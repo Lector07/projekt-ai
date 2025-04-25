@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +14,43 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(RoleSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $adminRole = Role::where('slug', 'admin')->first();
+        $patientRole = Role::where('slug', 'patient')->first();
+
+        $this->call(ProcedureCategorySeeder::class);
+
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@novamed.test'],
+            [
+                'name' => 'Admin NovaMed',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        if ($adminRole) {
+            $adminUser->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
+
+        if ($patientRole) {
+            User::factory(30)->create()->each(function ($user) use ($patientRole) {
+                $user->roles()->attach($patientRole->id);
+            });
+        } else {
+            User::factory(30)->create();
+            \Log::warning('Patient role not found during seeding.');
+        }
+
+        $this->call(DoctorSeeder::class);
+
+        $this->call(ProcedureSeeder::class);
+
+        $this->call(AppointmentSeeder::class);
+
+        $this->command->info('Database seeded successfully!');
+        $this->command->info('Admin Email: admin@novamed.test');
+        $this->command->info('Admin/Patient Password: password');
     }
 }
