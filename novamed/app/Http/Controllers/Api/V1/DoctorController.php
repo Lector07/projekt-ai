@@ -13,6 +13,8 @@ class DoctorController extends Controller
      */
     public function index()
     {
+        $doctors = Doctor::paginate(10);
+        return response()->json($doctors);
         //
     }
 
@@ -29,6 +31,7 @@ class DoctorController extends Controller
      */
     public function show(Doctor $doctor)
     {
+        return response()->json($doctor);
         //
     }
 

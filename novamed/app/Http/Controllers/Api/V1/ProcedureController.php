@@ -13,6 +13,9 @@ class ProcedureController extends Controller
      */
     public function index()
     {
+        $procedures = Procedure::paginate(10);
+        return response()->json($procedures);
+
         //
     }
 
@@ -29,6 +32,8 @@ class ProcedureController extends Controller
      */
     public function show(Procedure $procedure)
     {
+        $procedure->load('category');
+        return response()->json($procedure);
         //
     }
 
