@@ -8,15 +8,12 @@ use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
 
 Route::prefix('v1')->group(function () {
-    Route::post('/register', [Auth\RegisterController::class, 'store'])->name('api.v1.register');
-    Route::post('/login', [Auth\LoginController::class, 'store'])->name('api.v1.login');
 
     Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
     Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
     Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])->name('api.v1.appointments.check');
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->name('api.v1.logout');
 
         Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('api.v1.user.profile.show');
         Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('api.v1.user.profile.update');

@@ -104,7 +104,6 @@
       <path value="$PROJECT_DIR$/novamed/vendor/phpoption/phpoption" />
       <path value="$PROJECT_DIR$/novamed/vendor/ralouphie/getallheaders" />
       <path value="$PROJECT_DIR$/novamed/vendor/fruitcake/php-cors" />
-      <path value="$PROJECT_DIR$/novamed/vendor/inertiajs/inertia-laravel" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/code-unit-reverse-lookup" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/comparator" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/cli-parser" />

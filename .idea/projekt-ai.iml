@@ -25,7 +25,6 @@
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/guzzlehttp/psr7" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/guzzlehttp/uri-template" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/hamcrest/hamcrest-php" />
-      <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/inertiajs/inertia-laravel" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/laravel/framework" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/laravel/pail" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/laravel/pint" />

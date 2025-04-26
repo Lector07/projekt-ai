@@ -18,12 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
             'auth.admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
-            HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })
