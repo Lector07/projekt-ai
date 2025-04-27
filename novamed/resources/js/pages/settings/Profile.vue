@@ -54,7 +54,8 @@ async function updateProfile() {
             name: form.value.name,
             email: form.value.email,
         });
-        authStore.setUser(response.data);
+        // Zmiana: zamiast nieistniejącej metody setUser używamy bezpośredniego przypisania
+        authStore.user = response.data;
         profileRecentlySuccessful.value = true;
         profileSuccessTimeout = window.setTimeout(() => {
             profileRecentlySuccessful.value = false;

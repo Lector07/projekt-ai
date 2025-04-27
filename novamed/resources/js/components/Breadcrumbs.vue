@@ -25,8 +25,7 @@ defineProps<{
                         <BreadcrumbLink as-child>
                             <!-- Użyj router-link jeśli podano routeName lub href dla ścieżki wewnętrznej -->
                             <RouterLink v-if="item.routeName || (item.href && item.href.startsWith('/'))" :to="item.routeName ? { name: item.routeName } : item.href ?? '#'">{{ item.title }}</RouterLink>
-                            <!-- W przeciwnym razie zwykły link <a> -->
-                            <a v-else :href="item.href ?? '#'">{{ item.title }}</a>
+
                         </BreadcrumbLink>
                     </template>
                 </BreadcrumbItem>

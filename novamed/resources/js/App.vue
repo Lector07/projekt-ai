@@ -2,9 +2,7 @@
     <div>
         <main>
             <router-view v-slot="{ Component, route }">
-                <transition name="fade" mode="out-in">
-                    <component :is="Component" :key="route.path" />
-                </transition>
+                    <component :is="Component"/>
             </router-view>
         </main>
 
