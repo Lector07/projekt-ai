@@ -1,43 +1,53 @@
-// resources/js/stores/auth.ts
 import { defineStore } from 'pinia';
-import axios from 'axios'; // Zakładamy, że Axios jest skonfigurowany w bootstrap.js
-import type { User } from '@/types'; // Zaimportuj lub zdefiniuj typ User
+import axios from 'axios';
+import type { User } from '@/types';
+
+// Funkcja pomocnicza do pobierania danych użytkownika
+const fetchUserData = async (): Promise<User | null> => {
+    try {
+        // Dodaj nagłówek Accept dla JSON - to kluczowa zmiana
+        const response = await axios.get('/api/v1/user', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        // Sprawdź, czy odpowiedź zawiera HTML (co sugeruje błąd)
+        if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+            console.error('API zwróciło HTML zamiast danych JSON');
+            return null;
+        }
+
+        return response.data;
+    } catch (error) {
+        console.error('Błąd podczas pobierania danych użytkownika:', error);
+        return null;
+    }
+};
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        user: null as User | null, // Przechowuje dane zalogowanego użytkownika lub null
+        user: null as User | null,
+        isInitializing: true,
     }),
-    getters: {
-        isLoggedIn: (state) => !!state.user, // Sprawdza, czy użytkownik jest zalogowany
-    },
-    actions: {
-        setUser(user: User | null) {
-            this.user = user; // Ustawia użytkownika (np. po logowaniu lub pobraniu danych)
-        },
-        logout() {
-            this.user = null; // Czyści stan użytkownika
-        },
-        async fetchUser() {
-            try {
-                // Pobiera dane użytkownika z API
-                const response = await axios.get('/api/v1/user');
-                this.setUser(response.data); // Ustawia użytkownika na podstawie odpowiedzi
-            } catch (error: any) {
-                console.error('Nie udało się pobrać użytkownika:', error.response?.data?.message || error.message);
-                this.setUser(null); // Ustawia użytkownika na null w przypadku błędu
-            }
-        },
-    },
-});
 
-// Opcjonalnie zdefiniuj typ User, jeśli nie masz go w @/types
-/*
-export interface User {
-    id: number;
-    name: string;
-    email: string;
-    profile_picture_path?: string | null;
-    roles?: Array<{ id: number; name: string; slug: string }>;
-    // inne potrzebne pola
-}
-*/
+    getters: {
+        isLoggedIn: (state) => !!state.user,
+    },
+
+    actions: {
+        async initAuth() {
+            this.isInitializing = true;
+
+            try {
+                const userData = await fetchUserData();
+                this.user = userData;
+            } catch (error) {
+                console.error('Błąd podczas inicjalizacji autoryzacji:', error);
+                this.user = null;
+            } finally {
+                this.isInitializing = false;
+            }
+        }
+    }
+});

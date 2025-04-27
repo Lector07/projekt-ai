@@ -8,15 +8,18 @@ use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
 
 Route::prefix('v1')->group(function () {
+    // Trasy uwierzytelniania - dodaj te linie
+    Route::post('/login', [Auth\LoginController::class, 'store']);
+    Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->middleware('auth:sanctum');
 
     Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
     Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
     Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])->name('api.v1.appointments.check');
 
     Route::middleware('auth:sanctum')->group(function () {
-
         Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('api.v1.user.profile.show');
         Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('api.v1.user.profile.update');
+        Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('api.v1.user.profile.destroy');
 
         Route::apiResource('/patient/appointments', V1\PatientAppointmentController::class)->except(['update']);
 
@@ -31,8 +34,6 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-        Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])
-            ->name('api.v1.user.profile.destroy');
         return $request->user()->load('roles');
     });
 });

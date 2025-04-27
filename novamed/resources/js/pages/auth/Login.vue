@@ -31,9 +31,19 @@ async function submit() {
     errors.value = {};
 
     try {
+        // Pobierz CSRF token
         await axios.get('/sanctum/csrf-cookie');
-        await axios.post('/api/v1/login', form.value);
-        await authStore.fetchUser();
+
+        // Jawnie określ nagłówki dla JSON
+        const response = await axios.post('/api/v1/login', form.value, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Pobierz dane użytkownika
+        await authStore.initAuth();
 
         const redirectPath = (router.currentRoute.value.query.redirect as string) || '/dashboard';
         router.push(redirectPath);

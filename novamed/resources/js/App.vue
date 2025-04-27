@@ -1,17 +1,14 @@
-
 <template>
     <div>
         <main>
-
-            <router-view v-slot="{ Component }">
+            <router-view v-slot="{ Component, route }">
                 <transition name="fade" mode="out-in">
-                    <component :is="Component" />
+                    <component :is="Component" :key="route.path" />
                 </transition>
             </router-view>
         </main>
 
         <footer>
-
         </footer>
     </div>
 </template>
@@ -22,13 +19,9 @@ import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
 
-
 onMounted(async () => {
-
-    if (authStore.user === null) {
-        await authStore.fetchUser();
-
-    }
+    // Użyj istniejącej metody initAuth zamiast fetchUser
+    await authStore.initAuth();
 });
 </script>
 

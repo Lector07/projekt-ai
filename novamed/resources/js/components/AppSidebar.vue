@@ -10,7 +10,7 @@ import AppLogo from './AppLogo.vue';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        to: { name: 'dashboard' }, // Zmienione z href na to z nazwą trasy
         icon: LayoutGrid,
     },
 ];
@@ -18,12 +18,14 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
+        href: 'https://github.com/laravel/vue-starter-kit', // Zewnętrzny link - href jest OK
+        external: true, // Dodaj flagę dla zewnętrznych linków
         icon: Folder,
     },
     {
         title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits',
+        href: 'https://laravel.com/docs/starter-kits', // Zewnętrzny link - href jest OK
+        external: true, // Dodaj flagę dla zewnętrznych linków
         icon: BookOpen,
     },
 ];

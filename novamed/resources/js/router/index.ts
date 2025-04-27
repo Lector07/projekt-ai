@@ -24,23 +24,31 @@ const router = createRouter({
 const defaultTitle = 'Nova Med';
 
 router.beforeEach((to, from, next) => {
+    console.log('Guard: before next() for', to.name);
+
     const authStore = useAuthStore();
-
-    // Ustaw tytuł strony
-    document.title = to.meta.title ? `${to.meta.title} - Nova Med` : 'Nova Med';
-
-    const requiresAuth = to.meta.requiresAuth;
-    const requiresGuest = to.meta.requiresGuest;
     const isLoggedIn = authStore.isLoggedIn;
 
-    // Obsługa przekierowań
+    const requiresAuth = to.meta.requiresAuth === true;
+    const requiresGuest = to.meta.requiresGuest === true;
+
+    console.log(`Route ${to.path}: requiresAuth=${requiresAuth}, requiresGuest=${requiresGuest}, isLoggedIn=${isLoggedIn}`);
+
     if (requiresAuth && !isLoggedIn) {
+        console.log('Redirecting to login from', to.fullPath);
         next({ name: 'login', query: { redirect: to.fullPath } });
     } else if (requiresGuest && isLoggedIn) {
+        console.log('Redirecting to dashboard');
         next({ name: 'dashboard' });
     } else {
+        console.log('Proceeding to', to.name);
         next();
     }
+});
+
+// Aktualizacja tytułu strony
+router.afterEach((to) => {
+    document.title = to.meta.title ? `${to.meta.title} | ${defaultTitle}` : defaultTitle;
 });
 
 export default router;

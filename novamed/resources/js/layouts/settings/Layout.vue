@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,8 +22,12 @@ const sidebarNavItems: NavItem[] = [
 ];
 
 const router = useRouter();
-const currentPath = router.currentRoute.value.path;
+const currentPath = ref(router.currentRoute.value.path);
 
+// Aktualizuj `currentPath` przy każdej zmianie trasy
+watch(router.currentRoute, (newRoute) => {
+    currentPath.value = newRoute.path;
+});
 </script>
 
 <template>
