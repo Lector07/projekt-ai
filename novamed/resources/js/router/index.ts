@@ -6,6 +6,8 @@ import RegisterPage from '../pages/auth/Register.vue';
 import DashboardPage from '../pages/Dashboard.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
+import { storeToRefs } from 'pinia';
+import type { User } from '@/types';
 
 const routes: Array<RouteRecordRaw> = [
     { path: '/', name: 'home', component: HomePage, meta: { title: 'Strona Główna' } },
@@ -23,25 +25,41 @@ const router = createRouter({
 
 const defaultTitle = 'Nova Med';
 
-router.beforeEach((to, from, next) => {
-    console.log('Guard: before next() for', to.name);
+// Flaga inicjalizacji
+let authInitialized = false;
+
+// Dodajemy guard nawigacji
+router.beforeEach(async (to, from, next) => {
+    console.log(`Guard: przed nawigacją do ${String(to.name)}`);
 
     const authStore = useAuthStore();
-    const isLoggedIn = authStore.isLoggedIn;
+    const { isLoggedIn } = storeToRefs(authStore);
+
+    // Inicjalizuj autoryzację tylko raz
+    if (!authInitialized) {
+        console.log('Inicjalizacja autoryzacji...');
+        try {
+            await authStore.initAuth();
+            authInitialized = true;
+            console.log('Autoryzacja zainicjowana');
+        } catch (error) {
+            console.error('Błąd inicjalizacji autoryzacji:', error);
+        }
+    }
 
     const requiresAuth = to.meta.requiresAuth === true;
     const requiresGuest = to.meta.requiresGuest === true;
 
-    console.log(`Route ${to.path}: requiresAuth=${requiresAuth}, requiresGuest=${requiresGuest}, isLoggedIn=${isLoggedIn}`);
+    console.log(`Trasa ${to.path}: requiresAuth=${requiresAuth}, requiresGuest=${requiresGuest}, isLoggedIn=${isLoggedIn.value}`);
 
-    if (requiresAuth && !isLoggedIn) {
-        console.log('Redirecting to login from', to.fullPath);
-        next({ name: 'login', query: { redirect: to.fullPath } });
-    } else if (requiresGuest && isLoggedIn) {
-        console.log('Redirecting to dashboard');
+    if (requiresAuth && !isLoggedIn.value) {
+        console.log(`Przekierowanie do logowania z ${to.path}`);
+        next({ name: 'login' });
+    } else if (requiresGuest && isLoggedIn.value) {
+        console.log('Przekierowanie do panelu z logowania/rejestracji');
         next({ name: 'dashboard' });
     } else {
-        console.log('Proceeding to', to.name);
+        console.log(`Przechodzę do ${String(to.name)}`);
         next();
     }
 });
