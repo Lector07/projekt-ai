@@ -25,7 +25,7 @@ async function handleLogout() {
 
     try {
         await axios.post('/api/v1/logout');
-        // authStore.logout(); // Aktualizuj stan globalny
+        authStore.logout(); // Aktualizuj stan globalny
         router.push({ name: 'login' });
     } catch (error) {
         console.error("Błąd podczas wylogowywania:", error);

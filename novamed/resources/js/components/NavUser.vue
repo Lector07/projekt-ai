@@ -10,10 +10,13 @@ import { computed } from 'vue';
 const authStore = useAuthStore();
 const user = computed(() => authStore.user); // Pobierz użytkownika ze store'a
 const { isMobile, state } = useSidebar();
+
+console.log('Auth Store User:', authStore.user);
+console.log('Is Logged In:', authStore.isLoggedIn);
 </script>
 
 <template>
-    <SidebarMenu v-if="user"> {/* Pokaż tylko jeśli user istnieje */}
+    <SidebarMenu v-if="user">
         <SidebarMenuItem>
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>

@@ -24,25 +24,23 @@ const router = createRouter({
 const defaultTitle = 'Nova Med';
 
 router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore(); // Pobierz store
+    const authStore = useAuthStore();
 
-    // Ustaw tytuł
-    document.title = to.meta.title ? `${to.meta.title} - ${defaultTitle}` : defaultTitle;
+    // Ustaw tytuł strony
+    document.title = to.meta.title ? `${to.meta.title} - Nova Med` : 'Nova Med';
 
-    // Sprawdź stan zalogowania BEZ fetchUser()
     const requiresAuth = to.meta.requiresAuth;
     const requiresGuest = to.meta.requiresGuest;
-    const isLoggedIn = authStore.isLoggedIn; // Polegaj na stanie ze store'a
+    const isLoggedIn = authStore.isLoggedIn;
 
-    // Logika przekierowań
+    // Obsługa przekierowań
     if (requiresAuth && !isLoggedIn) {
         next({ name: 'login', query: { redirect: to.fullPath } });
     } else if (requiresGuest && isLoggedIn) {
         next({ name: 'dashboard' });
     } else {
-        next(); // Pozwól na nawigację
+        next();
     }
-    // Nie ma już bloku try...catch ani fetchUser
 });
 
 export default router;

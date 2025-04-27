@@ -17,6 +17,7 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
     Route::post('/logout', [Auth\LogoutController::class, 'destroy'])
         ->middleware('auth')
         ->name('logout');
+
 });
 
 Route::post('/api/v1/reset-password', [NewPasswordController::class, 'store'])

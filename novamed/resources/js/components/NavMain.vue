@@ -16,13 +16,13 @@ const route = useRoute();
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
-                    as-child :is-active="item.href === route.path"
+                    as-child
+                    :is-active="item.href === route.path"
                     :tooltip="item.title"
                 >
-                    <!-- Użyj RouterLink zamiast Link -->
-                    <RouterLink :to="item.href ?? '#'">
-                        <component :is="item.icon" />
-                        <span>{{ item.title }}</span>
+                    <RouterLink :to="item.href ?? '#'" class="flex items-center gap-2">
+                        <component v-if="item.icon" :is="item.icon" class="w-5 h-5" />
+                        <span class="text-sm font-medium">{{ item.title }}</span>
                     </RouterLink>
                 </SidebarMenuButton>
             </SidebarMenuItem>
