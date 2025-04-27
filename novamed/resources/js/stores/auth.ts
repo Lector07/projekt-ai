@@ -48,6 +48,54 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.isInitializing = false;
             }
+        },
+
+        async logout() {
+            try {
+                // Dekoduj token XSRF z ciasteczek
+                const xsrfTokenCookie = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('XSRF-TOKEN='));
+
+                const xsrfToken = xsrfTokenCookie ?
+                    decodeURIComponent(xsrfTokenCookie.split('=')[1]) : '';
+
+                try {
+                    // Spróbuj standardową ścieżkę Laravel
+                    await axios.post('/logout', {}, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-XSRF-TOKEN': xsrfToken
+                        },
+                        withCredentials: true
+                    });
+                } catch (logoutError) {
+                    console.warn('Błąd wylogowania na standardowej ścieżce:', logoutError);
+
+                    try {
+                        // Alternatywnie spróbuj ścieżkę API
+                        await axios.post('/api/v1/logout', {}, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-XSRF-TOKEN': xsrfToken
+                            },
+                            withCredentials: true
+                        });
+                    } catch (apiLogoutError) {
+                        console.warn('Błąd wylogowania na ścieżce API:', apiLogoutError);
+                    }
+                }
+
+                // Lokalne wylogowanie zawsze się wykona
+                this.user = null;
+                localStorage.removeItem('auth.token');
+
+                window.location.href = '/login';
+                return true;
+            } catch (error) {
+                console.error('Błąd podczas wylogowywania:', error);
+                throw error;
+            }
         }
     }
 });

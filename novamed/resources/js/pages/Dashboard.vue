@@ -6,7 +6,7 @@ import PlaceholderPattern from '../components/PlaceholderPattern.vue';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        to: '/dashboard', // Zmieniono z href na to
+        to: '/dashboard',
     },
 ];
 </script>
@@ -25,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     <PlaceholderPattern />
                 </div>
             </div>
-            <div class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 dark:border-sidebar-border md:min-h-min">
+            <div class="relative flex-grow rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                 <PlaceholderPattern />
             </div>
         </div>
