@@ -3,7 +3,7 @@ import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { useRouter } from 'vue-router';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -20,9 +20,9 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-const page = usePage();
+const router = useRouter();
+const currentPath = router.currentRoute.value.path;
 
-const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.location).pathname : '';
 </script>
 
 <template>
@@ -39,9 +39,9 @@ const currentPath = page.props.ziggy?.location ? new URL(page.props.ziggy.locati
                         :class="['w-full justify-start', { 'bg-muted': currentPath === item.href }]"
                         as-child
                     >
-                        <Link :href="item.href">
+                        <router-link :to="item.href" class="w-full">
                             {{ item.title }}
-                        </Link>
+                        </router-link>
                     </Button>
                 </nav>
             </aside>

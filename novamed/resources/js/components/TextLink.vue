@@ -1,25 +1,22 @@
 <script setup lang="ts">
-import { Method } from '@inertiajs/core';
-import { Link } from '@inertiajs/vue3';
+import { RouterLink, type RouteLocationRaw } from 'vue-router'; // Importuj RouterLink
 
 interface Props {
-    href: string;
+    to: RouteLocationRaw; // Zmieniono href na 'to' dla spójności z router-link
     tabindex?: number;
-    method?: Method;
-    as?: string;
+    // Usunięto method i as - nie są potrzebne dla router-link
 }
 
 defineProps<Props>();
 </script>
 
 <template>
-    <Link
-        :href="href"
+    <!-- Użyj router-link zamiast Link -->
+    <RouterLink
+        :to="to"
         :tabindex="tabindex"
-        :method="method"
-        :as="as"
-        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current dark:decoration-neutral-500"
     >
         <slot />
-    </Link>
+    </RouterLink>
 </template>

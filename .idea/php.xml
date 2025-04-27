@@ -117,7 +117,6 @@
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/global-state" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/lines-of-code" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/version" />
-      <path value="$PROJECT_DIR$/novamed/vendor/tightenco/ziggy" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/recursion-context" />
       <path value="$PROJECT_DIR$/novamed/vendor/sebastian/type" />
       <path value="$PROJECT_DIR$/novamed/vendor/guzzlehttp/promises" />

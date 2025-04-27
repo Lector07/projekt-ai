@@ -116,7 +116,6 @@
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/symfony/var-dumper" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/symfony/yaml" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/theseer/tokenizer" />
-      <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/tightenco/ziggy" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/tijsverkoyen/css-to-inline-styles" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/voku/portable-ascii" />

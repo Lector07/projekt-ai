@@ -31,6 +31,8 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])
+            ->name('api.v1.user.profile.destroy');
         return $request->user()->load('roles');
     });
 });

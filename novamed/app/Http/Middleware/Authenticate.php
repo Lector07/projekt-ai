@@ -1,27 +1,26 @@
 <?php
 
-namespace App\Http\Middleware; // <<< Upewnij się, że namespace jest poprawny
+namespace App\Http\Middleware;
 
-use Illuminate\Auth\Middleware\Authenticate as Middleware; // <<< Ważne: dziedziczy po bazowym middleware
+use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 
 class Authenticate extends Middleware
 {
     /**
-     * Get the path the user should be redirected to when they are not authenticated.
-     *
-     * Ta metoda jest wywoływana, gdy użytkownik NIE JEST uwierzytelniony,
-     * a żądanie NIE oczekuje odpowiedzi JSON.
-     * W czystym API rzadko będzie używana, ale musi istnieć.
+     * Pobiera ścieżkę, na którą użytkownik powinien zostać przekierowany, gdy nie jest uwierzytelniony.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return string|null
      */
     protected function redirectTo(Request $request): ?string
     {
-        // Jeśli żądanie oczekuje JSON (API), zwróć null, aby Laravel zwrócił 401.
-        // W przeciwnym razie (teoretycznie, dla żądań web), można by zwrócić nazwę trasy logowania.
-        // Ponieważ nie masz trasy 'login' webowej, zwrócenie null jest bezpieczne.
-        return null; // Zwróć null, aby uniknąć przekierowania
+        // Jeśli żądanie oczekuje JSON, zwróć null, aby Laravel zwrócił odpowiedź 401 Unauthorized.
+        if ($request->expectsJson()) {
+            return null;
+        }
+
+        // W przypadku żądań webowych można zwrócić ścieżkę logowania (jeśli istnieje).
+        return route('login'); // Upewnij się, że trasa 'login' istnieje w pliku routes/web.php.
     }
 }

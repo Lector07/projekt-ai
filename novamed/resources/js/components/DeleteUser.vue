@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import axios from 'axios';
 
-// Components
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -18,27 +17,55 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const passwordInput = ref<HTMLInputElement | null>(null);
 
-const form = useForm({
-    password: '',
-});
+const password = ref('');
 
-const deleteUser = (e: Event) => {
-    e.preventDefault();
+const isLoading = ref(false);
 
-    form.delete(route('profile.destroy'), {
-        preserveScroll: true,
-        onSuccess: () => closeModal(),
-        onError: () => passwordInput.value?.focus(),
-        onFinish: () => form.reset(),
-    });
-};
+const errors = ref<{ password?: string[] }>({});
+
+const isDialogOpen = ref(false);
+
+async function deleteUser(e?: Event) {
+    if (e) e.preventDefault();
+
+    isLoading.value = true;
+    errors.value = {};
+
+    try {
+
+        await axios.delete('/api/v1/user/profile', {
+            data: {
+                password: password.value,
+            }
+        });
+
+        closeModal(); // Zamknij dialog
+        alert('Twoje konto zostało usunięte.');
+        window.location.href = '/';
+
+    } catch (error: any) {
+        if (error.response && error.response.status === 422) {
+            errors.value = error.response.data.errors;
+            passwordInput.value?.focus();
+        } else {
+            console.error('Błąd usuwania konta:', error);
+            alert('Wystąpił błąd podczas usuwania konta.');
+        }
+    } finally {
+        isLoading.value = false;
+    }
+}
 
 const closeModal = () => {
-    form.clearErrors();
-    form.reset();
+    isDialogOpen.value = false;
+    password.value = '';
+    errors.value = {};
+    isLoading.value = false;
 };
 </script>
 
@@ -50,12 +77,12 @@ const closeModal = () => {
                 <p class="font-medium">Warning</p>
                 <p class="text-sm">Please proceed with caution, this cannot be undone.</p>
             </div>
-            <Dialog>
+            <Dialog v-model:open="isDialogOpen">
                 <DialogTrigger as-child>
-                    <Button variant="destructive">Delete account</Button>
+                    <Button variant="destructive" @click="isDialogOpen = true">Delete account</Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <form class="space-y-6" @submit="deleteUser">
+                    <form class="space-y-6" @submit.prevent="deleteUser">
                         <DialogHeader class="space-y-3">
                             <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
                             <DialogDescription>
@@ -66,17 +93,18 @@ const closeModal = () => {
 
                         <div class="grid gap-2">
                             <Label for="password" class="sr-only">Password</Label>
-                            <Input id="password" type="password" name="password" ref="passwordInput" v-model="form.password" placeholder="Password" />
-                            <InputError :message="form.errors.password" />
+                            <Input id="password" type="password" name="password" ref="passwordInput" v-model="password" placeholder="Password" />
+                            <InputError :message="errors.password ? errors.password[0] : ''" />
                         </div>
 
                         <DialogFooter class="gap-2">
                             <DialogClose as-child>
-                                <Button variant="secondary" @click="closeModal"> Cancel </Button>
+                                <Button variant="secondary" type="button" @click="closeModal"> Cancel </Button>
                             </DialogClose>
 
-                            <Button variant="destructive" :disabled="form.processing">
-                                <button type="submit">Delete account</button>
+                            <!-- Użyj stanu isLoading do wyłączania przycisku -->
+                            <Button variant="destructive" :disabled="isLoading" type="submit">
+                                {{ isLoading ? 'Deleting...' : 'Delete account' }}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -85,3 +113,11 @@ const closeModal = () => {
         </div>
     </div>
 </template>
+
+<style scoped>
+/* Dodaj style dla .error-message, jeśli InputError go wymaga */
+.error-message {
+    color: red;
+    font-size: 0.8em;
+}
+</style>

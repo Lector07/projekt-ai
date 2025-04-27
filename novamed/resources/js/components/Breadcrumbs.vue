@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Link } from '@inertiajs/vue3';
+import { RouterLink } from 'vue-router'; // Importuj RouterLink
 
-interface BreadcrumbItem {
+interface BreadcrumbItemType { // Zmieniono nazwę interfejsu dla jasności
     title: string;
-    href?: string;
+    href?: string; // href jest teraz opcjonalny
+    routeName?: string; // Opcjonalnie: nazwa trasy dla router-link
 }
 
 defineProps<{
-    breadcrumbs: BreadcrumbItem[];
+    breadcrumbs: BreadcrumbItemType[];
 }>();
 </script>
 
@@ -22,7 +23,10 @@ defineProps<{
                     </template>
                     <template v-else>
                         <BreadcrumbLink as-child>
-                            <Link :href="item.href ?? '#'">{{ item.title }}</Link>
+                            <!-- Użyj router-link jeśli podano routeName lub href dla ścieżki wewnętrznej -->
+                            <RouterLink v-if="item.routeName || (item.href && item.href.startsWith('/'))" :to="item.routeName ? { name: item.routeName } : item.href ?? '#'">{{ item.title }}</RouterLink>
+                            <!-- W przeciwnym razie zwykły link <a> -->
+                            <a v-else :href="item.href ?? '#'">{{ item.title }}</a>
                         </BreadcrumbLink>
                     </template>
                 </BreadcrumbItem>

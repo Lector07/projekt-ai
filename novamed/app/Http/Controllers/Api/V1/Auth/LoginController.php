@@ -12,13 +12,10 @@ class LoginController extends Controller
     public function store(LoginRequest $request){
         $request->authenticate();
         $request->session()->regenerate();
-        return response()->json([
-            'message' => 'Zalogowano pomyślnie',
-            'user' => $request->user(),
-            'token' => $request->user()->createToken('auth_token')->plainTextToken,
-        ]);
 
 
+        // Opcja 2: Zwróć tylko status sukcesu (często wystarcza dla SPA)
+        return response()->json(['message' => 'Zalogowano pomyślnie'], 204); // 204 No Content
     }
     //
 }

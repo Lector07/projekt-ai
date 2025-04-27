@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { usePage } from '@inertiajs/vue3';
+import { useRoute } from 'vue-router';
 import { SharedData } from '@/types';
 
 interface Props {
@@ -9,7 +9,8 @@ interface Props {
 
 defineProps<Props>();
 
-const isOpen = usePage<SharedData>().props.sidebarOpen;
+
+const isOpen = useRoute().query.sidebarOpen === 'true';
 </script>
 
 <template>

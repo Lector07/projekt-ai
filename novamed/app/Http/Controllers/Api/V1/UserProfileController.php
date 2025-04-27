@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ProfileUpdateRequest; // <<< IMPORTUJ POPRAWNY REQUEST
 use Illuminate\Http\Request; // Może być potrzebny, jeśli robisz coś z $request poza walidacją
-
+use Illuminate\Http\JsonResponse; // <<< Dodaj import JsonResponse
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 class UserProfileController extends Controller
 {
     /**
@@ -47,6 +50,33 @@ class UserProfileController extends Controller
         // Zwróć zaktualizowany obiekt użytkownika (z rolami)
         // fresh() pobierze najnowsze dane z bazy, load('roles') dołączy role
         return response()->json($user->fresh()->load('roles'), 200);
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        // Walidacja hasła - upewnij się, że frontend wysyła 'password' w ciele żądania DELETE
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Nie znaleziono użytkownika'], 404);
+        }
+
+        // Wyloguj przed usunięciem
+        Auth::guard('web')->logout();
+
+        // Usuń użytkownika
+        $user->delete();
+
+        // Unieważnij sesję i zregeneruj token
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // Zwróć odpowiedź 204 No Content
+        return response()->json(null, 204);
     }
 
     // Możesz dodać inne metody, np. do zmiany hasła, zdjęcia itp.
