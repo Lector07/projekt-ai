@@ -13,6 +13,7 @@
     <!-- Vite - Ładuje skompilowany JS i CSS dla Twojej SPA -->
     {{-- Upewnij się, że ścieżka do pliku wejściowego jest poprawna --}}
     @vite(['resources/js/app.ts'])
+    @vite('resources/css/app.css')
 
 </head>
 <body class="font-sans antialiased">

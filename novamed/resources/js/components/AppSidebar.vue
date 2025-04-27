@@ -45,10 +45,10 @@ const footerNavItems: NavItem[] = [
     <Sidebar
         variant="inset"
         collapsible="icon"
-        class="bg-[#001f54]"
+        class="text-nova-light"
     >
-        <SidebarHeader class="bg-[#001f54] text-[#fefcfb]">
-            <SidebarMenu class="bg-[#001f54]">
+        <SidebarHeader>
+            <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <RouterLink :to="{ name: 'dashboard' }">
@@ -59,12 +59,12 @@ const footerNavItems: NavItem[] = [
             </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent class="bg-[#001f54] text-[#fefcfb]">
+        <SidebarContent>
             <NavMain :items="mainNavItems"/>
         </SidebarContent>
 
-        <SidebarFooter class="bg-[#001f54] text-[#fefcfb]" >
-            <NavFooter  :items="footerNavItems" class="text-[#fefcfb]"/>
+        <SidebarFooter >
+            <NavFooter  :items="footerNavItems" />
             <NavUser/>
         </SidebarFooter>
     </Sidebar>

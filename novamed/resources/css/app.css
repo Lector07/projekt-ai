@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@source "../views";
 
 @import "tw-animate-css";
 
@@ -58,6 +59,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+    --color-nova-darkest: #0a1128;
+    --color-nova-dark: #001f54;
+    --color-nova-primary: #034078;
+    --color-nova-accent: #3d98b2;
+    --color-nova-light: #fefcfb;
 }
 
 /*
@@ -114,7 +120,7 @@
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
   --radius: 0.5rem;
-  --sidebar-background: hsl(0 0% 98%);
+  --sidebar-background: var(--color-nova-dark);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(0 0% 10%);
   --sidebar-primary-foreground: hsl(0 0% 98%);
