@@ -120,6 +120,7 @@
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/_laravel_idea" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

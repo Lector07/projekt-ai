@@ -37,7 +37,7 @@ function isActive(item: NavItem): boolean {
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel class="text-nova-light">Platform</SidebarGroupLabel>
+        <SidebarGroupLabel class="text-nova-light">Platforma</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton

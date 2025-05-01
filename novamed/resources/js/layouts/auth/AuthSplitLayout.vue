@@ -18,7 +18,7 @@ defineProps<{
         <div class="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
             <div class="absolute inset-0 bg-zinc-900" />
             <RouterLink :to="{ name: 'home' }" class="relative z-20 flex items-center text-lg font-medium">
-                <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
+                <AppLogoIcon class="mr-2 size-36 fill-current text-white" />
                 {{ name }}
             </RouterLink>
             <div v-if="quote" class="relative z-20 mt-auto">

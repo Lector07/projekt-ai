@@ -2,74 +2,82 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-// Załóżmy, że masz store autoryzacji
 import { useAuthStore } from '@/stores/auth';
 
-// Komponenty UI (zakładamy, że są OK)
 import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue'; // Upewnij się, że używa <router-link>
+import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthBase from '@/layouts/AuthLayout.vue'; // Sprawdź ten layout
+import AuthBase from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Stan formularza
 const form = ref({
     name: '',
     email: '',
     password: '',
-    password_confirmation: '', // Pole wymagane przez walidację 'confirmed'
+    password_confirmation: '',
 });
 
-// Stan ładowania i błędów
 const isLoading = ref(false);
 const errors = ref<Record<string, string[]>>({});
 
-// Funkcja rejestracji
+// Upewnijmy się, że axios jest skonfigurowany z odpowiednimi nagłówkami
+axios.defaults.headers.common['Accept'] = 'application/json';
+axios.defaults.withCredentials = true; // Ważne dla Sanctum - przesyła ciasteczka sesji
+
 async function submit() {
     isLoading.value = true;
     errors.value = {};
 
     try {
-        // 1. (Opcjonalnie, ale zalecane dla Sanctum SPA) Pobierz ciasteczko CSRF
+        // Pobranie tokenu CSRF
         await axios.get('/sanctum/csrf-cookie');
 
-        // 2. Wyślij żądanie rejestracji do endpointu API
-        // Endpoint zdefiniowany w routes/web.php, używa middleware 'guest'
-        await axios.post('/api/v1/register', form.value);
+        // Rejestracja użytkownika
+        const registerResponse = await axios.post('/api/v1/register', form.value, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
 
-        // 3. Rejestracja udana - teraz można pobrać dane użytkownika
-        //    (bo API rejestracji mogło go od razu zalogować lub nie)
-        //    lub po prostu przekierować na logowanie lub dashboard
-        await authStore.fetchUser(); // Spróbuj pobrać dane, jeśli został zalogowany
+        console.log('Rejestracja udana:', registerResponse);
 
-        // 4. Przekieruj na dashboard (jeśli został zalogowany) lub na logowanie
-        if (authStore.isLoggedIn) {
-            router.push({ name: 'dashboard' });
-        } else {
-            // Możesz pokazać komunikat "Rejestracja udana, zaloguj się" i przekierować
-            alert('Rejestracja udana! Zaloguj się, aby kontynuować.');
-            router.push({ name: 'login' });
+        // Nie próbujemy już automatycznie się logować przez /login (błąd 405)
+        // Zamiast tego sprawdzamy, czy rejestracja automatycznie zalogowała użytkownika
+
+        try {
+            // Pobieramy dane użytkownika
+            const userResponse = await axios.get('/api/v1/user', {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (userResponse.data) {
+                authStore.$patch({ user: userResponse.data });
+                router.push({ name: 'dashboard' });
+                return;
+            }
+        } catch (authError) {
+            console.log('Nie można pobrać danych użytkownika', authError);
         }
 
+        // Przekieruj do strony logowania jeśli nie udało się automatycznie zalogować
+        alert('Rejestracja udana! Zaloguj się, aby kontynuować.');
+        router.push({ name: 'login' });
     } catch (error: any) {
-        if (error.response && error.response.status === 422) {
-            // Błędy walidacji zwrócone przez RegisterRequest
+        if (error.response?.status === 422) {
             errors.value = error.response.data.errors;
         } else {
-            // Inne błędy
             console.error('Błąd rejestracji:', error);
             errors.value = { general: ['Wystąpił nieoczekiwany błąd podczas rejestracji.'] };
         }
     } finally {
         isLoading.value = false;
-        // Nie resetujemy hasła automatycznie po błędzie, aby użytkownik mógł poprawić inne pola
         if (Object.keys(errors.value).length === 0) {
-            // Resetuj tylko po sukcesie (chociaż następuje przekierowanie)
             form.value.password = '';
             form.value.password_confirmation = '';
         }
@@ -78,9 +86,7 @@ async function submit() {
 </script>
 
 <template>
-    <AuthBase title="Create an account" description="Enter your details below to create your account">
-
-        <!-- Wyświetl ogólny błąd, jeśli wystąpił -->
+    <AuthBase title="Utwórz swoje konto" description="Wpisz dane poniżej aby utworzyć konto">
         <div v-if="errors.general" class="mb-4 text-center text-sm font-medium text-red-600">
             {{ errors.general[0] }}
         </div>
@@ -88,19 +94,19 @@ async function submit() {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">Name</Label>
-                    <Input id="name" type="text" required autofocus :tabindex="1" autocomplete="name" v-model="form.name" placeholder="Full name" />
+                    <Label for="name">Imie</Label>
+                    <Input id="name" type="text" required autofocus :tabindex="1" autocomplete="name" v-model="form.name" placeholder="Imie i nazwisko" />
                     <InputError :message="errors.name ? errors.name[0] : ''" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">Adres Email</Label>
                     <Input id="email" type="email" required :tabindex="2" autocomplete="email" v-model="form.email" placeholder="email@example.com" />
                     <InputError :message="errors.email ? errors.email[0] : ''" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password">Hasło</Label>
                     <Input
                         id="password"
                         type="password"
@@ -108,13 +114,13 @@ async function submit() {
                         :tabindex="3"
                         autocomplete="new-password"
                         v-model="form.password"
-                        placeholder="Password"
+                        placeholder="Hasło"
                     />
                     <InputError :message="errors.password ? errors.password[0] : ''" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">Confirm password</Label>
+                    <Label for="password_confirmation">Potwierdź hasło</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -122,29 +128,25 @@ async function submit() {
                         :tabindex="4"
                         autocomplete="new-password"
                         v-model="form.password_confirmation"
-                        placeholder="Confirm password"
+                        placeholder="Potwierdź hasło"
                     />
-                    <!-- Błąd dla password_confirmation jest często zawarty w błędzie dla 'password' (reguła 'confirmed') -->
-                    <!-- Można też dodać <InputError :message="errors.password_confirmation ? errors.password_confirmation[0] : ''" /> jeśli backend go zwraca osobno -->
                 </div>
 
-                <Button type="submit" class="mt-2 w-full" tabindex="5" :disabled="isLoading">
+                <Button type="submit" class="mt-2 w-full bg-nova-dark hover:bg-nova-accent" tabindex="5" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
-                    {{ isLoading ? 'Creating Account...' : 'Create account' }}
+                    {{ isLoading ? 'Tworzenie konta...' : 'Utwórz konto' }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Already have an account?
-                <!-- Zmień na router-link -->
-                <router-link :to="{ name: 'login' }" class="underline underline-offset-4" :tabindex="6">Log in</router-link>
+                Masz już konto?
+                <router-link :to="{ name: 'login' }" class="underline underline-offset-4" :tabindex="6">Zaloguj się</router-link>
             </div>
         </form>
     </AuthBase>
 </template>
 
 <style scoped>
-/* Dodaj style dla .error-message, jeśli InputError go wymaga */
 .error-message {
     color: red;
     font-size: 0.8em;

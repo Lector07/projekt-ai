@@ -50,7 +50,7 @@ async function handleLogout() {
             <DropdownMenuItem :as-child="true">
                 <router-link :to="{ name: 'profile.settings' }" class="block w-full">
                     <Settings class="mr-2 h-4 w-4" />
-                    Settings
+                    Ustawienia
                 </router-link>
             </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -58,7 +58,7 @@ async function handleLogout() {
         <DropdownMenuItem :as-child="true">
             <button @click="handleLogout" class="block w-full text-left" :disabled="isLoggingOut">
                 <LogOut class="mr-2 h-4 w-4 inline" />
-                {{ isLoggingOut ? 'Logging out...' : 'Log out' }}
+                {{ isLoggingOut ? 'Wylogowywanie...' : 'Wyloguj się' }}
             </button>
         </DropdownMenuItem>
     </template>

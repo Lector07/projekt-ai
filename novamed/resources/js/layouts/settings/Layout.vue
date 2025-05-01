@@ -8,15 +8,15 @@ import { useRouter } from 'vue-router';
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: 'Profil',
         href: '/settings/profile',
     },
     {
-        title: 'Password',
+        title: 'Hasło',
         href: '/settings/password',
     },
     {
-        title: 'Appearance',
+        title: 'Wygląd',
         href: '/settings/appearance',
     },
 ];
@@ -32,7 +32,7 @@ watch(router.currentRoute, (newRoute) => {
 
 <template>
     <div class="px-4 py-6">
-        <Heading title="Settings" description="Manage your profile and account settings" />
+        <Heading title="Ustawienia" description="Zarządzaj swoim profilem i ustawieniami konta." />
 
         <div class="flex flex-col space-y-8 md:space-y-0 lg:flex-row lg:space-x-12 lg:space-y-0">
             <aside class="w-full max-w-xl lg:w-48">

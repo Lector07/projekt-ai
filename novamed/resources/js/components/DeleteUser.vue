@@ -71,40 +71,40 @@ const closeModal = () => {
 
 <template>
     <div class="space-y-6">
-        <HeadingSmall title="Delete account" description="Delete your account and all of its resources" />
+        <HeadingSmall title="Usuń konto" description="Usuń swoje konto i wszystkie powiązane z nim zasoby" />
         <div class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">Warning</p>
-                <p class="text-sm">Please proceed with caution, this cannot be undone.</p>
+                <p class="font-medium">Uwaga</p>
+                <p class="text-sm">Proszę postępować ostrożnie, tej operacji nie można cofnąć.</p>
             </div>
             <Dialog v-model:open="isDialogOpen">
                 <DialogTrigger as-child>
-                    <Button variant="destructive" @click="isDialogOpen = true">Delete account</Button>
+                    <Button variant="destructive" @click="isDialogOpen = true">Usuń konto</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <form class="space-y-6" @submit.prevent="deleteUser">
                         <DialogHeader class="space-y-3">
-                            <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
+                            <DialogTitle>Czy na pewno chcesz usunąć swoje konto?</DialogTitle>
                             <DialogDescription>
-                                Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your
-                                password to confirm you would like to permanently delete your account.
+                                Po usunięciu konta wszystkie powiązane z nim zasoby i dane zostaną trwale usunięte. Wprowadź swoje
+                                hasło, aby potwierdzić, że chcesz trwale usunąć swoje konto.
                             </DialogDescription>
                         </DialogHeader>
 
                         <div class="grid gap-2">
-                            <Label for="password" class="sr-only">Password</Label>
-                            <Input id="password" type="password" name="password" ref="passwordInput" v-model="password" placeholder="Password" />
+                            <Label for="password" class="sr-only">Hasło</Label>
+                            <Input id="password" type="password" name="password" ref="passwordInput" v-model="password" placeholder="Wpisz hasło" />
                             <InputError :message="errors.password ? errors.password[0] : ''" />
                         </div>
 
                         <DialogFooter class="gap-2">
                             <DialogClose as-child>
-                                <Button variant="secondary" type="button" @click="closeModal"> Cancel </Button>
+                                <Button variant="secondary" type="button" @click="closeModal"> Anuluj </Button>
                             </DialogClose>
 
                             <!-- Użyj stanu isLoading do wyłączania przycisku -->
                             <Button variant="destructive" :disabled="isLoading" type="submit">
-                                {{ isLoading ? 'Deleting...' : 'Delete account' }}
+                                {{ isLoading ? 'Usuwanie...' : 'Usuń konto' }}
                             </Button>
                         </DialogFooter>
                     </form>

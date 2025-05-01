@@ -96,26 +96,26 @@ async function sendVerificationEmail() {
 
                 <form @submit.prevent="updateProfile" class="space-y-6">
                     <div class="grid gap-2">
-                        <Label for="name">Name</Label>
-                        <Input id="name" v-model="form.name" required autocomplete="name" placeholder="Full name" />
+                        <Label for="name">Imie</Label>
+                        <Input id="name" v-model="form.name" required autocomplete="name" placeholder="Podaj pełne imie" />
                         <InputError :message="profileErrors.name ? profileErrors.name[0] : ''" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="email">Email address</Label>
-                        <Input id="email" type="email" v-model="form.email" required autocomplete="username" placeholder="Email address" />
+                        <Label for="email">Adres email</Label>
+                        <Input id="email" type="email" v-model="form.email" required autocomplete="username" placeholder="Podaj adres email" />
                         <InputError :message="profileErrors.email ? profileErrors.email[0] : ''" />
                     </div>
 
                     <div v-if="user && user.email_verified_at === null">
                         <p class="-mt-4 text-sm text-muted-foreground">
-                            Your email address is unverified.
+                            Twój adres email nie został zweryfikowany.
                             <button type="button" @click="sendVerificationEmail" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Click here to resend the verification email.
+                                Kliknij tutaj.
                             </button>
                         </p>
                         <div v-if="verificationStatus === 'verification-link-sent'" class="mt-2 text-sm font-medium text-green-600">
-                            A new verification link has been sent to your email address.
+                            Nowy link weryfikacyjny został wysłany na Twój adres email.
                         </div>
                         <div v-if="verificationStatus === 'Błąd wysyłania.'" class="mt-2 text-sm font-medium text-red-600">
                             {{ verificationStatus }}
@@ -123,8 +123,8 @@ async function sendVerificationEmail() {
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <Button :disabled="profileProcessing">
-                            {{ profileProcessing ? 'Saving...' : 'Save' }}
+                        <Button :disabled="profileProcessing" class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent">
+                            {{ profileProcessing ? 'Zapisywanie...' : 'Zapisz' }}
                         </Button>
                         <Transition
                             enter-active-class="transition ease-in-out duration-300"

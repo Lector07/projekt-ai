@@ -61,7 +61,7 @@ async function submit() {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
+    <AuthBase title="Zaloguj się na swoje konto" description="Wpisz adres email i hasło aby sie zalogować">
         <div v-if="errors.general" class="mb-4 text-center text-sm font-medium text-red-600">
             {{ errors.general[0] }}
         </div>
@@ -69,7 +69,7 @@ async function submit() {
         <form @submit.prevent="submit" class="flex flex-col gap-6">
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">Adres Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -85,7 +85,7 @@ async function submit() {
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
+                        <Label for="password">Hasło</Label>
                     </div>
                     <Input
                         id="password"
@@ -101,20 +101,20 @@ async function submit() {
 
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
+                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" class="checked:nova-accent" />
+                        <span>Zapamiętaj hasło</span>
                     </Label>
                 </div>
 
-                <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="isLoading">
+                <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent" :tabindex="4" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
-                    {{ isLoading ? 'Logging in...' : 'Log in' }}
+                    {{ isLoading ? 'Logowanie...' : 'Zaloguj się' }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <router-link :to="{ name: 'register' }" :tabindex="5">Sign up</router-link>
+                Nie masz konta?
+                <router-link :to="{ name: 'register' }" :tabindex="5">Zarejestruj się</router-link>
             </div>
         </form>
     </AuthBase>

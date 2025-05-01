@@ -98,7 +98,7 @@ async function updatePassword() {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <SettingsLayout>
             <div class="space-y-6">
-                <HeadingSmall title="Update password" description="Ensure your account is using a long, random password to stay secure" />
+                <HeadingSmall title="Zmień hasło" description="Upewnij się, że Twoje konto używa długiego, losowego hasła, aby pozostać bezpiecznym." />
 
                 <!-- Wyświetl ogólny błąd, jeśli wystąpił -->
                 <div v-if="errors.general" class="mb-4 text-center text-sm font-medium text-red-600">
@@ -107,7 +107,7 @@ async function updatePassword() {
 
                 <form @submit.prevent="updatePassword" class="space-y-6">
                     <div class="grid gap-2">
-                        <Label for="current_password">Current password</Label>
+                        <Label for="current_password">Aktualne hasło</Label>
                         <Input
                             id="current_password"
                             ref="currentPasswordInput"
@@ -115,7 +115,7 @@ async function updatePassword() {
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="current-password"
-                            placeholder="Current password"
+                            placeholder="Podaj aktualne hasło"
                             required
                         />
                         <!-- Poprawione wyświetlanie błędów -->
@@ -123,7 +123,7 @@ async function updatePassword() {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password">New password</Label>
+                        <Label for="password">Nowe hasło</Label>
                         <Input
                             id="password"
                             ref="passwordInput"
@@ -131,21 +131,21 @@ async function updatePassword() {
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="New password"
+                            placeholder="Nowe hasło"
                             required
                         />
                         <InputError :message="errors.password ? errors.password[0] : ''" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="password_confirmation">Confirm password</Label>
+                        <Label for="password_confirmation">Potwierdź nowe hasło</Label>
                         <Input
                             id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"
                             class="mt-1 block w-full"
                             autocomplete="new-password"
-                            placeholder="Confirm password"
+                            placeholder="Wpisz ponownie nowe hasło"
                             required
                         />
                         <InputError :message="errors.password_confirmation ? errors.password_confirmation[0] : ''" />
@@ -153,8 +153,8 @@ async function updatePassword() {
 
                     <div class="flex items-center gap-4">
                         <!-- Zmieniono :disabled -->
-                        <Button :disabled="isLoading">
-                            {{ isLoading ? 'Saving...' : 'Save password' }}
+                        <Button :disabled="isLoading" class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent">
+                            {{ isLoading ? 'Aktualizowanie...' : 'Aktualizuj hasło' }}
                         </Button>
 
                         <Transition

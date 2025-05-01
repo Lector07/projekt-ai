@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
 
 Route::prefix('v1')->group(function () {
-    // Trasy uwierzytelniania - dodaj te linie
     Route::post('/login', [Auth\LoginController::class, 'store']);
     Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->middleware('auth:sanctum');
 
@@ -17,6 +16,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])->name('api.v1.appointments.check');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::put('/user/password', [Auth\PasswordController::class, 'update']);
+
         Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('api.v1.user.profile.show');
         Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('api.v1.user.profile.update');
         Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('api.v1.user.profile.destroy');
