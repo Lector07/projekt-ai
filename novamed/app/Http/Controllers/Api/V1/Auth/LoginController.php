@@ -13,9 +13,10 @@ class LoginController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-
-        // Opcja 2: Zwróć tylko status sukcesu (często wystarcza dla SPA)
-        return response()->json(['message' => 'Zalogowano pomyślnie'], 204); // 204 No Content
+        // Zwróć dane użytkownika wraz z rolami
+        return response()->json([
+            'user' => $request->user()->load('roles')
+        ], 200);
     }
     //
 }

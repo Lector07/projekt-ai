@@ -6,6 +6,7 @@ import RegisterPage from '../pages/auth/Register.vue';
 import DashboardPage from '../pages/Dashboard.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
+import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
 import { storeToRefs } from 'pinia';
 
 const routes: Array<RouteRecordRaw> = [
@@ -56,6 +57,12 @@ const routes: Array<RouteRecordRaw> = [
         component: ResetPasswordPage,
         props: true,
         meta: { title: 'Reset Hasła', requiresGuest: true }
+    },
+    {
+        path: '/forgot-password',      // Ścieżka URL
+        name: 'forgot-password',     // <<< Nazwa, której szuka router-link
+        component: ForgotPasswordPage, // Komponent do wyświetlenia
+        meta: { title: 'Zapomniałem Hasła', requiresGuest: true } // Meta dane
     },
 ];
 

@@ -23,14 +23,16 @@ class RegisterController extends Controller
             'password' => Hash::make($validateData['password']),
         ]);
 
-        $patientRole = Role::where('name', 'patient')->first();
-        if ($patientRole) {
-            $user->roles()->attach($patientRole->id);
-        }else{
-            \Log::error("Rola 'patient' nie została znaleziona podczas rejestracji użytkownika.". $user->email);
-        }
+        $patientRole = Role::where('name', 'patient')->firstOrFail();
+        $user->roles()->attach($patientRole->id);
 
-        return response()->json($user->load('roles'), 201);
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $user->roles,
+        ], 201);
     }
     //
 }

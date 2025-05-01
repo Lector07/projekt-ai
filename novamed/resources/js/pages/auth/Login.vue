@@ -9,10 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthBase from '@/layouts/AuthLayout.vue';
+import AuthLayout from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
-
-const canResetPassword = ref(true);
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -34,7 +32,6 @@ async function submit() {
         // Pobierz CSRF token
         await axios.get('/sanctum/csrf-cookie');
 
-        // Jawnie określ nagłówki dla JSON
         const response = await axios.post('/api/v1/login', form.value, {
             headers: {
                 'Accept': 'application/json',
@@ -43,7 +40,11 @@ async function submit() {
         });
 
         // Pobierz dane użytkownika
-        await authStore.initAuth();
+        try {
+            await authStore.initAuth();
+        } catch (authError) {
+            console.error('Błąd podczas inicjalizacji auth:', authError);
+        }
 
         const redirectPath = (router.currentRoute.value.query.redirect as string) || '/dashboard';
         router.push(redirectPath);
@@ -61,7 +62,7 @@ async function submit() {
 </script>
 
 <template>
-    <AuthBase title="Zaloguj się na swoje konto" description="Wpisz adres email i hasło aby sie zalogować">
+    <AuthLayout title="Zaloguj się na swoje konto" description="Wpisz adres email i hasło aby sie zalogować">
         <div v-if="errors.general" class="mb-4 text-center text-sm font-medium text-red-600">
             {{ errors.general[0] }}
         </div>
@@ -101,12 +102,14 @@ async function submit() {
 
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" class="checked:nova-accent" />
+                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
                         <span>Zapamiętaj hasło</span>
                     </Label>
+                    <router-link :to="{ name: 'forgot-password' }" :tabindex="4" class="text-sm text-nova-accent hover:text-nova-primary">Nie pamiętasz hasła?</router-link>
                 </div>
 
-                <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent" :tabindex="4" :disabled="isLoading">
+
+                <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent" :tabindex="5" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
                     {{ isLoading ? 'Logowanie...' : 'Zaloguj się' }}
                 </Button>
@@ -114,8 +117,8 @@ async function submit() {
 
             <div class="text-center text-sm text-muted-foreground">
                 Nie masz konta?
-                <router-link :to="{ name: 'register' }" :tabindex="5">Zarejestruj się</router-link>
+                <router-link :to="{ name: 'register' }" :tabindex="6" class="text-nova-accent hover:text-nova-primary underline underline-offset-4">Zarejestruj się</router-link>
             </div>
         </form>
-    </AuthBase>
+    </AuthLayout>
 </template>

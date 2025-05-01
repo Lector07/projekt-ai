@@ -11,6 +11,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [Auth\LoginController::class, 'store']);
     Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->middleware('auth:sanctum');
 
+    Route::post('/forgot-password', [Auth\PasswordResetController::class, 'sendResetLink']);
+    Route::post('/reset-password', [Auth\PasswordResetController::class, 'reset']);
+
+
     Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
     Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
     Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])->name('api.v1.appointments.check');

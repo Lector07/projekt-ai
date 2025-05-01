@@ -29,6 +29,10 @@ Route::post('/api/v1/reset-password', [NewPasswordController::class, 'store'])
     ->middleware('guest')
     ->name('api.v1.reset-password');
 
+Route::post('/api/v1/forgot-password', [Auth\ForgotPasswordLinkController::class, 'store'])
+    ->middleware('guest')
+    ->name('api.v1.forgot-password');
+
 
 
 Route::get('/{any?}', function () {
