@@ -17,16 +17,6 @@ export function updateTheme(value: Appearance) {
     }
 }
 
-const setCookie = (name: string, value: string, days = 365) => {
-    if (typeof document === 'undefined') {
-        return;
-    }
-
-    const maxAge = days * 24 * 60 * 60;
-
-    document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
-};
-
 const mediaQuery = () => {
     if (typeof window === 'undefined') {
         return null;
@@ -63,30 +53,26 @@ export function initializeTheme() {
 }
 
 export function useAppearance() {
-    const appearance = ref<Appearance>('system');
-
-    onMounted(() => {
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-
-        if (savedAppearance) {
-            appearance.value = savedAppearance;
-        }
-    });
+    const appearance = ref<Appearance>(getStoredAppearance() || 'system');
 
     function updateAppearance(value: Appearance) {
         appearance.value = value;
 
-        // Store in localStorage for client-side persistence...
+        // Zapisz w localStorage
         localStorage.setItem('appearance', value);
 
-        // Store in cookie for SSR...
-        setCookie('appearance', value);
-
+        // Aktualizuj wygląd
         updateTheme(value);
     }
 
-    return {
-        appearance,
-        updateAppearance,
-    };
+    onMounted(() => {
+        updateTheme(appearance.value);
+        mediaQuery()?.addEventListener('change', () => {
+            if (appearance.value === 'system') {
+                updateTheme('system');
+            }
+        });
+    });
+
+    return { appearance, updateAppearance };
 }
