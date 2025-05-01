@@ -49,7 +49,7 @@ function isActive(item: NavItem): boolean {
                     <RouterLink
                         v-if="item.to"
                         :to="item.to"
-                        class="flex items-center gap-2"
+                        class="flex items-center gap-2 text-nova-light hover:text-nova-dark"
                     >
                         <component v-if="item.icon" :is="item.icon" class="w-5 h-5" />
                         <span class="text-sm font-medium ">{{ item.title }}</span>

@@ -17,9 +17,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/vue3';
+import { useRouter } from 'vue-router'; // Zamiast usePage z Inertia
+
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
@@ -29,13 +30,21 @@ const props = withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
 
-const page = usePage();
-const auth = computed(() => page.props.auth);
+// Symulacja danych auth bez Inertia
+const auth = ref({
+    user: {
+        name: 'Użytkownik',
+        avatar: null
+    }
+});
 
-const isCurrentRoute = computed(() => (url: string) => page.url === url);
+const router = useRouter();
+const currentPath = computed(() => router.currentRoute.value.path);
+
+const isCurrentRoute = computed(() => (url: string) => url === currentPath.value);
 
 const activeItemStyles = computed(
-    () => (url: string) => (isCurrentRoute.value(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
+    () => (url: string) => (url && isCurrentRoute.value(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
 );
 
 const mainNavItems: NavItem[] = [
@@ -58,6 +67,15 @@ const rightNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+// Funkcja route() używana w szablonie - zastępujemy funkcjonalność Inertia
+function route(name: string): string {
+    // Prosta mapa nazwanych tras
+    const routes = {
+        'dashboard': '/dashboard'
+    };
+    return routes[name] || '/';
+}
 </script>
 
 <template>
@@ -79,22 +97,28 @@ const rightNavItems: NavItem[] = [
                             </SheetHeader>
                             <div class="flex h-full flex-1 flex-col justify-between space-y-4 py-6">
                                 <nav class="-mx-3 space-y-1">
-                                    <Link
+                                    <router-link
                                         v-for="item in mainNavItems"
                                         :key="item.title"
-                                        :href="item.href"
-                                        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
-                                        :class="activeItemStyles(item.href)"
+                                        :to="item.href || '/'"
+                                        custom
+                                        v-slot="{ navigate }"
                                     >
-                                        <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
-                                        {{ item.title }}
-                                    </Link>
+                                        <a
+                                            @click="navigate"
+                                            class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
+                                            :class="activeItemStyles(item.href)"
+                                        >
+                                            <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+                                            {{ item.title }}
+                                        </a>
+                                    </router-link>
                                 </nav>
                                 <div class="flex flex-col space-y-4">
                                     <a
                                         v-for="item in rightNavItems"
                                         :key="item.title"
-                                        :href="item.href"
+                                        :href="item.href || '#'"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="flex items-center space-x-2 text-sm font-medium"
@@ -108,25 +132,31 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <Link :href="route('dashboard')" class="flex items-center gap-x-2">
+                <router-link to="/dashboard" class="flex items-center gap-x-2">
                     <AppLogo />
-                </Link>
+                </router-link>
 
                 <!-- Desktop Menu -->
                 <div class="hidden h-full lg:flex lg:flex-1">
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">
-                            <NavigationMenuItem v-for="(item, index) in mainNavItems" :key="index" class="relative flex h-full items-center">
-                                <Link :href="item.href">
-                                    <NavigationMenuLink
-                                        :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
-                                    >
-                                        <component v-if="item.icon" :is="item.icon" class="mr-2 h-4 w-4" />
-                                        {{ item.title }}
-                                    </NavigationMenuLink>
-                                </Link>
+                            <NavigationMenuItem
+                                v-for="(item, index) in mainNavItems"
+                                :key="index"
+                                class="relative flex h-full items-center"
+                            >
+                                <router-link :to="item.href || '/'" custom v-slot="{ navigate }">
+                                    <a @click="navigate">
+                                        <NavigationMenuLink
+                                            :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
+                                        >
+                                            <component v-if="item.icon" :is="item.icon" class="mr-2 h-4 w-4" />
+                                            {{ item.title }}
+                                        </NavigationMenuLink>
+                                    </a>
+                                </router-link>
                                 <div
-                                    v-if="isCurrentRoute(item.href)"
+                                    v-if="item.href && isCurrentRoute(item.href)"
                                     class="absolute bottom-0 left-0 h-0.5 w-full translate-y-px bg-black dark:bg-white"
                                 ></div>
                             </NavigationMenuItem>
@@ -146,7 +176,7 @@ const rightNavItems: NavItem[] = [
                                     <Tooltip>
                                         <TooltipTrigger>
                                             <Button variant="ghost" size="icon" as-child class="group h-9 w-9 cursor-pointer">
-                                                <a :href="item.href" target="_blank" rel="noopener noreferrer">
+                                                <a :href="item.href || '#'" target="_blank" rel="noopener noreferrer">
                                                     <span class="sr-only">{{ item.title }}</span>
                                                     <component :is="item.icon" class="size-5 opacity-80 group-hover:opacity-100" />
                                                 </a>
@@ -186,7 +216,7 @@ const rightNavItems: NavItem[] = [
 
         <div v-if="props.breadcrumbs.length > 1" class="flex w-full border-b border-sidebar-border/70">
             <div class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
-                <Breadcrumbs :breadcrumbs="breadcrumbs" />
+                <Breadcrumbs :breadcrumbs="props.breadcrumbs" />
             </div>
         </div>
     </div>

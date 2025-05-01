@@ -88,7 +88,7 @@ async function sendVerificationEmail() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
-                <HeadingSmall title="Profile information" description="Update your name and email address" />
+                <HeadingSmall title="Informacje o profilu" description="Zmień swoje dane." />
 
                 <div v-if="profileErrors.general" class="text-sm text-red-600 dark:text-red-500">
                     {{ profileErrors.general[0] }}
@@ -110,7 +110,7 @@ async function sendVerificationEmail() {
                     <div v-if="user && user.email_verified_at === null">
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Twój adres email nie został zweryfikowany.
-                            <button type="button" @click="sendVerificationEmail" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <button type="button" @click="sendVerificationEmail" class="underline text-sm text-gray-500 hover:text-nova-accent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 Kliknij tutaj.
                             </button>
                         </p>
