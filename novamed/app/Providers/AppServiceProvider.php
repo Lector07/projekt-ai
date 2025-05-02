@@ -25,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
                 '/reset-password/' . $token .
                 '?email=' . urlencode($user->getEmailForPasswordReset());
         });
-        //
+
+        // Rejestracja polskiej instancji Fakera w kontenerze
+        $this->app->singleton(\Faker\Generator::class, function ($app) {
+            return \Faker\Factory::create(config('faker.locale', 'pl_PL'));
+        });
     }
 }

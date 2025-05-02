@@ -105,11 +105,11 @@ async function submit() {
                         <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
                         <span>Zapamiętaj hasło</span>
                     </Label>
-                    <router-link :to="{ name: 'forgot-password' }" :tabindex="4" class="text-sm text-nova-accent hover:text-nova-primary">Nie pamiętasz hasła?</router-link>
+                    <router-link :to="{ name: 'forgot-password' }" :tabindex="4" class="text-sm text-nova-accent hover:text-nova-primary dark:text-nova-accent hover:dark:text-nova-light">Nie pamiętasz hasła?</router-link>
                 </div>
 
 
-                <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent" :tabindex="5" :disabled="isLoading">
+                <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent dark:bg-nova-light hover:dark:bg-nova-accent" :tabindex="5" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
                     {{ isLoading ? 'Logowanie...' : 'Zaloguj się' }}
                 </Button>
@@ -117,7 +117,7 @@ async function submit() {
 
             <div class="text-center text-sm text-muted-foreground">
                 Nie masz konta?
-                <router-link :to="{ name: 'register' }" :tabindex="6" class="text-nova-accent hover:text-nova-primary underline underline-offset-4">Zarejestruj się</router-link>
+                <router-link :to="{ name: 'register' }" :tabindex="6" class="text-nova-accent hover:text-nova-primary dark:text-nova-light hover:dark:text-nova-accent underline underline-offset-4">Zarejestruj się</router-link>
             </div>
         </form>
     </AuthLayout>

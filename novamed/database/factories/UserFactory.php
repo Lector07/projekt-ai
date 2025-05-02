@@ -24,13 +24,12 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(), // Używaj fake() w nowszych Laravelach
+            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'), // Domyślne hasło 'password'
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'profile_picture_path' => null, // Domyślnie brak zdjęcia
-            // Usunięto 'phone', 'address', 'role_id' - brak w migracji/nieprawidłowe dla many-to-many
+            'profile_picture_path' => null,
         ];
     }
 

@@ -10,9 +10,9 @@ use App\Http\Controllers\Api\V1\Admin;
 Route::prefix('v1')->group(function () {
     Route::post('/login', [Auth\LoginController::class, 'store']);
     Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->middleware('auth:sanctum');
+    Route::post('/register', [Auth\RegisterController::class, 'register']);
 
-    Route::post('/forgot-password', [Auth\PasswordResetController::class, 'sendResetLink']);
-    Route::post('/reset-password', [Auth\PasswordResetController::class, 'reset']);
+    Route::post('/reset-password', [Auth\ForgotPasswordLinkController::class, 'reset']);
 
 
     Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);

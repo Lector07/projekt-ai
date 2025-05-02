@@ -21,23 +21,23 @@ class ForgotPasswordLinkController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
+        ], [
+            'email.exists' => 'Podany adres e-mail nie został odnaleziony w systemie.',
         ]);
 
-        // Konfiguracja linku frontend dla powiadomień resetowania hasła
         ResetPassword::createUrlUsing(function ($user, string $token) {
             return env('FRONTEND_URL', 'http://localhost:5173') .
                 '/reset-password/' . $token .
                 '?email=' . urlencode($user->getEmailForPasswordReset());
         });
 
-        // Wysyłanie linku resetującego hasło
         $status = Password::broker()->sendResetLink(
             $request->only('email')
         );
 
         return response()->json([
             'status' => $status === Password::RESET_LINK_SENT,
-            'message' => Lang::get($status)
+            'message' => $status === Password::RESET_LINK_SENT ? 'Link do resetowania hasła został wysłany na podany adres e-mail.' : Lang::get($status),
         ], $status === Password::RESET_LINK_SENT ? 200 : 422);
     }
 }
