@@ -121,7 +121,7 @@
   --chart-5: hsl(27 87% 67%);
   --radius: 0.5rem;
   --sidebar-background: var(--color-nova-dark);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar-foreground: var(--color-nova-light);
   --sidebar-primary: var(--color-nova-light);
   --sidebar-primary-foreground: hsl(0 0% 98%);
   --sidebar-accent: var(--color-nova-light);

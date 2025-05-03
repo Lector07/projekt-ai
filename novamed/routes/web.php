@@ -38,4 +38,3 @@ Route::post('/api/v1/forgot-password', [Auth\ForgotPasswordLinkController::class
 Route::get('/{any?}', function () {
     return view('app');
 })->where('any', '.*');
-

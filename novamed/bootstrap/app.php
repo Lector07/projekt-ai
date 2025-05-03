@@ -8,6 +8,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Models\Appointment;
+use App\Models\User;
+use App\Policies\AppointmentPolicy;
 // --- Koniec dodanych importów ---
 
 
@@ -47,6 +50,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })
+
+    ->withProviders([
+        // Dodaj niezbędne providery
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+    ])
+
+
     // --- DODAJ TĘ SEKCJĘ PRZED ->create() ---
     ->booted(function () {
         RateLimiter::for('api', function (Request $request) {
