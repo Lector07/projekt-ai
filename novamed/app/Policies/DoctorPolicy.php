@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Appointment;
+use App\Models\Doctor;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class AppointmentPolicy
+class DoctorPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,9 +19,9 @@ class AppointmentPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Appointment $appointment): bool
+    public function view(User $user, Doctor $doctor): bool
     {
-        return $user->id === $appointment->patient_id || $user->hasRole('admin');
+        return $user->hasRole('admin');
     }
 
     /**
@@ -29,13 +29,13 @@ class AppointmentPolicy
      */
     public function create(User $user): bool
     {
-        return true; // wszyscy zalogowani użytkownicy mogą tworzyć wizyty
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Appointment $appointment): bool
+    public function update(User $user, Doctor $doctor): bool
     {
         return $user->hasRole('admin');
     }
@@ -43,15 +43,15 @@ class AppointmentPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Appointment $appointment): bool
+    public function delete(User $user, Doctor $doctor): bool
     {
-        return $user->id === $appointment->patient_id || $user->hasRole('admin');
+        return $user->hasRole('admin');
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Appointment $appointment): bool
+    public function restore(User $user, Doctor $doctor): bool
     {
         return $user->hasRole('admin');
     }
@@ -59,7 +59,7 @@ class AppointmentPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Appointment $appointment): bool
+    public function forceDelete(User $user, Doctor $doctor): bool
     {
         return $user->hasRole('admin');
     }

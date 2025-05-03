@@ -4,15 +4,19 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-// --- Dodaj te importy na górze pliku ---
+// --- Importy ---
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\Appointment;
 use App\Models\User;
 use App\Policies\AppointmentPolicy;
-// --- Koniec dodanych importów ---
-
+use App\Policies\UserPolicy;
+use App\Models\Doctor;
+use App\Policies\DoctorPolicy;
+use App\Models\Procedure;
+use App\Policies\ProcedurePolicy;
+use Illuminate\Support\Facades\Gate;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,7 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-    // apiPrefix: 'api/v1', // Upewnij się, czy używasz tego czy prefixów w plikach tras
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
@@ -32,13 +35,13 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\HandleAppearance::class, // Rozważ usunięcie
+            \App\Http\Middleware\HandleAppearance::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
         $middleware->api(append: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api', // <<<--- To middleware używa limitera 'api'
+            'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
@@ -50,22 +53,21 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })
-
     ->withProviders([
-        // Dodaj niezbędne providery
         Illuminate\Filesystem\FilesystemServiceProvider::class,
     ])
-
-
-    // --- DODAJ TĘ SEKCJĘ PRZED ->create() ---
     ->booted(function () {
+        // Rejestracja limitów żądań
         RateLimiter::for('api', function (Request $request) {
-            // Pozwala na 60 żądań na minutę dla zalogowanego użytkownika
-            // lub 10 żądań na minutę dla gościa
-            return Limit::perMinute( $request->user() ? 60 : 10 )->by(
-                $request->user()?->id ?: $request->ip() // Identyfikuj po ID użytkownika lub IP
+            return Limit::perMinute($request->user() ? 60 : 10)->by(
+                $request->user()?->id ?: $request->ip()
             );
         });
+
+        // Rejestracja polityk
+        Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Doctor::class, DoctorPolicy::class);
+        Gate::policy(Procedure::class, ProcedurePolicy::class);
+        Gate::policy(Appointment::class, AppointmentPolicy::class);
     })
-    // --- Koniec dodanej sekcji ---
     ->create();
