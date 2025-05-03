@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\V1\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAppointmentRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class UpdateAppointmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +23,8 @@ class UpdateAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'status' => ['required', 'string', Rule::in(['booked', 'confirmed', 'completed', 'cancelled'])],
+            'admin_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

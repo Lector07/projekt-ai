@@ -11,7 +11,7 @@ class UpdateProcedureRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class UpdateProcedureRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|nullable|string|max:1000',
+            'base_price' => 'sometimes|required|numeric|min:0',
+            'procedure_category_id' => 'sometimes|required|exists:procedure_categories,id',
+            'recovery_timeline_info' => 'sometimes|nullable|string|max:1000',
         ];
     }
 }
