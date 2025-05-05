@@ -18,16 +18,18 @@ class AdminDashboardController extends Controller
     /**
      * Display dashboard statistics.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $this->authorize('viewDashboard', User::class);
 
-        // Statystyki użytkowników i lekarzy
-        $patientCount = User::whereHas('roles', fn($q) => $q->where('slug', 'patient'))->count();
-        $doctorCount = Doctor::count();
+        // Parametry filtrowania
+        $startDate = $request->input('start_date') ? Carbon::parse($request->start_date) : now()->startOfYear();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->end_date) : now();
 
-        // Statystyki wizyt
+        // Zastosuj filtry we wszystkich zapytaniach...
         $upcomingAppointments = Appointment::where('appointment_datetime', '>=', now())
+            ->where('appointment_datetime', '>=', $startDate)
+            ->where('appointment_datetime', '<=', $endDate)
             ->whereIn('status', ['booked', 'confirmed'])
             ->count();
 

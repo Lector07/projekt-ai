@@ -3,70 +3,119 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\Admin\UpdateAppointmentRequest;   // <<< Import
-use App\Http\Resources\Api\V1\AppointmentResource;            // <<< Import
+use App\Http\Resources\Api\V1\AppointmentResource;
 use App\Models\Appointment;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request; // <<< Potrzebny dla $request w index()
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Http\Response;
 
 class AdminAppointmentController extends Controller
 {
-    use AuthorizesRequests;
-
     /**
-     * Display a listing of the resource.
+     * Pobierz listę wszystkich wizyt z filtrowaniem
+     *
+     * @param Request $request
+     * @return ResourceCollection
      */
-    public function index(Request $request): AnonymousResourceCollection // Dodano Request dla filtrowania
+    public function index(Request $request): ResourceCollection
     {
-        $this->authorize('viewAny', Appointment::class);
+        $query = Appointment::query()
+            ->with(['patient', 'doctor', 'procedure']);
 
-        // Podstawowe zapytanie z relacjami
-        $query = Appointment::with(['patient:id,name', 'doctor:id,first_name,last_name', 'procedure:id,name']);
+        // Filtrowanie po ID lekarza
+        if ($request->has('doctor_id')) {
+            $query->where('doctor_id', $request->doctor_id);
+        }
 
-        // TODO: Dodać filtrowanie na podstawie $request->query(...)
-        // np. if ($request->query('status')) { $query->where('status', $request->query('status')); }
-        // np. if ($request->query('doctor_id')) { $query->where('doctor_id', $request->query('doctor_id')); }
-        // np. if ($request->query('date_from')) { $query->whereDate('appointment_datetime', '>=', $request->query('date_from')); }
+        // Filtrowanie po ID pacjenta
+        if ($request->has('patient_id')) {
+            $query->where('patient_id', $request->patient_id);
+        }
 
-        $appointments = $query->latest('appointment_datetime')->paginate(15);
+        // Filtrowanie po statusie
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Sortowanie - domyślnie po dacie wizyty (od najnowszych)
+        $query->orderBy('appointment_datetime', 'desc');
+
+        $appointments = $query->paginate();
 
         return AppointmentResource::collection($appointments);
     }
 
     /**
-     * Display the specified resource.
+     * Zapisz nową wizytę
+     *
+     * @param Request $request
+     * @return AppointmentResource
      */
-    public function show(Appointment $appointment): AppointmentResource
+    public function store(Request $request): AppointmentResource
     {
-        $this->authorize('view', $appointment);
-        // Ładuj wszystkie potrzebne relacje
-        $appointment->load(['patient', 'doctor', 'procedure']);
+        $validated = $request->validate([
+            'patient_id' => 'required|exists:users,id',
+            'doctor_id' => 'required|exists:doctors,id',
+            'procedure_id' => 'required|exists:procedures,id',
+            'appointment_datetime' => 'required|date|after:now',
+            'status' => 'required|in:booked,confirmed,completed,cancelled,no-show',
+            'patient_notes' => 'nullable|string|max:1000',
+            'doctor_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $appointment = Appointment::create($validated);
+
         return new AppointmentResource($appointment);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Pobierz szczegóły konkretnej wizyty
+     *
+     * @param Appointment $appointment
+     * @return AppointmentResource
      */
-    public function update(UpdateAppointmentRequest $request, Appointment $appointment): AppointmentResource
+    public function show(Appointment $appointment): AppointmentResource
     {
-        $this->authorize('update', $appointment);
-        $validated = $request->validated(); // Głównie status i admin_notes
-        $appointment->update($validated);
+        $appointment->load(['patient', 'doctor', 'procedure']);
 
-        // Zwróć świeży zasób z relacjami
-        return new AppointmentResource($appointment->fresh()->load(['patient', 'doctor', 'procedure']));
+        return new AppointmentResource($appointment);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Aktualizuj dane wizyty
+     *
+     * @param Request $request
+     * @param Appointment $appointment
+     * @return AppointmentResource
+     */
+    public function update(Request $request, Appointment $appointment): AppointmentResource
+    {
+        $validated = $request->validate([
+            'patient_id' => 'sometimes|exists:users,id',
+            'doctor_id' => 'sometimes|exists:doctors,id',
+            'procedure_id' => 'sometimes|exists:procedures,id',
+            'appointment_datetime' => 'sometimes|date',
+            'status' => 'sometimes|in:booked,confirmed,completed,cancelled,no-show',
+            'patient_notes' => 'nullable|string|max:1000',
+            'doctor_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $appointment->update($validated);
+        $appointment->refresh();
+
+        return new AppointmentResource($appointment);
+    }
+
+    /**
+     * Usuń wizytę
+     *
+     * @param Appointment $appointment
+     * @return Response
      */
     public function destroy(Appointment $appointment): Response
     {
-        $this->authorize('delete', $appointment);
         $appointment->delete();
+
         return response()->noContent();
     }
 }
