@@ -62,4 +62,9 @@ class UserPolicy
     {
         return $user->hasRole('admin');
     }
+
+    public function viewDashboard(User $user): bool
+    {
+        return $user->hasRole('admin');
+    }
 }

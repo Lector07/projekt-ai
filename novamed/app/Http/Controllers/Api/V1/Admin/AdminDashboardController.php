@@ -7,10 +7,13 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Procedure;
 use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
+    use AuthorizesRequests;
 
     /**
      * Display dashboard statistics.
@@ -32,19 +35,24 @@ class AdminDashboardController extends Controller
         $completedAppointments = Appointment::where('status', 'completed')->count();
         $cancelledAppointments = Appointment::where('status', 'cancelled')->count();
 
-        // Statystyki wizyt miesięczne
-        $appointmentsPerMonth = Appointment::selectRaw('MONTH(appointment_datetime) as month, COUNT(*) as count')
-            ->whereYear('appointment_datetime', now()->year)
-            ->groupBy('month')
+        // Statystyki wizyt miesięczne - używamy funkcji month() kompatybilnej z różnymi bazami
+        $appointmentsPerMonth = Appointment::selectRaw('EXTRACT(MONTH FROM appointment_datetime) as month, COUNT(*) as count')
+            ->whereRaw('EXTRACT(YEAR FROM appointment_datetime) = EXTRACT(YEAR FROM CURRENT_DATE)')
+            ->groupBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
+            ->orderBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
             ->get()
-            ->keyBy('month')
-            ->map(fn($item) => $item->count)
-            ->toArray();
+            ->pipe(function ($results) {
+                $counts = array_fill(1, 12, 0);
+                foreach ($results as $result) {
+                    $counts[(int)$result->month] = $result->count;
+                }
+                return $counts;
+            });
 
-        // Najpopularniejsze procedury
-        $popularProcedures = Appointment::selectRaw('procedure_id, COUNT(*) as count')
+        // Najpopularniejsze procedury - upewniamy się, że kolumna procedure_id istnieje
+        $popularProcedures = Appointment::select('procedure_id', DB::raw('COUNT(*) as count'))
             ->groupBy('procedure_id')
-            ->orderByDesc('count')
+            ->orderByDesc(DB::raw('COUNT(*)'))  // Zmiana na bezpośrednie odwołanie do funkcji
             ->take(5)
             ->with('procedure:id,name,price')
             ->get()
