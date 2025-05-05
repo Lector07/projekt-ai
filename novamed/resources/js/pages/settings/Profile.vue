@@ -1,28 +1,36 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useAuthStore } from '@/stores/auth';
+import {ref, computed, watch} from 'vue';
+import {useAuthStore} from '@/stores/auth';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
+import {useRouter} from 'vue-router';
 
 // Komponenty
 import DeleteUser from '@/components/DeleteUser.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Transition } from 'vue';
+import {type BreadcrumbItem} from '@/types';
+import {Transition} from 'vue';
 
 const authStore = useAuthStore();
 const user = computed(() => authStore.user);
 const router = useRouter();
 
+const isAdmin = computed(() => {
+    const userValue = user.value;
+    const result = userValue?.roles?.includes('admin') ||
+        userValue?.role === 'admin' ||
+        (typeof userValue?.hasRole === 'function' && userValue.hasRole('admin'));
+    return result;
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Ustawienia', href: '/settings' },
-    { title: 'Profil', href: '/settings/profile' },
+    {title: 'Ustawienia', href: '/settings'},
+    {title: 'Profil', href: '/settings/profile'},
 ];
 
 const form = ref({
@@ -41,7 +49,7 @@ watch(user, (newUser) => {
         form.value.name = newUser.name || '';
         form.value.email = newUser.email || '';
     }
-}, { immediate: true });
+}, {immediate: true});
 
 async function updateProfile() {
     profileProcessing.value = true;
@@ -54,7 +62,6 @@ async function updateProfile() {
             name: form.value.name,
             email: form.value.email,
         });
-        // Zmiana: zamiast nieistniejącej metody setUser używamy bezpośredniego przypisania
         authStore.user = response.data;
         profileRecentlySuccessful.value = true;
         profileSuccessTimeout = window.setTimeout(() => {
@@ -65,7 +72,7 @@ async function updateProfile() {
             profileErrors.value = error.response.data.errors;
         } else {
             console.error('Błąd podczas aktualizacji profilu:', error);
-            profileErrors.value = { general: ['Wystąpił błąd podczas aktualizacji profilu.'] };
+            profileErrors.value = {general: ['Wystąpił błąd podczas aktualizacji profilu.']};
         }
     } finally {
         profileProcessing.value = false;
@@ -88,7 +95,7 @@ async function sendVerificationEmail() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <SettingsLayout>
             <div class="flex flex-col space-y-6">
-                <HeadingSmall title="Informacje o profilu" description="Zmień swoje dane." />
+                <HeadingSmall title="Informacje o profilu" description="Zmień swoje dane."/>
 
                 <div v-if="profileErrors.general" class="text-sm text-red-600 dark:text-red-500">
                     {{ profileErrors.general[0] }}
@@ -96,34 +103,40 @@ async function sendVerificationEmail() {
 
                 <form @submit.prevent="updateProfile" class="space-y-6">
                     <div class="grid gap-2">
-                        <Label for="name">Imie</Label>
-                        <Input id="name" v-model="form.name" required autocomplete="name" placeholder="Podaj pełne imie" />
-                        <InputError :message="profileErrors.name ? profileErrors.name[0] : ''" />
+                        <Label for="name">Imię</Label>
+                        <Input id="name" v-model="form.name" required autocomplete="name"
+                               placeholder="Podaj pełne imie"/>
+                        <InputError :message="profileErrors.name ? profileErrors.name[0] : ''"/>
                     </div>
 
                     <div class="grid gap-2">
                         <Label for="email">Adres email</Label>
-                        <Input id="email" type="email" v-model="form.email" required autocomplete="username" placeholder="Podaj adres email" />
-                        <InputError :message="profileErrors.email ? profileErrors.email[0] : ''" />
+                        <Input id="email" type="email" v-model="form.email" required autocomplete="username"
+                               placeholder="Podaj adres email"/>
+                        <InputError :message="profileErrors.email ? profileErrors.email[0] : ''"/>
                     </div>
 
                     <div v-if="user && user.email_verified_at === null">
                         <p class="-mt-4 text-sm text-muted-foreground">
                             Twój adres email nie został zweryfikowany.
-                            <button type="button" @click="sendVerificationEmail" class="underline text-sm text-gray-500 hover:text-nova-accent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <button type="button" @click="sendVerificationEmail"
+                                    class="underline text-sm text-gray-500 hover:text-nova-accent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 Kliknij tutaj.
                             </button>
                         </p>
-                        <div v-if="verificationStatus === 'verification-link-sent'" class="mt-2 text-sm font-medium text-green-600">
+                        <div v-if="verificationStatus === 'verification-link-sent'"
+                             class="mt-2 text-sm font-medium text-green-600">
                             Nowy link weryfikacyjny został wysłany na Twój adres email.
                         </div>
-                        <div v-if="verificationStatus === 'Błąd wysyłania.'" class="mt-2 text-sm font-medium text-red-600">
+                        <div v-if="verificationStatus === 'Błąd wysyłania.'"
+                             class="mt-2 text-sm font-medium text-red-600">
                             {{ verificationStatus }}
                         </div>
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <Button :disabled="profileProcessing" class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent">
+                        <Button :disabled="profileProcessing"
+                                class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent">
                             {{ profileProcessing ? 'Zapisywanie...' : 'Zapisz' }}
                         </Button>
                         <Transition
@@ -137,10 +150,8 @@ async function sendVerificationEmail() {
                     </div>
                 </form>
             </div>
-
-            <hr class="my-6" />
-
-            <DeleteUser />
+            <hr class="my-6"/>
+            <DeleteUser v-if="!isAdmin"/>
         </SettingsLayout>
     </AppLayout>
 </template>

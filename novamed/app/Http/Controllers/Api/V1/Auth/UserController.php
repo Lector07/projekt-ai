@@ -15,6 +15,17 @@ class UserController extends Controller
      */
     public function show(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        $userData = $user->toArray();
+
+        if (method_exists($user, 'hasRole')) {
+            $userData['role'] = $user->hasRole('admin') ? 'admin' : 'user';
+        }
+
+        if (method_exists($user, 'roles')) {
+            $userData['roles'] = $user->roles()->pluck('name')->toArray();
+        }
+
+        return response()->json($userData);
     }
 }
