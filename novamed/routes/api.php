@@ -3,48 +3,53 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\Api\V1\Auth;
+// Importuj kontrolery V1 i Admin
 use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
+// Usunięto importy kontrolerów Auth, bo trasy są w web.php
 
-Route::prefix('v1')->group(function () {
-    // Trasy publiczne - autentykacja
-    Route::post('/login', [Auth\LoginController::class, 'store']);
-    Route::post('/logout', [Auth\LogoutController::class, 'destroy'])->middleware('auth:sanctum');
-    Route::post('/register', [Auth\RegisterController::class, 'register']);
-    Route::post('/reset-password', [Auth\ForgotPasswordLinkController::class, 'reset']);
-    Route::post('/forgot-password', [Auth\ForgotPasswordLinkController::class, 'store']);
+// Zakładamy globalny prefiks api/v1 z bootstrap/app.php LUB dodaj Route::prefix('v1') na zewnątrz
+// Route::prefix('v1')->group(function () { // Odkomentuj, jeśli nie ma globalnego prefiksu
 
-    // Zasoby publiczne
-    Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
-    Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
-    Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])
-        ->name('api.v1.appointments.check');
+// === Trasy Publiczne ===
+Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
+Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
+Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])
+    ->name('appointments.check'); // Uproszczona nazwa
 
-    // Trasy wymagające uwierzytelnienia
-    Route::middleware('auth:sanctum')->group(function () {
-        // Profil użytkownika
-        Route::get('/user', function (Request $request) {
-            return $request->user()->load('roles');
-        });
-        Route::put('/user/password', [Auth\PasswordController::class, 'update']);
-        Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('api.v1.user.profile.show');
-        Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('api.v1.user.profile.update');
-        Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('api.v1.user.profile.destroy');
+// === Trasy Wymagające Uwierzytelnienia ===
+Route::middleware('auth:sanctum')->group(function () {
 
-        // Trasy dla pacjenta
-        Route::prefix('patient')->group(function () {
-            Route::apiResource('appointments', V1\PatientAppointmentController::class);
-            Route::get('appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability']);
-        });
+    // Endpoint do pobrania danych zalogowanego użytkownika (bez ładowania ról tutaj)
+    Route::get('/user', function (Request $request) {
+        // UserResource sam zdecyduje co zwrócić (w tym pole 'role')
+        return new \App\Http\Resources\Api\V1\UserResource($request->user());
+    })->name('user.show');
 
-        // Trasy dla administratora
-        Route::prefix('admin')->middleware('auth.admin')->name('api.v1.admin.')->group(function () {
+    // Profil użytkownika
+    Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('user.profile.show');
+    Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('user.profile.update');
+    // Zmiana hasła (używamy metody w UserProfileController)
+    Route::put('/user/password', [V1\UserProfileController::class, 'updatePassword'])->name('user.password.update');
+    Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('user.profile.destroy');
+
+    // Wizyty pacjenta
+    Route::apiResource('/patient/appointments', V1\PatientAppointmentController::class)
+        ->except(['update']) // Pacjent nie aktualizuje przez PUT/PATCH
+        ->names('patient.appointments');
+
+    // === Trasy Tylko dla Administratora ===
+    Route::prefix('admin')
+        ->middleware('auth.admin')
+        ->name('admin.') // Prefiks nazw tras admin
+        ->group(function () {
             Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index'])->name('dashboard');
             Route::apiResource('/users', Admin\AdminUserController::class);
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
             Route::apiResource('/appointments', Admin\AdminAppointmentController::class);
         });
-    });
-});
+
+}); // Koniec grupy auth:sanctum
+
+// }); // Koniec grupy v1 (jeśli używasz Route::prefix('v1') tutaj)

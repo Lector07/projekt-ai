@@ -2,52 +2,42 @@
 
 namespace Database\Factories;
 
+use App\Models\Appointment;
 use App\Models\Doctor;
-use App\Models\Procedure; // <<< IMPORTUJ Procedure
+use App\Models\Procedure;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Appointment>
- */
 class AppointmentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Appointment::class;
+
     public function definition(): array
     {
-        // --- WAŻNE: Pobieranie istniejących rekordów ---
-        // Zakłada, że Seeder stworzył już użytkowników z rolą 'patient', lekarzy i procedury.
+        // Znajdź losowego użytkownika z rolą 'patient'
+        $patient = User::where('role', 'patient')->inRandomOrder()->first();
 
-        // Losowy pacjent (Użytkownik z odpowiednią rolą)
-        $patient = User::whereHas('roles', function ($query) {
-            $query->where('slug', 'patient'); // Zakładamy, że slug roli pacjenta to 'patient'
-        })->inRandomOrder()->first();
-
-        // Losowy lekarz
+        // Znajdź losowego lekarza
         $doctor = Doctor::inRandomOrder()->first();
 
-        // Losowa procedura
+        // Znajdź losową procedurę
         $procedure = Procedure::inRandomOrder()->first();
 
-        // --- SPRAWDZENIE ---
-        // Jeśli nie można znaleźć potrzebnych danych (np. seeder nie stworzył pacjentów),
-        // fabryka nie może stworzyć poprawnej wizyty.
-        if (!$patient || !$doctor || !$procedure) {
-            // Rzucenie wyjątku jest dobrym pomysłem, aby zatrzymać seedowanie i wskazać problem.
-            throw new \RuntimeException('Cannot create Appointment: Missing required Patient, Doctor, or Procedure data. Ensure dependent seeders run first and create data.');
-            // Alternatywnie: return []; // Zwróci pustą tablicę, co może spowodować błąd później
-        }
+        // Ustaw losową datę w zakresie od teraz do +30 dni
+        $appointmentDate = Carbon::now()->addDays(rand(1, 30))->format('Y-m-d');
+        // Losowa godzina między 8:00 a 16:00 z krokiem co 30 minut
+        $appointmentHour = rand(8, 16);
+        $appointmentMinute = rand(0, 1) * 30;
+        $appointmentTime = sprintf('%02d:%02d:00', $appointmentHour, $appointmentMinute);
+        $appointmentDateTime = $appointmentDate . ' ' . $appointmentTime;
 
         return [
-            'patient_id' => $patient->id, // Poprawna nazwa klucza i ID istniejącego pacjenta
-            'doctor_id' => $doctor->id,   // ID istniejącego lekarza
-            'procedure_id' => $procedure->id, // ID istniejącej procedury
-            'appointment_datetime' => fake()->dateTimeBetween('-6 months', '+6 months'), // Poprawna nazwa kolumny
-            'status' => fake()->randomElement(['booked', 'confirmed', 'completed', 'cancelled']),
+            'patient_id' => $patient->id,
+            'doctor_id' => $doctor->id,
+            'procedure_id' => $procedure->id,
+            'appointment_datetime' => $appointmentDateTime,
+            'status' => $this->faker->randomElement(['scheduled', 'completed', 'cancelled']),
             'patient_notes' => fake()->optional(0.3)->sentence(),
             'admin_notes' => fake()->optional(0.2)->sentence(),
         ];

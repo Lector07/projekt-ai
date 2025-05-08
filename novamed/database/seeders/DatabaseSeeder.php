@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Role;
-use Faker\Factory as Faker;
+// use App\Models\Role; // <<< USUŃ IMPORT ROLE
+// use Faker\Factory as Faker; // Nie jest tu potrzebny
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -15,41 +15,39 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
+        // $this->call(RoleSeeder::class); // <<< USUŃ WYWOŁANIE RoleSeeder
 
-        $adminRole = Role::where('slug', 'admin')->first();
-        $patientRole = Role::where('slug', 'patient')->first();
+        // Usunięto pobieranie $adminRole i $patientRole
 
-        $this->call(ProcedureCategorySeeder::class);
+        $this->call(ProcedureCategorySeeder::class); // Wywołaj inne potrzebne seedery
 
+        // Stwórz administratora z rolą 'admin'
         $adminUser = User::firstOrCreate(
             ['email' => 'admin@novamed.test'],
             [
                 'name' => 'Admin NovaMed',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'role' => 'admin', // <<< Ustaw rolę bezpośrednio
             ]
         );
+        // Usunięto syncWithoutDetaching
 
-        if ($adminRole) {
-            $adminUser->roles()->syncWithoutDetaching([$adminRole->id]);
-        }
+        // Stwórz pacjentów (fabryka domyślnie ustawi rolę 'patient')
+        User::factory(30)->create();
+        // Usunięto pętlę each i sprawdzanie $patientRole
 
-        if ($patientRole) {
-            User::factory(30)->create()->each(function ($user) use ($patientRole) {
-                $user->roles()->attach($patientRole->id);
-            });
-        } else {
-            User::factory(30)->create();
-            \Log::warning('Patient role not found during seeding.');
-        }
 
+        // Wywołaj seeder dla lekarzy (on ustawi rolę 'doctor' dla userów)
         $this->call(DoctorSeeder::class);
 
-        $this->call(ProcedureSeeder::class);
+        // Wywołaj pozostałe seedery
+        $this->call([
+            ProcedureSeeder::class,
+            AppointmentSeeder::class,
+        ]);
 
-        $this->call(AppointmentSeeder::class);
-
+        // ... komunikaty ...
         $this->command->info('Database seeded successfully!');
         $this->command->info('Admin Email: admin@novamed.test');
         $this->command->info('Admin/Patient Password: password');

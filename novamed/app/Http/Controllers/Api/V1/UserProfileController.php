@@ -3,81 +3,87 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\ProfileUpdateRequest; // <<< IMPORTUJ POPRAWNY REQUEST
-use Illuminate\Http\Request; // Może być potrzebny, jeśli robisz coś z $request poza walidacją
-use Illuminate\Http\JsonResponse; // <<< Dodaj import JsonResponse
+use App\Http\Requests\Api\V1\ProfileUpdateRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Http\Resources\Api\V1\UserResource; // Importuj UserResource
+
 class UserProfileController extends Controller
 {
+    // Dodaj use AuthorizesRequests, jeśli używasz $this->authorize()
+    use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
     /**
      * Display the specified resource.
      */
-    public function show(Request $request)
+    public function show(Request $request): UserResource // Zwracamy UserResource
     {
-        $user = $request->user();
-        if(!$user){
-            return response()->json(['message' => 'Nie znaleziono użytkownika'], 401);
-        }
-        $user->load('roles');
-        return response()->json($user);
+        // Middleware auth:sanctum zapewnia, że $request->user() istnieje
+        $this->authorize('view', $request->user()); // Opcjonalnie, jeśli masz UserPolicy@view
+        return new UserResource($request->user()); // Usunięto load('roles')
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(ProfileUpdateRequest $request) // <<< WSTRZYKNIJ FORM REQUEST
+    public function update(ProfileUpdateRequest $request): UserResource // Zwracamy UserResource
     {
-        // Walidacja już się odbyła automatycznie dzięki Form Request.
+        $user = $request->user();
+        // $this->authorize('update', $user); // Autoryzacja przez Policy (jeśli zdefiniowana)
 
-        $user = $request->user(); // Pobierz zalogowanego użytkownika
-
-        // Zaktualizuj użytkownika tylko zwalidowanymi danymi
-        // Metoda fill() jest bezpieczniejsza niż update(), jeśli chcesz mieć pewność,
-        // że tylko pola z $fillable w modelu User zostaną przypisane.
-        // update() też działa, jeśli $fillable jest poprawnie zdefiniowane.
         $user->fill($request->validated());
 
-        // Sprawdź, czy email został zmieniony PRZED zapisaniem
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null; // Zresetuj weryfikację emaila
+            $user->email_verified_at = null;
         }
 
-        // Zapisz zmiany w użytkowniku
         $user->save();
 
-        // Zwróć zaktualizowany obiekt użytkownika (z rolami)
-        // fresh() pobierze najnowsze dane z bazy, load('roles') dołączy role
-        return response()->json($user->fresh()->load('roles'), 200);
+        return new UserResource($user->fresh()); // Usunięto load('roles')
     }
 
+    /**
+     * Update the authenticated user's password.
+     */
+    public function updatePassword(Request $request): JsonResponse // Użyj dedykowanego UpdatePasswordRequest
+    {
+        // $this->authorize('update', $request->user()); // Autoryzacja
+
+        // TODO: Stworzyć UpdatePasswordRequest i wstrzyknąć go tutaj
+        $validated = $request->validateWithBag('updatePassword', [
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', Password::defaults(), 'confirmed'],
+        ]);
+
+        $request->user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json(['message' => 'Hasło zostało pomyślnie zaktualizowane.'], 200);
+    }
+
+
+    /**
+     * Delete the authenticated user's account.
+     */
     public function destroy(Request $request): JsonResponse
     {
-        // Walidacja hasła - upewnij się, że frontend wysyła 'password' w ciele żądania DELETE
+        // $this->authorize('delete', $request->user()); // Autoryzacja
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
 
         $user = $request->user();
 
-        if (!$user) {
-            return response()->json(['message' => 'Nie znaleziono użytkownika'], 404);
-        }
-
-        // Wyloguj przed usunięciem
         Auth::guard('web')->logout();
-
-        // Usuń użytkownika
         $user->delete();
-
-        // Unieważnij sesję i zregeneruj token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Zwróć odpowiedź 204 No Content
         return response()->json(null, 204);
     }
-
-    // Możesz dodać inne metody, np. do zmiany hasła, zdjęcia itp.
 }
