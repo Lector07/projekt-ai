@@ -24,32 +24,16 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Pobierz ID użytkownika bezpośrednio z segmentu trasy
-        // Laravel automatycznie dopasuje {user} z definicji trasy apiResource
-        $userId = $this->route('user'); // Zwraca obiekt User lub ID w zależności od konfiguracji
-
-        // Upewnijmy się, że mamy ID
-        $userIdToIgnore = ($userId instanceof User) ? $userId->id : $userId;
+        $userIdToIgnore = $this->route('user')?->id;
 
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'lowercase',
-                'email',
-                'max:255',
-                // Użyj uzyskanego ID w metodzie ignore
+                'sometimes', 'required', 'string', 'lowercase', 'email', 'max:255',
                 Rule::unique('users')->ignore($userIdToIgnore),
             ],
-            'password' => [
-                'nullable',
-                'confirmed',
-                Password::defaults(),
-            ],
-            'roles' => ['sometimes', 'required', 'array'],
-            'roles.*' => ['integer', 'exists:roles,id'],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
+            'role' => ['sometimes', 'required', 'string', Rule::in(['admin', 'patient', 'doctor'])], // <<< Zmieniono walidację roli
         ];
     }
 }

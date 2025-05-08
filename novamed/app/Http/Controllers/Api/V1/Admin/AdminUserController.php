@@ -22,7 +22,7 @@ class AdminUserController extends Controller
     public function index()
     {
         $this->authorize('viewAny', User::class);
-        $users = User::with('roles')->paginate(10);
+        $users = User::paginate(10); // Usunięto with('roles')
         return UserResource::collection($users);
     }
 
@@ -34,12 +34,10 @@ class AdminUserController extends Controller
         $this->authorize('create', User::class);
         $validated = $request->validated();
 
-        $userData = collect($validated)->except(['roles', 'password'])->toArray();
+        $userData = collect($validated)->except('password')->toArray();
         $userData['password'] = Hash::make($validated['password']);
 
         $user = User::create($userData);
-        $user->roles()->sync($validated['roles'] ?? []);
-        $user->load('roles');
 
         return (new UserResource($user))
             ->response()
@@ -52,7 +50,7 @@ class AdminUserController extends Controller
     public function show(User $user)
     {
         $this->authorize('view', $user);
-        $user->load('roles');
+        // Usunięto $user->load('roles');
         return new UserResource($user);
     }
 
@@ -64,18 +62,14 @@ class AdminUserController extends Controller
         $this->authorize('update', $user);
         $validated = $request->validated();
 
-        $userData = collect($validated)->except(['roles', 'password'])->toArray();
+        $userData = collect($validated)->except('password')->toArray();
         $user->update($userData);
 
         if (!empty($validated['password'])) {
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        if (isset($validated['roles'])) {
-            $user->roles()->sync($validated['roles']);
-        }
-
-        return new UserResource($user->fresh()->load('roles'));
+        return new UserResource($user->fresh());
     }
 
     /**

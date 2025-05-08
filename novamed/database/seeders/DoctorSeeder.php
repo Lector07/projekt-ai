@@ -2,19 +2,23 @@
 
 namespace Database\Seeders;
 
-use Faker\Factory as Faker;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;
+// Usunięto import Role
 use App\Models\Doctor;
 
 class DoctorSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        User::factory(8)->create(['role' => 'doctor'])
+        ->each(function ($user) {
+            Doctor::factory()->create([
+                'user_id' => $user->id,
+            ]);
+        });
 
-        Doctor::factory(10)->create();
+        $this->command->info('Stworzono 8 lekarzy powiązanych z użytkownikami (rola: doctor).');
     }
 }

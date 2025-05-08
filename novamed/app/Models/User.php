@@ -6,17 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne; // Import HasOne dla Doctor
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     * Dodano 'role'.
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role', // <<< DODANO
         'profile_picture_path',
     ];
 
@@ -30,18 +35,40 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class);
-    }
-
+    /**
+     * Relacja do wizyt, gdzie użytkownik jest pacjentem.
+     */
     public function appointmentsAsPatient(): HasMany
     {
         return $this->hasMany(Appointment::class, 'patient_id');
     }
 
+    /**
+     * Relacja do profilu lekarza (jeśli user_id jest w doctors).
+     */
+    public function doctor(): HasOne
+    {
+        return $this->hasOne(Doctor::class);
+    }
+
+    // --- Metody Pomocnicze do Sprawdzania Ról ---
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->role === 'patient';
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->role === 'doctor';
+    }
+
     public function hasRole(string $roleSlug): bool
     {
-        return $this->roles()->where('slug', $roleSlug)->exists();
+        return $this->role === $roleSlug;
     }
 }

@@ -1,42 +1,37 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios'; // Importuj Axios
+import axios from 'axios';
 
-// Komponenty UI i Layouty (zakładamy, że są oczyszczone lub niezależne)
 import AppLayout from '@/layouts/AppLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue'; // Upewnij się, że ten layout jest OK
+import SettingsLayout from '@/layouts/settings/Layout.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
-import { Transition } from 'vue'; // Importuj Transition
+import { Transition } from 'vue';
 
 const breadcrumbItems: BreadcrumbItem[] = [
-    // Breadcrumbs mogą wymagać dostosowania, jeśli używały nazw tras Ziggy
     {
         title: 'Ustawienia',
-         href: '/settings' // lub routeName: 'settings.index'
+         href: '/settings'
     },
     {
         title: 'Hasło',
-         href: '/settings/password' // lub routeName: 'settings.password'
+         href: '/settings/password'
     },
 ];
 
-// Referencje do inputów dla focusa
 const passwordInput = ref<HTMLInputElement | null>(null);
 const currentPasswordInput = ref<HTMLInputElement | null>(null);
 
-// Stan formularza używając ref
 const form = ref({
     current_password: '',
     password: '',
     password_confirmation: '',
 });
 
-// Stan ładowania, błędów i sukcesu
 const isLoading = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const recentlySuccessful = ref(false);

@@ -8,18 +8,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsAdmin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user() && $request->user()->hasRole('admin')) {
+        if ($request->user() && $request->user()->isAdmin()) {
             return $next($request);
         }
 
         return response()->json(['message' => 'Forbidden. Administrator access required.'], 403);
-
     }
 }

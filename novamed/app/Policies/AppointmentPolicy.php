@@ -8,59 +8,41 @@ use Illuminate\Auth\Access\Response;
 
 class AppointmentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('admin');
+        return true; // Kontroler filtruje
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Appointment $appointment): bool
     {
-        return $user->id === $appointment->patient_id || $user->hasRole('admin');
+        // Użyj isAdmin() lub hasRole()
+        return $user->id === $appointment->patient_id || $user->isAdmin();
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return true; // wszyscy zalogowani użytkownicy mogą tworzyć wizyty
+        // Użyj isPatient() lub hasRole()
+        return $user->isPatient();
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Appointment $appointment): bool
     {
-        return $user->hasRole('admin');
+        // Użyj isAdmin() lub hasRole()
+        return $user->isAdmin();
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Appointment $appointment): bool
     {
-        return $user->id === $appointment->patient_id || $user->hasRole('admin');
+        if ($appointment->appointment_datetime->isPast() && !$user->isAdmin()) { return false; }
+        return $user->id === $appointment->patient_id || $user->isAdmin();
     }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Appointment $appointment): bool
     {
-        return $user->hasRole('admin');
+        return $user->isAdmin();
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Appointment $appointment): bool
     {
-        return $user->hasRole('admin');
+        return $user->isAdmin();
     }
 }
