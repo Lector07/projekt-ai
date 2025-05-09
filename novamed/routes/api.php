@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return new \App\Http\Resources\Api\V1\UserResource($request->user());
     })->name('user.show');
 
+
     Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('user.profile.show');
     Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('user.profile.update');
     Route::put('/user/password', [V1\UserProfileController::class, 'updatePassword'])->name('user.password.update');

@@ -140,7 +140,7 @@ async function submit() {
 
             <div class="text-center text-sm text-muted-foreground">
                 Masz już konto?
-                <router-link :to="{ name: 'login' }" class="underline underline-offset-4" :tabindex="6">Zaloguj się</router-link>
+                <router-link :to="{ name: 'login' }" class="underline underline-offset-4 text-nova-accent hover:text-nova-primary" :tabindex="6">Zaloguj się</router-link>
             </div>
         </form>
     </AuthBase>

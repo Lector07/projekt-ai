@@ -32,7 +32,6 @@ class StoreAppointmentRequest extends FormRequest
                 'date',
                 'after_or_equal:today',
                 function ($attribute, $value, $fail) {
-                    // Sprawdzanie dostępności terminu
                     $exists = Appointment::where('doctor_id', $this->doctor_id)
                         ->where('appointment_datetime', $value)
                         ->exists();

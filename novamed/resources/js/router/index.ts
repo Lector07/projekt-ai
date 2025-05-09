@@ -9,12 +9,46 @@ import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
 import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
 import { storeToRefs } from 'pinia';
 
+
 const routes: Array<RouteRecordRaw> = [
     { path: '/', name: 'home', component: HomePage, meta: { title: 'Strona Główna' } },
     { path: '/login', name: 'login', component: LoginPage, meta: { title: 'Logowanie', requiresGuest: true } },
     { path: '/register', name: 'register', component: RegisterPage, meta: { title: 'Rejestracja', requiresGuest: true } },
-    { path: '/dashboard', name: 'dashboard', component: DashboardPage, meta: { title: 'Panel Pacjenta', requiresAuth: true } },
+    {
+        path: '/dashboard',
+        name: 'dashboard',
+        component: DashboardPage,
+        meta: {
+            requiresAuth: true,
+            dynamicTitle: true // flaga wskazująca na dynamiczny tytuł
+        },
+        beforeEnter: (to, from, next) => {
+            const authStore = useAuthStore();
 
+            // Poprawione sprawdzanie roli użytkownika z obsługą przypadku gdy user jest null
+            if (authStore.user) {
+                // Sprawdzamy dostępność pola role/roles bezpiecznie używając operatora opcjonalnego chaining
+                const userRole =
+                    // Używamy typowanych asercji aby uniknąć błędów TypeScript
+                    (authStore.user as any).role ||
+                    ((authStore.user as any).roles && (authStore.user as any).roles[0]) ||
+                    'patient'; // Domyślna rola
+
+                if (userRole === 'admin') {
+                    to.meta.title = 'Panel Administratora';
+                } else if (userRole === 'doctor') {
+                    to.meta.title = 'Panel Lekarza';
+                } else {
+                    to.meta.title = 'Panel Pacjenta';
+                }
+            } else {
+                // Domyślny tytuł jeśli user jest null
+                to.meta.title = 'Panel';
+            }
+
+            next();
+        }
+    },
     // Przekierowanie głównego widoku ustawień do profilu
     {
         path: '/settings',

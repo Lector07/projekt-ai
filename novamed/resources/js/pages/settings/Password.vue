@@ -50,7 +50,7 @@ async function updatePassword() {
 
         // 2. Wyślij żądanie PUT do endpointu API zmiany hasła
         // Musisz stworzyć ten endpoint w Laravelu, np. w UserProfileController
-        await axios.put('/api/v1/user/password', form.value); // Endpoint API
+        await axios.put('/api/user/password', form.value); // Endpoint API
 
         // 3. Sukces
         recentlySuccessful.value = true;
