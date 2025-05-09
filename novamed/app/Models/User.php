@@ -21,7 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // <<< DODANO
+        'role',
         'profile_picture_path',
     ];
 

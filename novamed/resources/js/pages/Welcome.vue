@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import {computed} from 'vue';
-// Importuj store autoryzacji (załóżmy, że jest w 'src/stores/auth.ts')
 import {useAuthStore} from '@/stores/auth';
 
 const authStore = useAuthStore();
 
-// Użyj computed property do odczytu stanu zalogowania
 const isLoggedIn = computed(() => authStore.isLoggedIn);
-// Możesz też potrzebować danych użytkownika, jeśli chcesz wyświetlić np. jego nazwę
 const user = computed(() => authStore.user);
 
 </script>

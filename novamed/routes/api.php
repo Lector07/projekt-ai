@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('user.profile.update');
     Route::put('/user/password', [V1\UserProfileController::class, 'updatePassword'])->name('user.password.update');
     Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('user.profile.destroy');
+    Route::post('/user/profile/avatar', [V1\UserProfileController::class, 'updateAvatar'])->name('user.profile.avatar.update');
+
 
     Route::apiResource('/patient/appointments', V1\PatientAppointmentController::class)
         ->except(['update'])
@@ -37,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
             Route::apiResource('/appointments', Admin\AdminAppointmentController::class);
+            Route::post('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'updateAvatar'])->name('doctors.avatar.update');
+
         });
 
     Route::prefix('doctor')
@@ -49,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/appointments', [V1\Doctor\DoctorAppointmentController::class, 'index'])->name('appointments.index');
             Route::get('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'show'])->name('appointments.show');
             Route::put('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'update'])->name('appointments.update');
+            Route::post('/profile/avatar', [V1\Doctor\DoctorProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
         });
 
 });

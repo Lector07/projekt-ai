@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class DoctorResource extends JsonResource
 {
@@ -17,7 +18,7 @@ class DoctorResource extends JsonResource
             'specialization' => $this->specialization,
             'bio' => $this->bio,
             'price_modifier' => $this->price_modifier,
-            'avatar_url' => $this->profile_picture_path ? url('storage/' . $this->profile_picture_path) : null, // Zmieniono nazwę klucza
+            'avatar_url' => $this->profile_picture_path ? Storage::disk('public')->url($this->profile_picture_path) : null,
         ];
     }
 }

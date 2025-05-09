@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use App\Http\Resources\Api\V1\UserResource;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Api\V1\UpdateUserAvatarRequest;
+
+
+
 
 class UserProfileController extends Controller
 {
@@ -79,5 +84,23 @@ class UserProfileController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json(null, 204);
+    }
+
+    public function updateAvatar(UpdateUserAvatarRequest $request): UserResource
+    {
+        $user = $request->user();
+        $this->authorize('update', $user); // Zakładając, że UserPolicy ma metodę update
+
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            if ($user->profile_picture_path) {
+                Storage::disk('public')->delete($user->profile_picture_path);
+            }
+
+            $path = $request->file('avatar')->store('avatars/users', 'public');
+            $user->profile_picture_path = $path;
+            $user->save();
+        }
+
+        return new UserResource($user->fresh());
     }
 }

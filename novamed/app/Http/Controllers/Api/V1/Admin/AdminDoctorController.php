@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\Admin\StoreDoctorRequest;   // <<< Import
-use App\Http\Requests\Api\V1\Admin\UpdateDoctorRequest;   // <<< Import
-use App\Http\Resources\Api\V1\DoctorResource;            // <<< Import
+use App\Http\Requests\Api\V1\Admin\StoreDoctorRequest;
+use App\Http\Requests\Api\V1\Admin\UpdateDoctorRequest;
+use App\Http\Resources\Api\V1\DoctorResource;
 use App\Models\Doctor;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Api\V1\Admin\UpdateDoctorAvatarRequest;
 
 class AdminDoctorController extends Controller
 {
@@ -74,5 +76,22 @@ class AdminDoctorController extends Controller
         // TODO: Logika usuwania zdjęcia z dysku, jeśli istnieje ($doctor->profile_picture_path)
         $doctor->delete();
         return response()->noContent();
+    }
+
+    public function updateAvatar(UpdateDoctorAvatarRequest $request, Doctor $doctor): DoctorResource
+    {
+        $this->authorize('update', $doctor);
+
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            if ($doctor->profile_picture_path) {
+                Storage::disk('public')->delete($doctor->profile_picture_path);
+            }
+
+            $path = $request->file('avatar')->store('avatars/doctors', 'public');
+            $doctor->profile_picture_path = $path;
+            $doctor->save();
+        }
+
+        return new DoctorResource($doctor->fresh());
     }
 }
