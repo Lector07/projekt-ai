@@ -1,19 +1,21 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import HomePage from '../pages/Welcome.vue';
+import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
+import {useAuthStore} from '@/stores/auth';
+import HomePage from '../pages/Public/Welcome.vue';
 import LoginPage from '../pages/auth/Login.vue';
 import RegisterPage from '../pages/auth/Register.vue';
 import DashboardPage from '../pages/Dashboard.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
 import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
-import { storeToRefs } from 'pinia';
+import ProceduresPage from '../pages/Public/ProceduresPage.vue';
+import {storeToRefs} from 'pinia';
+import DoctorsPage from "@/pages/Public/DoctorsPage.vue";
 
 
 const routes: Array<RouteRecordRaw> = [
-    { path: '/', name: 'home', component: HomePage, meta: { title: 'Strona Główna' } },
-    { path: '/login', name: 'login', component: LoginPage, meta: { title: 'Logowanie', requiresGuest: true } },
-    { path: '/register', name: 'register', component: RegisterPage, meta: { title: 'Rejestracja', requiresGuest: true } },
+    {path: '/', name: 'home', component: HomePage, meta: {title: 'Strona Główna'}},
+    {path: '/login', name: 'login', component: LoginPage, meta: {title: 'Logowanie', requiresGuest: true}},
+    {path: '/register', name: 'register', component: RegisterPage, meta: {title: 'Rejestracja', requiresGuest: true}},
     {
         path: '/dashboard',
         name: 'dashboard',
@@ -53,8 +55,8 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/settings',
         name: 'settings',
-        redirect: { name: 'settings.profile' },
-        meta: { title: 'Ustawienia', requiresAuth: true }
+        redirect: {name: 'settings.profile'},
+        meta: {title: 'Ustawienia', requiresAuth: true}
     },
 
     // Definiujemy każdą podstronę jako osobną trasę (nie zagnieżdżoną)
@@ -62,19 +64,19 @@ const routes: Array<RouteRecordRaw> = [
         path: '/settings/profile',
         name: 'settings.profile',
         component: ProfileSettingsPage,
-        meta: { title: 'Ustawienia Profilu', requiresAuth: true }
+        meta: {title: 'Ustawienia Profilu', requiresAuth: true}
     },
     {
         path: '/settings/password',
         name: 'settings.password',
         component: () => import('@/pages/settings/Password.vue'),
-        meta: { title: 'Zmiana Hasła', requiresAuth: true }
+        meta: {title: 'Zmiana Hasła', requiresAuth: true}
     },
     {
         path: '/settings/appearance',
         name: 'settings.appearance',
         component: () => import('@/pages/settings/Appearance.vue'),
-        meta: { title: 'Wygląd Aplikacji', requiresAuth: true }
+        meta: {title: 'Wygląd Aplikacji', requiresAuth: true}
     },
 
     // Zachowujemy starą ścieżkę dla kompatybilności
@@ -82,7 +84,7 @@ const routes: Array<RouteRecordRaw> = [
         path: '/profile/settings',
         name: 'profile.settings',
         component: ProfileSettingsPage,
-        meta: { title: 'Ustawienia Profilu', requiresAuth: true }
+        meta: {title: 'Ustawienia Profilu', requiresAuth: true}
     },
 
     {
@@ -90,14 +92,27 @@ const routes: Array<RouteRecordRaw> = [
         name: 'password.reset',
         component: ResetPasswordPage,
         props: true,
-        meta: { title: 'Reset Hasła', requiresGuest: true }
+        meta: {title: 'Reset Hasła', requiresGuest: true}
     },
     {
         path: '/forgot-password',      // Ścieżka URL
         name: 'forgot-password',     // <<< Nazwa, której szuka router-link
         component: ForgotPasswordPage, // Komponent do wyświetlenia
-        meta: { title: 'Zapomniałem Hasła', requiresGuest: true } // Meta dane
+        meta: {title: 'Zapomniałem Hasła', requiresGuest: true} // Meta dane
     },
+    {
+        path: '/procedures',
+        name: 'procedures',
+        component: ProceduresPage,
+        meta: {title: 'Zabiegi', requiresAuth: true}
+    },
+    {
+        path: '/doctors',
+        name: 'doctors',
+        component: DoctorsPage,
+        meta: {title: 'Lekarze', requiresAuth: true}
+    },
+
 ];
 
 const router = createRouter({
@@ -112,7 +127,7 @@ router.beforeEach(async (to, from, next) => {
     console.log(`Guard: przed nawigacją do ${String(to.name)}`);
 
     const authStore = useAuthStore();
-    const { isLoggedIn } = storeToRefs(authStore);
+    const {isLoggedIn} = storeToRefs(authStore);
 
     if (!authInitialized) {
         console.log('Inicjalizacja autoryzacji...');
@@ -132,10 +147,10 @@ router.beforeEach(async (to, from, next) => {
 
     if (requiresAuth && !isLoggedIn.value) {
         console.log(`Przekierowanie do logowania z ${to.path}`);
-        next({ name: 'login' });
+        next({name: 'login'});
     } else if (requiresGuest && isLoggedIn.value) {
         console.log('Przekierowanie do panelu z logowania/rejestracji');
-        next({ name: 'dashboard' });
+        next({name: 'dashboard'});
     } else {
         console.log(`Przechodzę do ${String(to.name)}`);
         next();

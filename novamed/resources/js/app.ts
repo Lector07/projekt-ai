@@ -1,6 +1,7 @@
 import './bootstrap';
 import '../css/app.css';
 import { createApp } from 'vue';
+import PrimeVue from 'primevue/config';
 import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';

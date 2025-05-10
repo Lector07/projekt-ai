@@ -12,9 +12,9 @@ import {
     SidebarMenuItem
 } from '@/components/ui/sidebar';
 import {type NavItem} from '@/types';
-import {BookOpen, Folder, LayoutGrid} from 'lucide-vue-next';
+import {BookOpen, Folder, LayoutGrid, Slice, Contact} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
-import "tailwindcss";
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -22,6 +22,17 @@ const mainNavItems: NavItem[] = [
         to: {name: 'dashboard'}, // Zmienione z href na to z nazwą trasy
         icon: LayoutGrid,
     },
+    {
+        title: 'Zabiegi',
+        to: {name: 'procedures'},
+        icon: Slice,
+    },
+    {
+        title: 'Lekarze',
+        to: {name: 'doctors'},
+        icon: Contact,
+    },
+
 ];
 
 const footerNavItems: NavItem[] = [
