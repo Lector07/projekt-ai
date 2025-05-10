@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Route;
 
 // Importuj kontrolery V1 i Admin
 
+// WAŻNE: Najpierw definiujemy bardziej specyficzne trasy
+Route::get('/procedures/categories', [V1\ProcedureController::class, 'categories']);
+// Potem definiujemy ogólne trasy resource
 Route::apiResource('/procedures', V1\ProcedureController::class)->only(['index', 'show']);
+
 Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show']);
 Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])
     ->name('appointments.check');
@@ -26,7 +30,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('user.profile.destroy');
     Route::post('/user/profile/avatar', [V1\UserProfileController::class, 'updateAvatar'])->name('user.profile.avatar.update');
 
-
     Route::apiResource('/patient/appointments', V1\PatientAppointmentController::class)
         ->except(['update'])
         ->names('patient.appointments');
@@ -41,7 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
             Route::apiResource('/appointments', Admin\AdminAppointmentController::class);
             Route::post('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'updateAvatar'])->name('doctors.avatar.update');
-
         });
 
     Route::prefix('doctor')
@@ -50,12 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->group(function () {
             Route::get('/profile', [V1\Doctor\DoctorProfileController::class, 'show'])->name('profile.show');
             Route::put('/profile', [V1\Doctor\DoctorProfileController::class, 'update'])->name('profile.update');
-
             Route::get('/appointments', [V1\Doctor\DoctorAppointmentController::class, 'index'])->name('appointments.index');
             Route::get('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'show'])->name('appointments.show');
             Route::put('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'update'])->name('appointments.update');
             Route::post('/profile/avatar', [V1\Doctor\DoctorProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
         });
-
 });
-

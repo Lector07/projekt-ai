@@ -10,6 +10,8 @@ import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
 import ProceduresPage from '../pages/Public/ProceduresPage.vue';
 import {storeToRefs} from 'pinia';
 import DoctorsPage from "@/pages/Public/DoctorsPage.vue";
+import ProcedureDetailPage from "@/pages/Public/ProcedureDetailPage.vue";
+import DoctorDetailPage from "@/pages/Public/DoctorDetailPage.vue";
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -111,6 +113,18 @@ const routes: Array<RouteRecordRaw> = [
         name: 'doctors',
         component: DoctorsPage,
         meta: {title: 'Lekarze', requiresAuth: true}
+    },
+    {
+        path: '/procedures/:id',
+        name: 'procedure.detail',
+        component: ProcedureDetailPage,
+        meta: {title: 'Szczegóły zabiegu', requiresAuth: true}
+    },
+    {
+        path: '/doctors/:id',
+        name: 'doctor.detail',
+        component: DoctorDetailPage,
+        meta: {title: 'Szegóły lekarza', requiresAuth: true}
     },
 
 ];

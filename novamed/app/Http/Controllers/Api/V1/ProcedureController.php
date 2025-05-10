@@ -5,51 +5,50 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Procedure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Models\ProcedureCategory;
 
 class ProcedureController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of procedures.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $procedures = Procedure::paginate(10);
+        $query = Procedure::with('category');
+
+        // Filtrowanie po ID kategorii
+        if ($request->has('procedure_category_id') && $request->procedure_category_id !== null) {
+            $query->where('procedure_category_id', $request->procedure_category_id);
+        }
+
+        $procedures = $query->paginate($request->per_page ?? 10);
         return response()->json($procedures);
-
-        //
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Display the specified procedure.
      */
-    public function store(Request $request)
+    public function show(string $id)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Procedure $procedure)
-    {
-        $procedure->load('category');
+        $procedure = Procedure::with('category')->findOrFail($id);
         return response()->json($procedure);
-        //
     }
 
     /**
-     * Update the specified resource in storage.
+     * Get distinct procedure categories.
      */
-    public function update(Request $request, Procedure $procedure)
+    public function categories()
     {
-        //
-    }
+        try {
+            $categories = ProcedureCategory::select('id', 'name', 'slug')
+                ->orderBy('name')
+                ->get();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Procedure $procedure)
-    {
-        //
+            return response()->json($categories);
+        } catch (\Exception $e) {
+            Log::error('Błąd podczas pobierania kategorii: ' . $e->getMessage());
+            return response()->json(['error' => 'Wystąpił błąd podczas pobierania kategorii'], 500);
+        }
     }
 }

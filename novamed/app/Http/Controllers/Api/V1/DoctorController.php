@@ -13,7 +13,7 @@ class DoctorController extends Controller
      */
     public function index()
     {
-        $doctors = Doctor::paginate(10);
+        $doctors = Doctor::paginate(4);
         return response()->json($doctors);
         //
     }

@@ -20,5 +20,7 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
+app.use(PrimeVue);
+
 
 app.mount('#app');

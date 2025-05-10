@@ -7,33 +7,38 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import {
-    Pagination,
-    PaginationEllipsis,
-    PaginationFirst,
-    PaginationLast,
-    PaginationList,
-    PaginationListItem,
-    PaginationNext,
-    PaginationPrev,
-} from '@/components/ui/pagination';
+import { Pagination, PaginationEllipsis, PaginationFirst, PaginationPrevious, PaginationLast, PaginationNext } from '@/components/ui/pagination';
+import { PaginationList, PaginationListItem} from 'reka-ui';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Procedure {
     id: number;
     name: string;
     description: string;
-    category?: string;
+    procedure_category_id?: number;
+    category?: {
+        id: number;
+        name: string;
+        slug: string;
+    };
     base_price: number;
+}
+
+interface ProcedureCategory {
+    id: number;
+    name: string;
+    slug: string;
 }
 
 const procedures = ref<Procedure[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const categories = ref<string[]>([]);
-const selectedCategory = ref<string | null>(null);
+const categories = ref<ProcedureCategory[]>([]);
+const selectedCategory = ref<number | null>(null);
 const currentPage = ref(1);
 const totalItems = ref(0);
 const itemsPerPage = ref(10);
+const totalPages = ref(1);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,25 +50,38 @@ const breadcrumbs: BreadcrumbItem[] = [
 const fetchProcedures = async (page = 1) => {
     try {
         loading.value = true;
-        const response = await axios.get('/api/v1/procedures', {
+        error.value = null;
+
+        console.log(`Pobieranie zabiegów dla strony ${page}...`);
+
+        const response = await axios.get('/api/procedures', {
             params: {
-                page,
-                category: selectedCategory.value,
+                page: page,
+                procedure_category_id: selectedCategory.value,
                 per_page: itemsPerPage.value
             }
         });
 
-        procedures.value = response.data.data;
-        totalItems.value = response.data.total;
-        currentPage.value = response.data.current_page;
+        console.log('Odpowiedź API:', response.data);
 
-        // Jeśli jeszcze nie pobrano kategorii
+        if (!response.data.data || !Array.isArray(response.data.data)) {
+            throw new Error('Nieprawidłowa struktura odpowiedzi API');
+        }
+
+        procedures.value = response.data.data;
+        totalItems.value = response.data.total || 0;
+        currentPage.value = page;
+        totalPages.value = Math.ceil(totalItems.value / itemsPerPage.value);
+
+        console.log(`Pobrano ${procedures.value.length} zabiegów dla strony ${currentPage.value}`);
+
         if (categories.value.length === 0) {
             fetchCategories();
         }
     } catch (err) {
         console.error('Błąd podczas pobierania zabiegów:', err);
-        error.value = 'Nie udało się pobrać listy zabiegów';
+        error.value = 'Nie udało się pobrać listy zabiegów.';
+        procedures.value = [];
     } finally {
         loading.value = false;
     }
@@ -71,7 +89,7 @@ const fetchProcedures = async (page = 1) => {
 
 const fetchCategories = async () => {
     try {
-        const response = await axios.get('/api/v1/procedures/categories');
+        const response = await axios.get('/api/procedures/categories');
         categories.value = response.data;
     } catch (err) {
         console.error('Błąd podczas pobierania kategorii:', err);
@@ -83,9 +101,64 @@ const filterByCategory = () => {
     fetchProcedures(1);
 };
 
+const goToPage = (page: number) => {
+    if (page === currentPage.value) return;
+    console.log(`Zmiana strony na: ${page}`);
+    fetchProcedures(page);
+};
+
 onMounted(() => {
     fetchProcedures(1);
 });
+
+const getCategoryName = (procedure: Procedure): string => {
+    if (procedure.category) {
+        return procedure.category.name;
+    }
+
+    if (procedure.procedure_category_id) {
+        const category = categories.value.find(c => c.id === procedure.procedure_category_id);
+        return category ? category.name : 'Brak kategorii';
+    }
+
+    return 'Brak kategorii';
+};
+
+// Generuje numery stron do wyświetlenia
+const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages.value <= maxVisible) {
+        // Jeśli jest mniej stron niż maxVisible, pokaż wszystkie
+        for (let i = 1; i <= totalPages.value; i++) {
+            pages.push(i);
+        }
+    } else {
+        // Zawsze pokazuj pierwszą stronę
+        pages.push(1);
+
+        const startPage = Math.max(2, currentPage.value - 1);
+        const endPage = Math.min(totalPages.value - 1, currentPage.value + 1);
+
+        if (startPage > 2) {
+            pages.push('...');
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        if (endPage < totalPages.value - 1) {
+            pages.push('...');
+        }
+
+        // Zawsze pokazuj ostatnią stronę
+        pages.push(totalPages.value);
+    }
+
+    return pages;
+};
 </script>
 
 <template>
@@ -99,17 +172,38 @@ onMounted(() => {
                     @change="filterByCategory"
                 >
                     <option :value="null">Wszystkie kategorie</option>
-                    <option v-for="category in categories" :key="category" :value="category">
-                        {{ category }}
+                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                        {{ category.name }}
                     </option>
                 </select>
             </div>
 
-            <!-- Ładowanie -->
-            <div v-if="loading" class="grid auto-rows-min gap-4 md:grid-cols-3">
-                <div v-for="i in 3" :key="i" class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                    <PlaceholderPattern />
-                </div>
+            <!-- Ładowanie - struktura odpowiadająca kontenerowi z kartami -->
+            <!-- Ładowanie - struktura odpowiadająca zawartości ScrollArea z zabiegami -->
+            <div v-if="loading">
+                <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
+                    <div class="p-4">
+                        <Skeleton class="h-6 w-72 mb-4" />
+
+                        <div v-for="i in 5" :key="i" class="mb-4">
+                            <div class="rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                                <div class="mb-2 flex items-center justify-between">
+                                    <Skeleton class="h-6 w-48" />
+                                    <Skeleton class="h-6 w-24 rounded-full" />
+                                </div>
+
+                                <Skeleton class="h-4 w-full mb-2" />
+                                <Skeleton class="h-4 w-3/4 mb-4" />
+
+                                <div class="flex items-center justify-between">
+                                    <Skeleton class="h-6 w-20" />
+                                    <Skeleton class="h-9 w-24 rounded-md" />
+                                </div>
+                            </div>
+                            <Separator class="my-2" />
+                        </div>
+                    </div>
+                </ScrollArea>
             </div>
 
             <!-- Błąd -->
@@ -119,24 +213,30 @@ onMounted(() => {
 
             <!-- Lista zabiegów w ScrollArea -->
             <div v-else>
-                <ScrollArea class="h-[60vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
+                <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
                     <div class="p-4">
                         <h4 class="mb-4 text-lg font-medium leading-none">
                             Lista dostępnych zabiegów
                         </h4>
 
-                        <div v-for="procedure in procedures" :key="procedure.id" class="mb-4">
+                        <div v-if="procedures.length === 0" class="py-4 text-center text-gray-500">
+                            Brak zabiegów do wyświetlenia.
+                        </div>
+
+                        <div v-else v-for="procedure in procedures" :key="procedure.id" class="mb-4">
                             <div class="rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
                                 <div class="mb-2 flex items-center justify-between">
                                     <h3 class="text-xl font-medium">{{ procedure.name }}</h3>
-                                    <span class="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium">{{ procedure.category }}</span>
+                                    <span class="rounded-full bg-nova-accent dark:bg-nova-primary text-nova-light px-3 py-1 text-sm font-medium">
+                                        {{ getCategoryName(procedure) }}
+                                    </span>
                                 </div>
 
                                 <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ procedure.description }}</p>
 
                                 <div class="flex items-center justify-between">
-                                    <div class="font-bold text-primary">{{ procedure.base_price }} zł</div>
-                                    <Button as-child>
+                                    <div class="font-extrabold text-nova-light">{{ procedure.base_price }} zł</div>
+                                    <Button as-child class="bg-nova-primary dark:bg-nova-accent dark:text-nova-light hover:bg-nova-accent">
                                         <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }">
                                             Szczegóły
                                         </router-link>
@@ -148,32 +248,36 @@ onMounted(() => {
                     </div>
                 </ScrollArea>
 
-                <!-- Paginacja -->
+                <!-- Paginacja - używając tylko lokalnych komponentów -->
                 <div class="mt-4 flex justify-center">
                     <Pagination
+                        v-if="totalPages > 1"
                         :items-per-page="itemsPerPage"
                         :total="totalItems"
                         :sibling-count="1"
                         show-edges
                         :default-page="currentPage"
-                        v-slot="{ page }"
-                        @change="fetchProcedures"
+                        @update:page="goToPage"
                     >
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                            <PaginationFirst />
-                            <PaginationPrev />
+                            <PaginationFirst @click="goToPage(1)" />
+                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))" />
 
-                            <template v-for="(item, index) in items">
-                                <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
-                                    <Button class="h-9 w-9 p-0" :variant="item.value === page ? 'default' : 'outline'">
+                            <template v-for="(item, index) in items" :key="index">
+                                <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
+                                    <Button
+                                        class="w-9 h-9 p-0"
+                                        :variant="item.value === currentPage ? 'default' : 'outline'"
+                                        @click="goToPage(item.value)"
+                                    >
                                         {{ item.value }}
                                     </Button>
                                 </PaginationListItem>
-                                <PaginationEllipsis v-else :key="item.type" :index="index" />
+                                <PaginationEllipsis v-else :index="index" />
                             </template>
 
-                            <PaginationNext />
-                            <PaginationLast />
+                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))" />
+                            <PaginationLast @click="goToPage(totalPages)" />
                         </PaginationList>
                     </Pagination>
                 </div>
