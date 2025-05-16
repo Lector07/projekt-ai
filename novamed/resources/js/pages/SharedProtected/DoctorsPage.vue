@@ -107,76 +107,85 @@ const getDoctorName = (doctor: Doctor): string => {
                 <h1 class="text-3xl font-bold">Nasi Specjaliści</h1>
             </div>
 
-            <!-- Ładowanie - struktura odpowiadająca kontenerowi z kartami -->
-            <div v-if="loading" class="rounded-md border border-sidebar-border/70 dark:border-sidebar-border mx-1 p-3">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div v-for="i in 4" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
-                        <Skeleton class="w-full h-52" />
-                        <div class="p-4">
-                            <Skeleton class="h-6 w-3/4 mb-3" />
-                            <Skeleton class="h-4 w-1/2 mb-6" />
-                            <div class="flex justify-end gap-2">
-                                <Skeleton class="h-9 w-20" />
-                                <Skeleton class="h-9 w-24" />
+            <div v-if="loading" class="flex flex-col h-full w-full rounded-md border border-sidebar-border/70 dark:border-sidebar-border mx-0 p-3 justify-center">
+                <div class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
+                    <div v-for="i in 4" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm w-full h-auto flex flex-col">
+                        <div class="flex h-full">
+                            <div class="w-1/3" style="min-height: 250px;">
+                                <Skeleton class="w-full h-full" />
+                            </div>
+
+                            <div class="w-2/3 flex flex-col p-4 h-full">
+                                <div class="flex-grow">
+                                    <Skeleton class="h-6 w-3/4 mb-2" />
+                                    <Skeleton class="h-4 w-1/2 mb-4" />
+                                    <Skeleton class="h-16 w-full mb-2" />
+                                </div>
+
+                                <div class="flex justify-end gap-4 mt-25 pt-2">
+                                    <Skeleton class="h-9 w-20" />
+                                    <Skeleton class="h-9 w-24" />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Błąd -->
             <div v-else-if="error" class="p-4 text-center text-red-500">
                 {{ error }}
             </div>
 
-            <!-- Karty lekarzy bez ScrollArea -->
-            <div v-else class="rounded-md border border-sidebar-border/70 dark:border-sidebar-border mx-1 p-3">
-                <div v-if="doctors.length === 0" class="py-4 text-center text-gray-500">
+            <div v-else class="flex flex-col h-full w-full rounded-md border border-sidebar-border/70 dark:border-sidebar-border mx-0 p-3 justify-center">
+                <div v-if="doctors.length === 0" class="flex-grow py-4 text-center text-gray-500">
                     Nie znaleziono lekarzy.
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div v-else class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
                     <Card
                         v-for="doctor in doctors"
                         :key="doctor.id"
-                        style="width: 100%; overflow: hidden; --p-card-border-radius: 0.75rem; "
-                        class="mx-auto border border-gray-200 dark:border-gray-700 shadow-sm"
+                        style="--p-card-border-radius: 0.75rem; overflow: hidden;"
+                        class="mx-auto border border-gray-200 dark:border-gray-700 shadow-sm w-full h-auto flex flex-col"
                     >
-                        <template #header>
-                            <img
-                                :src="doctor.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
-                                :alt="`Dr. ${getDoctorName(doctor)}`"
-                                class="w-full h-52 object-cover"
-                            />
-                        </template>
-
-                        <template #title>
-                            <h3 class="text-xl font-semibold m-1 ml-3">{{ getDoctorName(doctor) }}</h3>
-                        </template>
-
                         <template #content>
-                            <p class="ml-3 dark:text-gray-300">
-                                {{ doctor.specialization || 'Brak określonej specjalizacji' }}
-                            </p>
-                        </template>
+                            <div class="flex h-full">
+                                <div class="w-1/3" style="min-height: 250px;">
+                                    <img
+                                        :src="doctor.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
+                                        :alt="`Dr. ${getDoctorName(doctor)}`"
+                                        class="w-full h-full object-cover object-center"
+                                    />
+                                </div>
 
-                        <template #footer>
-                            <div class="flex gap-4 mt-1 justify-end p-2">
-                                <Button
-                                    variant="outline"
-                                    class="w-auto bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-dark text-nova-light"
-                                    @click="router.push(`/doctors/${doctor.id}`)"
-                                >
-                                    Profil
-                                </Button>
-                                <Button class="w-auto bg-nova-accent hover:bg-nova-primary dark:bg-nova-primary hover:dark:bg-nova-dark text-nova-light">Umów wizytę</Button>
+                                <div class="w-2/3 flex flex-col p-4 h-full">
+                                    <div class="flex-grow">
+                                        <h3 class="text-xl font-semibold mb-2">{{ getDoctorName(doctor) }}</h3>
+                                        <div class="dark:text-gray-300 mb-4">
+                                            {{ doctor.specialization || 'Brak określonej specjalizacji' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400" v-if="doctor.bio">
+                                            {{ doctor.bio.substring(0, 100) }}{{ doctor.bio.length > 100 ? '...' : '' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-4 justify-end mt-25 lg:mt-50 pt-2">
+                                        <Button
+                                            variant="outline"
+                                            class="w-auto bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-dark text-nova-light"
+                                            @click="router.push(`/doctors/${doctor.id}`)"
+                                        >
+                                            Profil
+                                        </Button>
+                                        <Button class="w-auto bg-nova-accent hover:bg-nova-primary dark:bg-nova-primary hover:dark:bg-nova-dark text-nova-light">Umów wizytę</Button>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </Card>
                 </div>
 
-                <!-- Paginacja -->
-                <div class="mt-4 flex justify-center">
+                <div class="mt-4 pt-2 flex justify-center">
                     <Pagination
                         v-if="totalPages > 1"
                         :items-per-page="itemsPerPage"

@@ -12,9 +12,25 @@ import {
     SidebarMenuItem
 } from '@/components/ui/sidebar';
 import {type NavItem} from '@/types';
-import {BookOpen, Folder, LayoutGrid, Slice, Contact} from 'lucide-vue-next';
+import {BookOpen, Folder, LayoutGrid, Slice, Contact, LayoutDashboard, Users, Stethoscope, ClipboardList, Calendar} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import { useAuthStore } from '@/stores/auth';
+import { computed } from 'vue';
 
+const authStore = useAuthStore();
+
+// Sprawdzanie czy użytkownik jest administratorem
+const isAdmin = computed(() => {
+    if (!authStore.user) return false;
+    return (authStore.user as any).role === 'admin' ||
+        ((authStore.user as any).roles && (authStore.user as any).roles.includes('admin'));
+});
+
+const isPatient = computed(() => {
+    if (!authStore.user) return false;
+    return (authStore.user as any).role === 'patient' ||
+        ((authStore.user as any).roles && (authStore.user as any).roles.includes('patient'));
+});
 
 const mainNavItems: NavItem[] = [
     {
@@ -32,7 +48,20 @@ const mainNavItems: NavItem[] = [
         to: {name: 'doctors'},
         icon: Contact,
     },
+];
 
+// Linki administracyjne
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Panel Admina',
+        to: { name: 'admin.dashboard' },
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Użytkownicy',
+        to: { name: 'admin.users' },
+        icon: Users,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
@@ -46,7 +75,6 @@ const footerNavItems: NavItem[] = [
 </script>
 
 <template>
-
     <Sidebar
         variant="inset"
         collapsible="icon"
@@ -65,14 +93,14 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems"/>
+            <NavMain v-if="isPatient" :items="mainNavItems"/>
+            <NavMain v-if="isAdmin" :items="adminNavItems" label="Administracja" class="mt-4"/>
         </SidebarContent>
 
-        <SidebarFooter >
+        <SidebarFooter>
             <NavFooter :items="footerNavItems"/>
             <NavUser/>
         </SidebarFooter>
     </Sidebar>
     <slot/>
 </template>
-

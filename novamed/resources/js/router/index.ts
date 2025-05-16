@@ -1,3 +1,4 @@
+// novamed/resources/js/router/index.ts
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 import {useAuthStore} from '@/stores/auth';
 import HomePage from '../pages/Public/Welcome.vue';
@@ -7,12 +8,41 @@ import DashboardPage from '../pages/Dashboard.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
 import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
-import ProceduresPage from '../pages/Public/ProceduresPage.vue';
+import ProceduresPage from '../pages/SharedProtected/ProceduresPage.vue';
 import {storeToRefs} from 'pinia';
-import DoctorsPage from "@/pages/Public/DoctorsPage.vue";
-import ProcedureDetailPage from "@/pages/Public/ProcedureDetailPage.vue";
-import DoctorDetailPage from "@/pages/Public/DoctorDetailPage.vue";
+import DoctorsPage from "@/pages/SharedProtected/DoctorsPage.vue";
+import ProcedureDetailPage from "@/pages/SharedProtected/ProcedureDetailPage.vue";
+import DoctorDetailPage from "@/pages/SharedProtected/DoctorDetailPage.vue";
+import DashboardAdmin from "@/pages/Admin/DashboardAdmin.vue";
+import IndexPage from "@/pages/Admin/Users/IndexPage.vue";
+import CreatePage from "@/pages/Admin/Users/CreatePage.vue";
+import EditPage from "@/pages/Admin/Users/EditPage.vue";
 
+// Trasy administracyjne
+const adminRoutes: Array<RouteRecordRaw> = [
+    {
+        path: '/admin/dashboard',
+        name: 'admin.dashboard',
+        component: DashboardAdmin,
+        meta: {
+            title: 'Panel Administratora',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+    {
+      path:'/admin/users'
+        , name:'admin.users',
+        component: IndexPage,
+        meta: {
+            title: 'Użytkownicy',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+
+
+];
 
 const routes: Array<RouteRecordRaw> = [
     {path: '/', name: 'home', component: HomePage, meta: {title: 'Strona Główna'}},
@@ -39,7 +69,8 @@ const routes: Array<RouteRecordRaw> = [
                     'patient'; // Domyślna rola
 
                 if (userRole === 'admin') {
-                    to.meta.title = 'Panel Administratora';
+                    // Przekierowanie administratora na dedykowany panel
+                    return next({ name: 'admin.dashboard' });
                 } else if (userRole === 'doctor') {
                     to.meta.title = 'Panel Lekarza';
                 } else {
@@ -126,7 +157,8 @@ const routes: Array<RouteRecordRaw> = [
         component: DoctorDetailPage,
         meta: {title: 'Szegóły lekarza', requiresAuth: true}
     },
-
+    // Dodajemy trasy administracyjne
+    ...adminRoutes
 ];
 
 const router = createRouter({
@@ -156,6 +188,14 @@ router.beforeEach(async (to, from, next) => {
 
     const requiresAuth = to.meta.requiresAuth === true;
     const requiresGuest = to.meta.requiresGuest === true;
+    const requiresAdmin = to.meta.requiresAdmin === true;
+
+    // Funkcja sprawdzająca czy użytkownik jest administratorem
+    const isAdmin = () => {
+        if (!authStore.user) return false;
+        return (authStore.user as any).role === 'admin' ||
+            ((authStore.user as any).roles && (authStore.user as any).roles.includes('admin'));
+    };
 
     console.log(`Trasa ${to.path}: requiresAuth=${requiresAuth}, requiresGuest=${requiresGuest}, isLoggedIn=${isLoggedIn.value}`);
 
@@ -164,6 +204,9 @@ router.beforeEach(async (to, from, next) => {
         next({name: 'login'});
     } else if (requiresGuest && isLoggedIn.value) {
         console.log('Przekierowanie do panelu z logowania/rejestracji');
+        next({name: 'dashboard'});
+    } else if (requiresAdmin && !isAdmin()) {
+        console.log('Brak uprawnień administratora, przekierowanie do dashboard');
         next({name: 'dashboard'});
     } else {
         console.log(`Przechodzę do ${String(to.name)}`);

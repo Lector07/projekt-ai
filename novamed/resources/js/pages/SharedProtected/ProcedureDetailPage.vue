@@ -50,11 +50,11 @@ const error = ref<string | null>(null);
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Zabiegi',
-        href: '/procedures',  // zmieniono z href na to
+        href: '/procedures',
     },
     {
         title: 'Szczegóły zabiegu',
-        href: `/procedures/${procedureId}`,  // zmieniono z href na to
+        href: `/procedures/${procedureId}`,
     }
 ];
 

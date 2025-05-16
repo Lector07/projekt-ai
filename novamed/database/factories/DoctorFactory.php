@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Models\Role; // Importuj Role, jeśli Role::create jest w seederze
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DoctorFactory extends Factory

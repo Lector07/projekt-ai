@@ -9,7 +9,11 @@ use App\Models\Procedure;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class AdminDashboardController extends Controller
 {
@@ -20,69 +24,110 @@ class AdminDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewDashboard', User::class);
+        Log::info('AdminDashboardController@index reached by user: ' . $request->user()?->email);
 
-        // Parametry filtrowania
-        $startDate = $request->input('start_date') ? Carbon::parse($request->start_date) : now()->startOfYear();
-        $endDate = $request->input('end_date') ? Carbon::parse($request->end_date) : now();
+        // Ręczne sprawdzenie polityki zamiast $this->authorize()
+        if (! Gate::allows('viewDashboard', User::class)) {
+            Log::warning('AdminDashboardController: User not authorized for viewDashboard');
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
-        // Zastosuj filtry we wszystkich zapytaniach...
-        $upcomingAppointments = Appointment::where('appointment_datetime', '>=', now())
-            ->where('appointment_datetime', '>=', $startDate)
-            ->where('appointment_datetime', '<=', $endDate)
-            ->whereIn('status', ['booked', 'confirmed'])
-            ->count();
+        Log::info('AdminDashboardController: User authorized for viewDashboard');
 
-        $totalAppointments = Appointment::count();
-        $completedAppointments = Appointment::where('status', 'completed')->count();
-        $cancelledAppointments = Appointment::where('status', 'cancelled')->count();
+        try {
+            // Pobieranie parametrów filtrowania (opcjonalnie)
+            $startDate = $request->input('start_date')
+                ? Carbon::parse($request->input('start_date'))->startOfDay()
+                : Carbon::now()->startOfYear();
 
-        // Statystyki wizyt miesięczne - używamy funkcji month() kompatybilnej z różnymi bazami
-        $appointmentsPerMonth = Appointment::selectRaw('EXTRACT(MONTH FROM appointment_datetime) as month, COUNT(*) as count')
-            ->whereRaw('EXTRACT(YEAR FROM appointment_datetime) = EXTRACT(YEAR FROM CURRENT_DATE)')
-            ->groupBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
-            ->orderBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
-            ->get()
-            ->pipe(function ($results) {
-                $counts = array_fill(1, 12, 0);
-                foreach ($results as $result) {
-                    $counts[(int)$result->month] = $result->count;
+            $endDate = $request->input('end_date')
+                ? Carbon::parse($request->input('end_date'))->endOfDay()
+                : Carbon::now();
+
+            // Poprawione zliczanie użytkowników według kolumny role
+            $patientCount = User::where('role', 'patient')->count();
+            $doctorUserCount = User::where('role', 'doctor')->count();
+
+            $procedureCount = Procedure::count();
+
+            // Statystyki wizyt
+            $totalAppointments = Appointment::whereBetween('appointment_datetime', [$startDate, $endDate])->count();
+            $upcomingAppointments = Appointment::where('appointment_datetime', '>=', now())
+                ->whereBetween('appointment_datetime', [$startDate, $endDate])
+                ->whereIn('status', ['booked', 'confirmed'])
+                ->count();
+            $completedAppointments = Appointment::where('status', 'completed')
+                ->whereBetween('appointment_datetime', [$startDate, $endDate])
+                ->count();
+            $cancelledAppointments = Appointment::where('status', 'cancelled')
+                ->whereBetween('appointment_datetime', [$startDate, $endDate])
+                ->count();
+
+            // Wizyty per miesiąc
+            $appointmentsPerMonthData = DB::table('appointments')
+                ->selectRaw('EXTRACT(MONTH FROM appointment_datetime) as month_number, COUNT(*) as count')
+                ->whereBetween('appointment_datetime', [$startDate, $endDate])
+                ->groupBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
+                ->orderBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
+                ->get();
+
+            $appointmentsPerMonthArray = array_fill(1, 12, 0);
+            foreach ($appointmentsPerMonthData as $result) {
+                if ($result->month_number >= 1 && $result->month_number <= 12) {
+                    $appointmentsPerMonthArray[(int)$result->month_number] = (int)$result->count;
                 }
-                return $counts;
-            });
+            }
 
-        // Najpopularniejsze procedury - upewniamy się, że kolumna procedure_id istnieje
-        $popularProcedures = Appointment::select('procedure_id', DB::raw('COUNT(*) as count'))
-            ->groupBy('procedure_id')
-            ->orderByDesc(DB::raw('COUNT(*)'))  // Zmiana na bezpośrednie odwołanie do funkcji
-            ->take(5)
-            ->with('procedure:id,name,price')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->procedure_id,
-                    'name' => $item->procedure->name ?? 'Nieznana procedura',
-                    'count' => $item->count,
-                ];
-            });
+            // Najpopularniejsze procedury
+            $popularProcedures = DB::table('appointments')
+                ->join('procedures', 'appointments.procedure_id', '=', 'procedures.id')
+                ->select('procedures.id as procedure_id', 'procedures.name as procedure_name', DB::raw('COUNT(appointments.id) as count'))
+                ->whereBetween('appointments.appointment_datetime', [$startDate, $endDate])
+                ->groupBy('procedures.id', 'procedures.name')
+                ->orderByDesc('count')
+                ->take(5)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->procedure_id,
+                        'name' => $item->procedure_name,
+                        'count' => (int)$item->count,
+                    ];
+                })
+                ->all();
 
-        $stats = [
-            'users' => [
-                'patientCount' => $patientCount,
-                'doctorCount' => $doctorCount,
-            ],
-            'appointments' => [
-                'total' => $totalAppointments,
-                'upcoming' => $upcomingAppointments,
-                'completed' => $completedAppointments,
-                'cancelled' => $cancelledAppointments,
-            ],
-            'charts' => [
-                'appointmentsPerMonth' => $appointmentsPerMonth,
-                'popularProcedures' => $popularProcedures,
-            ],
-        ];
+            $stats = [
+                'users' => [
+                    'patientCount' => $patientCount,
+                    'doctorCount' => $doctorUserCount,
+                ],
+                'totalProcedures' => $procedureCount,
+                'appointments' => [
+                    'total' => $totalAppointments,
+                    'upcoming' => $upcomingAppointments,
+                    'completed' => $completedAppointments,
+                    'cancelled' => $cancelledAppointments,
+                ],
+                'charts' => [
+                    'appointmentsPerMonth' => $appointmentsPerMonthArray,
+                    'popularProcedures' => $popularProcedures,
+                ],
+            ];
 
-        return response()->json($stats);
+            // Dodatkowe logowanie danych JSON przed wysłaniem
+            $jsonData = json_encode($stats);
+            Log::info('AdminDashboardController: JSON data length: ' . strlen($jsonData));
+
+            // Jawnie ustawiamy nagłówki JSON
+            return response()->json($stats)
+                ->header('Content-Type', 'application/json')
+                ->header('X-Content-Type-Options', 'nosniff');
+
+        } catch (\Exception $e) {
+            Log::error('AdminDashboardController error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Server error', 'message' => $e->getMessage()], 500);
+        }
     }
 }

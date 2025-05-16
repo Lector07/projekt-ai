@@ -34,11 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
         ->except(['update'])
         ->names('patient.appointments');
 
-    Route::prefix('admin')
+    Route::prefix('v1/admin')
         ->middleware('auth.admin')
         ->name('admin.')
         ->group(function () {
-            Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index']);
             Route::apiResource('/users', Admin\AdminUserController::class);
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);

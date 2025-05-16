@@ -6,6 +6,8 @@ import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
 import './services/axios';
+import ToastService from 'primevue/toastservice';
+
 
 if (localStorage.getItem('appearance') === 'dark' ||
     (!localStorage.getItem('appearance') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -21,6 +23,8 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.use(PrimeVue);
+app.use(ToastService);
+
 
 
 app.mount('#app');

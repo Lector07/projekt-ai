@@ -5,6 +5,7 @@ import { useRoute, RouterLink, RouteLocationRaw } from 'vue-router';
 
 defineProps<{
     items: NavItem[];
+    label?: string;  // Opcjonalna etykieta dla grupy nawigacyjnej
 }>();
 
 const route = useRoute();
@@ -37,7 +38,7 @@ function isActive(item: NavItem): boolean {
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel class="text-nova-light">Platforma</SidebarGroupLabel>
+        <SidebarGroupLabel class="text-nova-light">{{ label || 'Platforma' }}</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
@@ -52,7 +53,7 @@ function isActive(item: NavItem): boolean {
                         class="flex items-center gap-2 text-nova-light hover:text-nova-dark"
                     >
                         <component v-if="item.icon" :is="item.icon" class="w-5 h-5" />
-                        <span class="text-sm font-medium ">{{ item.title }}</span>
+                        <span class="text-sm font-medium">{{ item.title }}</span>
                     </RouterLink>
 
                     <!-- Dla zewnętrznych linków używamy zwykłego <a> -->

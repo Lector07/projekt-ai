@@ -12,15 +12,36 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', User::class);
-        $users = User::orderBy('name')->paginate(15); // Usunięto with('roles')
+
+        $query = User::query()->orderBy('name');
+
+        // Filtrowanie po wyszukiwaniu
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('email', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Filtrowanie po roli
+        if ($request->filled('role')) {
+            $query->where('role', $request->input('role'));
+        }
+
+        // Paginacja z liczbą elementów na stronę
+        $perPage = $request->input('per_page', 15);
+        $users = $query->paginate($perPage);
+
         return UserResource::collection($users);
     }
 

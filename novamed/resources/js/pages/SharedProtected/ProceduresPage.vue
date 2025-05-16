@@ -235,7 +235,7 @@ const getPageNumbers = () => {
                                 <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ procedure.description }}</p>
 
                                 <div class="flex items-center justify-between">
-                                    <div class="font-extrabold text-nova-light">{{ procedure.base_price }} zł</div>
+                                    <div class="font-extrabold text-nova-darkest dark:text-nova-light">{{ procedure.base_price }} zł</div>
                                     <Button as-child class="bg-nova-primary dark:bg-nova-accent dark:text-nova-light hover:bg-nova-accent">
                                         <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }">
                                             Szczegóły
