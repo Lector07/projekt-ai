@@ -10,6 +10,13 @@ import Chart from 'primevue/chart';
 import axios from 'axios';
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from '@/stores/auth';
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from '@/components/ui/carousel'
 
 // Interfejs dla danych dashboardu
 interface DashboardStats {
@@ -62,7 +69,7 @@ const rawApiResponse = ref<any>(null);
 const authStore = useAuthStore();
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Panel administratora'
+        title: 'Statystyki'
     },
 ];
 
@@ -290,10 +297,18 @@ onMounted(async () => {
                 <Label class="text-3xl font-bold text-nova-darkest dark:text-nova-light">Panel Administratora</Label>
             </div>
 
-            <div v-if="loading" class="flex flex-col h-full w-full rounded-xl border border-sidebar-border/70 dark:border-sidebar-border mx-0 p-6 justify-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
-                <!-- Szkielety ładowania dla kart statystyk -->
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-                    <div v-for="i in 5" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
+            <div v-if="loading" class="flex flex-col h-full w-full gap-8">
+                <!-- Szkielety ładowania dla kart statystyk użytkowników (3 karty) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div v-for="i in 3" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
+                        <Skeleton class="h-6 w-3/4 mb-2" />
+                        <Skeleton class="h-8 w-1/2" />
+                    </div>
+                </div>
+
+                <!-- Szkielety ładowania dla kart statystyk wizyt (4 karty) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div v-for="i in 4" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
                         <Skeleton class="h-6 w-3/4 mb-2" />
                         <Skeleton class="h-8 w-1/2" />
                     </div>
@@ -301,11 +316,21 @@ onMounted(async () => {
 
                 <!-- Szkielety dla wykresów -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="relative h-80 overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-gray-800">
-                        <PlaceholderPattern />
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <Skeleton class="h-6 w-2/5 mb-4" />
+                            <div class="h-[320px] relative">
+                                <PlaceholderPattern />
+                            </div>
+                        </div>
                     </div>
-                    <div class="relative h-80 overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-gray-800">
-                        <PlaceholderPattern />
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <Skeleton class="h-6 w-2/5 mb-4" />
+                            <div class="h-[320px] relative">
+                                <PlaceholderPattern />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -320,98 +345,80 @@ onMounted(async () => {
             <div v-else class="flex flex-col h-full w-full gap-8">
                 <!-- Karty statystyk użytkowników -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Pacjenci</h3>
-                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.patientCount }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Pacjenci</h3>
+                            <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.patientCount }}</p>
+                        </div>
+                    </div>
 
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Lekarze</h3>
-                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.doctorCount }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Lekarze</h3>
+                            <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.doctorCount }}</p>
+                        </div>
+                    </div>
 
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Procedury medyczne</h3>
-                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.totalProcedures }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Procedury medyczne</h3>
+                            <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.totalProcedures }}</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Karty statystyk wizyt -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Wszystkie wizyty</h3>
-                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.appointments.total }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Wszystkie wizyty</h3>
+                            <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.appointments.total }}</p>
+                        </div>
+                    </div>
 
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Nadchodzące wizyty</h3>
-                                <p class="text-2xl font-bold text-nova-accent">{{ stats.appointments.upcoming }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Nadchodzące wizyty</h3>
+                            <p class="text-2xl font-bold text-nova-accent">{{ stats.appointments.upcoming }}</p>
+                        </div>
+                    </div>
 
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Zakończone wizyty</h3>
-                                <p class="text-2xl font-bold text-green-500">{{ stats.appointments.completed }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Zakończone wizyty</h3>
+                            <p class="text-2xl font-bold text-green-500">{{ stats.appointments.completed }}</p>
+                        </div>
+                    </div>
 
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-1">Anulowane wizyty</h3>
-                                <p class="text-2xl font-bold text-red-500">{{ stats.appointments.cancelled }}</p>
-                            </div>
-                        </template>
-                    </Card>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Anulowane wizyty</h3>
+                            <p class="text-2xl font-bold text-red-500">{{ stats.appointments.cancelled }}</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Wykresy -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Wykres wizyt miesięcznie -->
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-4">Wizyty w ciągu roku</h3>
-                                <div style="height: 320px;">
-                                    <Chart type="line" :data="appointmentsChartData" :options="appointmentsChartOptions" />
-                                </div>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-4">Wizyty w ciągu roku</h3>
+                            <div style="height: 320px;">
+                                <Chart type="line" :data="appointmentsChartData" :options="appointmentsChartOptions" />
                             </div>
-                        </template>
-                    </Card>
+                        </div>
+                    </div>
 
                     <!-- Wykres popularnych procedur -->
-                    <Card class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
-                        <template #content>
-                            <div class="p-4">
-                                <h3 class="text-lg font-medium mb-4">Popularne procedury</h3>
-                                <div style="height: 320px">
-                                    <Chart type="pie" :data="proceduresChartData" :options="proceduresChartOptions" />
-                                </div>
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-4">Popularne procedury</h3>
+                            <div style="height: 320px">
+                                <Chart type="pie" :data="proceduresChartData" :options="proceduresChartOptions" />
                             </div>
-                        </template>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

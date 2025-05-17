@@ -40,7 +40,7 @@ class AdminProcedureController extends Controller
             $query->where('procedure_category_id', $request->category_id); // Zmieniono z category_id
         }
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', 12);
         $procedures = $query->orderBy('name')->paginate($perPage);
 
         return ProcedureResource::collection($procedures);

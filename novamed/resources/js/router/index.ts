@@ -25,7 +25,7 @@ const adminRoutes: Array<RouteRecordRaw> = [
         name: 'admin.dashboard',
         component: DashboardAdmin,
         meta: {
-            title: 'Panel Administratora',
+            title: 'Statystyki',
             requiresAuth: true,
             requiresAdmin: true
         }

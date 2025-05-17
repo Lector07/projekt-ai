@@ -5,12 +5,13 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input'
 import {InputError} from '@/components/ui/input-error';
-import {TableHeader, TableRow, TableCell, TableHead, Table} from '@/components/ui/table';
+import {TableHeader, TableRow, TableCell, TableHead, Table, TableBody} from '@/components/ui/table';
 import {Card, CardHeader, CardTitle, CardDescription, CardContent} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import InputNumber from 'primevue/inputnumber';
 import Icon from '@/components/Icon.vue';
 import {Search} from 'lucide-vue-next';
+import FloatLabel from 'primevue/floatlabel';
 import {
     Tooltip,
     TooltipContent,
@@ -37,6 +38,8 @@ import {
 } from '@/components/ui/pagination';
 import {PaginationList, PaginationListItem} from 'reka-ui';
 import type {BreadcrumbItem} from "@/types";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Separator} from "@/components/ui/separator";
 
 // Stan
 const toast = useToast();
@@ -193,6 +196,11 @@ const resetForm = () => {
 
 };
 
+const truncateText = (text: string, maxLength: number): string => {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+};
+
 
 const resetFilters = () => {
     searchQuery.value = '';
@@ -238,32 +246,32 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 // Placeholder dla rekonwalescencji
-const recoveryPlaceholder = `Dzień 1-3: Odpoczynek, chłodne kompresy, możliwy obrzęk i zasinienie.
-Tydzień 1-2: Kontrola lekarska, usunięcie szwów, łagodny obrzęk.
-Miesiąc 1-2: Stopniowy powrót do normalnej aktywności, widoczne wstępne efekty.
-Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
+const recoveryPlaceholder = `Dzień 1-3: ...
+Tydzień 1-2: ...
+Miesiąc 1-2: ...
+Miesiąc 3-6: ...`;
 
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="container mx-auto py-6 px-2 sm:px-4 lg:px-6">
             <!-- Nagłówek i wyszukiwarka -->
-            <Card class="mb-6">
-                <CardHeader>
+            <div class="rounded-lg border border-border shadow-sm bg-card mb-3 md:mb-4 overflow-hidden">
+                <div class="p-2 sm:p-4 border-b">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                         <div>
-                            <CardTitle class="text-2xl font-bold">Zabiegi Medyczne</CardTitle>
-                            <CardDescription>Zarządzaj dostępnymi zabiegami</CardDescription>
+                            <h2 class="text-2xl font-bold leading-7 text-foreground">Zabiegi Medyczne</h2>
+                            <p class="text-sm text-muted-foreground mt-1">Zarządzaj dostępnymi zabiegami</p>
                         </div>
                         <Button @click="showAddForm = true"
                                 class="mt-2 sm:mt-0 bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
                             <Icon name="plus" size="16" class="mr-2"/>
-                            Dodaj Procedurę
+                            Dodaj Zabieg
                         </Button>
                     </div>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div class="p-4 sm:p-6">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="relative">
                             <Label for="search" class="mb-1">Wyszukaj</Label>
@@ -271,7 +279,7 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
                                 <Input
                                     id="search"
                                     v-model="searchQuery"
-                                    placeholder="Wpisz nazwę procedury..."
+                                    placeholder="Wpisz nazwę zabiegu..."
                                     @keyup.enter="currentPage = 1; loadProcedures()"
                                     class="pr-10"
                                 />
@@ -305,123 +313,134 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
                             </Button>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
-            <!-- Tabela procedur -->
-            <Card>
-                <CardContent class="p-0">
-                    <div v-if="loading" class="flex justify-center items-center p-8">
-                        <Icon name="loader2" size="32" class="animate-spin text-nova-primary"/>
-                    </div>
+            <!-- Tabela procedur w responsywnym kontenerze -->
+            <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-hidden">
+                <!-- Stany ładowania i błędów -->
+                <div v-if="loading" class="flex justify-center items-center p-8">
+                    <Icon name="loader2" size="32" class="animate-spin text-nova-primary"/>
+                </div>
 
-                    <div v-else-if="error" class="p-6 text-center text-red-500">
-                        {{ error }}
-                    </div>
+                <div v-else-if="error" class="p-6 text-center text-red-500">
+                    {{ error }}
+                </div>
 
-                    <div v-else-if="procedures.length === 0" class="p-6 text-center text-gray-500">
-                        Nie znaleziono żadnych procedur.
-                        <Button variant="link" @click="resetFilters">Wyczyść filtry</Button>
-                    </div>
+                <div v-else-if="procedures.length === 0" class="p-6 text-center text-gray-500">
+                    Nie znaleziono żadnych procedur.
+                    <Button variant="link" @click="resetFilters">Wyczyść filtry</Button>
+                </div>
 
-                    <Table v-else>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nazwa</TableHead>
-                                <TableHead>Opis</TableHead>
-                                <TableHead>Kategoria</TableHead>
-                                <TableHead class="text-center">Cena Bazowa</TableHead>
-                                <TableHead class="text-center">Akcje</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <tbody>
-                        <TableRow v-for="procedure in procedures" :key="procedure.id">
-                            <TableCell class="font-medium">{{ procedure.name }}</TableCell>
-                            <TableCell class="text-sm text-gray-500">
-                                <div v-if="procedure.description" class="line-clamp-3">
-                                    {{ procedure.description }}
-                                </div>
-                                <div v-else class="text-gray-400">Brak opisu</div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="outline" class="bg-nova-primary text-nova-light">
-                                    {{ procedure.category?.name || 'Brak kategorii' }}
-                                </Badge>
-                            </TableCell>
-                            <TableCell class="text-center">{{ formatPrice(procedure.base_price) }}</TableCell>
-                            <TableCell class="text-center">
-                                <TooltipProvider class="flex space-x-1">
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Button variant="ghost" size="sm" @click="editProcedure(procedure)">
-                                                <Icon name="edit" size="16"/>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Edytuj</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                <!-- ScrollArea z tabelą -->
+                <div v-else class="w-full overflow-x-auto">
+                    <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
+                        <Table class="w-full">
+                            <TableHeader class="sticky top-0 bg-card z-10">
+                                <TableRow class="border-b border-border">
+                                    <TableHead class="whitespace-nowrap">Nazwa</TableHead>
+                                    <TableHead class="max-w-[40%]">Opis</TableHead>
+                                    <TableHead class="whitespace-nowrap">Kategoria</TableHead>
+                                    <TableHead class="text-center whitespace-nowrap">Cena Bazowa</TableHead>
+                                    <TableHead class="text-center whitespace-nowrap">Akcje</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="procedure in procedures" :key="procedure.id"
+                                          class="border-b border-border hover:bg-muted/50">
+                                    <TableCell class="font-medium">{{ procedure.name }}</TableCell>
+                                    <TableCell class="text-sm text-gray-500 max-w-[200px] min-w-[150px]">
+                                        <div v-if="procedure.description" class="truncate">
+                                            <span :title="procedure.description">{{ truncateText(procedure.description, 80) }}</span>
+                                            <TooltipProvider v-if="procedure.description.length > 60">
+                                                <Tooltip>
+                                                    <TooltipTrigger as="span" class="text-nova-primary ml-1 cursor-help whitespace-nowrap">[więcej]</TooltipTrigger>
+                                                    <TooltipContent class="max-w-md whitespace-normal">
+                                                        <p class="text-sm">{{ procedure.description }}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </div>
+                                        <div v-else class="text-gray-400">Brak opisu</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" class="bg-nova-primary text-nova-light">
+                                            {{ procedure.category?.name || 'Brak kategorii' }}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell class="text-center">{{ formatPrice(procedure.base_price) }}</TableCell>
+                                    <TableCell class="text-center">
+                                        <TooltipProvider class="flex space-x-1">
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Button variant="ghost" size="sm" @click="editProcedure(procedure)">
+                                                        <Icon name="edit" size="16"/>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Edytuj</p>
+                                                </TooltipContent>
+                                            </Tooltip>
 
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Button variant="ghost" size="sm" @click="deleteProcedure(procedure.id)">
-                                                <Icon name="trash" size="16" class="text-red-500"/>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Usuń</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </TableCell>
-                        </TableRow>
-                        </tbody>
-                    </Table>
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <Button variant="ghost" size="sm" @click="deleteProcedure(procedure.id)">
+                                                        <Icon name="trash" size="16" class="text-red-500"/>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Usuń</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </ScrollArea>
+                </div>
 
-                    <!-- Paginacja -->
-                    <div
-                        class="flex justify-center items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                        <div class="mt-4 flex justify-center">
-                            <Pagination
-                                v-if="totalPages > 1"
-                                :items-per-page="itemsPerPage"
-                                :total="totalItems"
-                                :sibling-count="1"
-                                show-edges
-                                :default-page="currentPage"
-                                @update:page="goToPage"
-                            >
-                                <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                                    <PaginationFirst @click="goToPage(1)"/>
-                                    <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
+                <!-- Paginacja w ramach tego samego kontenera -->
+                <div v-if="totalPages > 1 && procedures.length > 0"
+                     class="flex justify-center items-center p-3 sm:p-4 border-t border-border">
+                    <Pagination
+                        :items-per-page="itemsPerPage"
+                        :total="totalItems"
+                        :sibling-count="1"
+                        show-edges
+                        :default-page="currentPage"
+                        @update:page="goToPage"
+                    >
+                        <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                            <PaginationFirst @click="goToPage(1)"/>
+                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
 
-                                    <template v-for="(item, index) in items" :key="index">
-                                        <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
-                                            <Button
-                                                :variant="currentPage === item.value ? 'outline' : 'ghost'"
-                                                :class="currentPage === item.value ? 'bg-muted' : ''"
-                                            >
-                                                {{ item.value }}
-                                            </Button>
-                                        </PaginationListItem>
-                                        <PaginationEllipsis v-else :index="index"/>
-                                    </template>
+                            <template v-for="(item, index) in items" :key="index">
+                                <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
+                                    <Button
+                                        :variant="currentPage === item.value ? 'default' : 'outline'"
+                                        :class="currentPage === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : ''"
+                                        size="sm"
+                                    >
+                                        {{ item.value }}
+                                    </Button>
+                                </PaginationListItem>
+                                <PaginationEllipsis v-else :index="index"/>
+                            </template>
 
-                                    <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
-                                    <PaginationLast @click="goToPage(totalPages)"/>
-                                </PaginationList>
-                            </Pagination>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
+                            <PaginationLast @click="goToPage(totalPages)"/>
+                        </PaginationList>
+                    </Pagination>
+                </div>
+            </div>
         </div>
 
         <!-- Modal dodawania procedury -->
         <div v-if="showAddForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card class="max-w-xl w-full mx-auto shadow-lg max-h-[90vh] overflow-y-auto">
                 <CardHeader class="flex justify-between items-center border-b">
-                    <CardTitle>Dodaj Nową Procedurę</CardTitle>
+                    <CardTitle>Dodaj nowy zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showAddForm = false">
                         <Icon name="x" size="18"/>
                     </Button>
@@ -430,7 +449,8 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
                     <form class="space-y-4" @submit.prevent="addProcedure">
                         <div class="space-y-2">
                             <Label for="name">Nazwa</Label>
-                            <Input id="name" v-model="newProcedure.name" :class="{'border-red-500': formErrors.name}"/>
+                            <Input id="name" v-model="newProcedure.name" placeholder="Wpisz nazwę zabiegu"
+                                   :class="{'border-red-500': formErrors.name}"/>
                             <InputError :message="formErrors.name?.[0]"/>
                         </div>
 
@@ -480,23 +500,29 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
 
                         <div class="space-y-2">
                             <Label for="description">Opisz zabieg</Label>
-                            <Textarea id="description" placeholder="Tutaj możesz wpisać opis zabiegu"/>
+                            <Textarea
+                                id="description"
+                                v-model="newProcedure.description"
+                                placeholder="Tutaj możesz wpisać opis zabiegu"
+                                class="w-full resize-none"
+                                :class="{'border-red-500': formErrors.description}"
+                            />
                             <InputError :message="formErrors.description?.[0]"/>
                         </div>
+
                         <div class="space-y-2">
                             <Label for="recovery_info">Informacje o Rekonwalescencji</Label>
                             <FloatLabel>
-                        <Textarea
-                            id="recovery_info"
-                            v-model="newProcedure.recovery_info"
-                            rows="5"
-                            class="w-full resize-none"
-                            :class="{'p-invalid': formErrors.recovery_info}"
-                            :placeholder="recoveryPlaceholder"
-                        />
-                                <label for="recovery_info">Okresy rekonwalescencji</label>
+                                <Textarea
+                                    id="recovery_info"
+                                    v-model="newProcedure.recovery_info"
+                                    rows="5"
+                                    class="w-full resize-none"
+                                    :class="{'p-invalid': formErrors.recovery_info}"
+                                    :placeholder="recoveryPlaceholder"
+                                />
                             </FloatLabel>
-                            <p class="text-xs text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
+                            <p class="text-xs mt-1 ml-1 text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
                             <InputError :message="formErrors.recovery_info?.[0]"/>
                         </div>
 
@@ -521,7 +547,7 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card class="max-w-xl w-full mx-auto shadow-lg max-h-[90vh] overflow-y-auto">
                 <CardHeader class="flex justify-between items-center border-b">
-                    <CardTitle>Edytuj Procedurę</CardTitle>
+                    <CardTitle>Edytuj zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showEditForm = false">
                         <Icon name="x" size="18"/>
                     </Button>
@@ -537,64 +563,43 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
 
                         <div class="space-y-2">
                             <Label for="edit-category_id">Kategoria</Label>
-                            <Select
-                                id="edit-category_id"
-                                v-model="selectedProcedure.category_id"
-                                :options="categories"
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder="Wybierz kategorię"
-                                class="w-full"
-                                :class="{'p-invalid': formErrors.category_id}"
-                            />
+                            <Select v-model="selectedProcedure.category_id">
+                                <SelectTrigger id="edit-category_id" class="w-full">
+                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
+                                        {{ category.name }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                             <InputError :message="formErrors.category_id?.[0]"/>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-2">
-                                <Label for="edit-base_price">Cena Bazowa (PLN)</Label>
+                                <Label for="edit-base_price">Cena bazowa</Label>
                                 <InputNumber
                                     id="edit-base_price"
                                     v-model="selectedProcedure.base_price"
                                     :min="0"
                                     :step="10"
                                     showButtons
+                                    currency="PLN"
+                                    mode="currency"
                                     buttonLayout="horizontal"
                                     inputClass="w-full rounded-md border border-input px-3 py-2 text-sm"
-                                    class="w-full"
+                                    class="w-full rounded-md border border-input px-3 py-2 text-sm"
                                     :class="{'p-invalid': formErrors.base_price}"
                                 >
                                     <template #incrementbuttonicon>
                                         <Icon name="plus" size="14"/>
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14"/>
+                                        <Icon name="minus" size="14" class="mr-2"/>
                                     </template>
                                 </InputNumber>
                                 <InputError :message="formErrors.base_price?.[0]"/>
-                            </div>
-
-                            <div class="space-y-2">
-                                <Label for="edit-duration_minutes">Czas Trwania (min)</Label>
-                                <InputNumber
-                                    id="edit-duration_minutes"
-                                    v-model="selectedProcedure.duration_minutes"
-                                    :min="5"
-                                    :step="5"
-                                    showButtons
-                                    buttonLayout="horizontal"
-                                    inputClass="w-full rounded-md border border-input px-3 py-2 text-sm"
-                                    class="w-full"
-                                    :class="{'p-invalid': formErrors.duration_minutes}"
-                                >
-                                    <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14"/>
-                                    </template>
-                                    <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14"/>
-                                    </template>
-                                </InputNumber>
-                                <InputError :message="formErrors.duration_minutes?.[0]"/>
                             </div>
                         </div>
 
@@ -605,10 +610,9 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
                                     id="edit-description"
                                     v-model="selectedProcedure.description"
                                     rows="3"
-                                    class="w-full"
+                                    class="w-full resize-none"
                                     :class="{'p-invalid': formErrors.description}"
                                 />
-                                <label for="edit-description">Opisz procedurę</label>
                             </FloatLabel>
                             <InputError :message="formErrors.description?.[0]"/>
                         </div>
@@ -620,12 +624,10 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
                                     id="edit-recovery_info"
                                     v-model="selectedProcedure.recovery_info"
                                     rows="5"
-                                    class="w-full"
+                                    class="w-full resize-none"
                                     :class="{'p-invalid': formErrors.recovery_info}"
                                     :placeholder="recoveryPlaceholder"
-                                    style="resize: none"
                                 />
-                                <label for="edit-recovery_info">Okresy rekonwalescencji</label>
                             </FloatLabel>
                             <p class="text-xs text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
                             <InputError :message="formErrors.recovery_info?.[0]"/>
@@ -650,6 +652,11 @@ Miesiąc 3-6: Pełne efekty zabiegu, zanikanie blizn.`;
 </template>
 
 <style scoped>
-
-
+/* Optymalizacja tabeli na mniejszych ekranach */
+@media (max-width: 768px) {
+    :deep(th), :deep(td) {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+}
 </style>

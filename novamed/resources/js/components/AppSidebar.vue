@@ -12,7 +12,7 @@ import {
     SidebarMenuItem
 } from '@/components/ui/sidebar';
 import {type NavItem} from '@/types';
-import {BookOpen, Folder, LayoutGrid, Slice, Contact, LayoutDashboard, Users, Stethoscope, ClipboardList, Calendar} from 'lucide-vue-next';
+import {BookOpen, Folder, LayoutGrid, Slice, Contact, LayoutDashboard, ChartArea , Users, Stethoscope, ClipboardList, Calendar} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { useAuthStore } from '@/stores/auth';
 import { computed } from 'vue';
@@ -53,9 +53,9 @@ const mainNavItems: NavItem[] = [
 // Linki administracyjne
 const adminNavItems: NavItem[] = [
     {
-        title: 'Panel Admina',
+        title: 'Panel Statystyk',
         to: { name: 'admin.dashboard' },
-        icon: LayoutDashboard,
+        icon: ChartArea,
     },
     {
         title: 'Użytkownicy',
@@ -75,12 +75,6 @@ const adminNavItems: NavItem[] = [
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/Lector07/projekt-ai', // Zewnętrzny link - href jest OK
-        external: true, // Dodaj flagę dla zewnętrznych linków
-        icon: Folder,
-    },
 ];
 </script>
 

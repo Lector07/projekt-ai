@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
 import {ref, onMounted, watch, computed, h} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from 'axios';
@@ -37,6 +37,17 @@ import {
     ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import {useAuthStore} from '@/stores/auth';
+import {
+    ScrollArea,
+    ScrollBar
+} from "@/components/ui/scroll-area";
+
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Komponent do wyświetlania błędów formularza
 const InputError = (props: { message?: string }) => {
@@ -329,6 +340,11 @@ const formatDate = (dateString?: string | null) => {
     }
 };
 
+const truncateText = (text: string, maxLength: number): string => {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+};
+
 watch(() => query.value.search, resetPagination);
 watch(() => query.value.specialization, resetPagination);
 watch(query, loadDoctors, {deep: true});
@@ -364,8 +380,9 @@ onMounted(() => {
                             @keyup.enter="resetPagination(); loadDoctors()"
                             class="dark:bg-background pr-10"
                         />
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" @click="resetPagination(); loadDoctors()">
-                            <Icon name="search" size="16" class="text-gray-400" />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                             @click="resetPagination(); loadDoctors()">
+                            <Icon name="search" size="16" class="text-gray-400"/>
                         </div>
                     </div>
                 </div>
@@ -392,7 +409,7 @@ onMounted(() => {
 
             <div v-else-if="!loading && !error"
                  class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
+                <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -415,7 +432,23 @@ onMounted(() => {
                                             <TableCell>{{ doctor.first_name }} {{ doctor.last_name }}</TableCell>
                                             <TableCell>{{ doctor.user?.email || 'Brak' }}</TableCell>
                                             <TableCell>{{ doctor.specialization }}</TableCell>
-                                            <TableCell>{{ doctor.bio || 'Brak' }}</TableCell>
+                                            <TableCell class="max-w-[200px]">
+                                                <div v-if="doctor.bio" class="truncate">
+                                                    {{ truncateText(doctor.bio, 60) }}
+                                                    <TooltipProvider v-if="doctor.bio.length > 60">
+                                                        <Tooltip>
+                                                            <TooltipTrigger as="span"
+                                                                            class="text-nova-primary ml-1 cursor-help">
+                                                                [więcej]
+                                                            </TooltipTrigger>
+                                                            <TooltipContent class="max-w-md whitespace-normal">
+                                                                <p class="text-sm">{{ doctor.bio }}</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+                                                </div>
+                                                <div v-else class="text-gray-400">Brak</div>
+                                            </TableCell>
                                             <TableCell>{{ doctor.price_modifier || '1.00' }}</TableCell>
                                             <TableCell>
                                                 {{ doctor.created_at ? formatDate(doctor.created_at) : 'Brak daty' }}
@@ -440,39 +473,38 @@ onMounted(() => {
                             </TableRow>
                         </TableBody>
                     </Table>
-                </div>
-                <div
-                    class="flex justify-center items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                    <div class="mt-4 flex justify-center">
-                        <Pagination
-                            v-if="totalPages > 1"
-                            :items-per-page="itemsPerPage"
-                            :total="totalItems"
-                            :sibling-count="1"
-                            show-edges
-                            :default-page="currentPage"
-                            @update:page="goToPage"
-                        >
-                            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                                <PaginationFirst @click="goToPage(1)"/>
-                                <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
-                                <template v-for="(item, index) in items" :key="index">
-                                    <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
-                                        <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
-                                            {{ item.value }}
-                                        </Button>
-                                    </PaginationListItem>
-                                    <PaginationEllipsis v-else :index="index"/>
-                                </template>
-                                <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
-                                <PaginationLast @click="goToPage(totalPages)"/>
-                            </PaginationList>
-                        </Pagination>
-                    </div>
+                </ScrollArea>
+            </div>
+            <div
+                class="flex justify-center items-center px-4 py-3  dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                <div class="mt-4 flex justify-center">
+                    <Pagination
+                        v-if="totalPages > 1"
+                        :items-per-page="itemsPerPage"
+                        :total="totalItems"
+                        :sibling-count="1"
+                        show-edges
+                        :default-page="currentPage"
+                        @update:page="goToPage"
+                    >
+                        <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                            <PaginationFirst @click="goToPage(1)"/>
+                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
+                            <template v-for="(item, index) in items" :key="index">
+                                <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
+                                    <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
+                                        {{ item.value }}
+                                    </Button>
+                                </PaginationListItem>
+                                <PaginationEllipsis v-else :index="index"/>
+                            </template>
+                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
+                            <PaginationLast @click="goToPage(totalPages)"/>
+                        </PaginationList>
+                    </Pagination>
                 </div>
             </div>
         </div>
-
         <!-- Modal Dodawania Lekarza -->
         <div v-if="showAddDoctorForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
@@ -520,11 +552,11 @@ onMounted(() => {
                             showButtons
                             buttonLayout="horizontal"
                             inputClass="w-full rounded-md border border-input px-3 py-2 text-sm"
-                            class="w-full"
+                            class="w-full rounded-md border border-input px-3 py-2 text-sm"
                             :class="{'p-invalid': doctorFormErrors.price_modifier}"
                         >
                             <template #incrementbuttonicon>
-                                <Icon name="plus" size="14" />
+                                <Icon name="plus" size="14"/>
                             </template>
                             <template #decrementbuttonicon class="rounded-xl">
                                 <Icon name="minus" size="14" class="mr-2"/>
@@ -567,8 +599,9 @@ onMounted(() => {
                         </div>
                     </div>
                     <div class="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="outline" @click="showAddDoctorForm = false" >Anuluj</Button>
-                        <Button @click="addDoctor" :disabled="doctorFormLoading" class="flex bg-nova-primary hover:bg-nova-accent dark:text-nova-light dark:hover:bg-nova-primary dark:bg-nova-accent items-center gap-2">
+                        <Button type="button" variant="outline" @click="showAddDoctorForm = false">Anuluj</Button>
+                        <Button @click="addDoctor" :disabled="doctorFormLoading"
+                                class="flex bg-nova-primary hover:bg-nova-accent dark:text-nova-light dark:hover:bg-nova-primary dark:bg-nova-accent items-center gap-2">
                             <Icon v-if="doctorFormLoading" name="loader2" class="animate-spin" size="16"/>
                             <span>Zapisz Lekarza</span></Button>
                     </div>
@@ -629,7 +662,7 @@ onMounted(() => {
                             :class="{'p-invalid': doctorFormErrors.price_modifier}"
                         >
                             <template #incrementbuttonicon>
-                                <Icon name="plus" size="14" />
+                                <Icon name="plus" size="14"/>
                             </template>
                             <template #decrementbuttonicon class="rounded-xl">
                                 <Icon name="minus" size="14" class="mr-2"/>
@@ -642,7 +675,8 @@ onMounted(() => {
                     <!-- Pole user_id jest zazwyczaj nieedytowalne po utworzeniu -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" @click="showEditDoctorForm = false">Anuluj</Button>
-                        <Button @click="updateDoctor" :disabled="doctorFormLoading" class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2">
+                        <Button @click="updateDoctor" :disabled="doctorFormLoading"
+                                class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2">
                             <Icon v-if="doctorFormLoading" name="loader2" class="animate-spin" size="16"/>
                             <span>Aktualizuj Lekarza</span></Button>
                     </div>

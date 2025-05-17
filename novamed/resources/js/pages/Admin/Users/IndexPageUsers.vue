@@ -48,6 +48,11 @@ import {
     ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 
+import {
+    ScrollArea,
+    ScrollBar
+} from "@/components/ui/scroll-area";
+
 // Interfejs dla danych użytkownika
 interface User {
     id: number;
@@ -454,60 +459,62 @@ onMounted(() => {
 
             <!-- Tabela użytkowników z Data Table -->
             <div v-else-if="!loading && !error" class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead class="w-16">ID</TableHead>
-                                <TableHead>Imię i Nazwisko</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Rola</TableHead>
-                                <TableHead>Data utworzenia</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="user in users" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                <ContextMenu>
-                                    <ContextMenuTrigger :asChild="true">
-                                        <tr class="contents cursor-context-menu">
-                                            <TableCell>{{ user.id }}</TableCell>
-                                            <TableCell>{{ user.name }}</TableCell>
-                                            <TableCell>{{ user.email }}</TableCell>
-                                            <TableCell>
-                    <span :class="`px-2 py-1 text-xs font-medium rounded-full ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                        user.role === 'doctor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                    }`">
-                        {{ user.role === 'admin' ? 'Administrator' : user.role === 'doctor' ? 'Lekarz' : 'Pacjent' }}
-                    </span>
-                                            </TableCell>
-                                            <TableCell>{{ formatDate(user.created_at) }}</TableCell>
-                                        </tr>
-                                    </ContextMenuTrigger>
-                                    <ContextMenuContent>
-                                        <ContextMenuItem @click="editUser(user)">
-                                            <Icon name="edit" size="16" class="mr-2"/>
-                                            Edytuj
-                                        </ContextMenuItem>
-                                        <ContextMenuSeparator v-if="user.role !== 'admin'" />
-                                        <ContextMenuItem
-                                            v-if="user.role !== 'admin'"
-                                            @click="deleteUser(user.id)"
-                                            class="text-red-600 cursor-pointer">
-                                            <Icon name="trash2" size="16" class="mr-2"/>
-                                            Usuń
-                                        </ContextMenuItem>
-                                    </ContextMenuContent>
-                                </ContextMenu>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
+                <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
+                    <div class="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead class="w-16">ID</TableHead>
+                                    <TableHead>Imię i Nazwisko</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Rola</TableHead>
+                                    <TableHead>Data utworzenia</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow v-for="user in users" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <ContextMenu>
+                                        <ContextMenuTrigger :asChild="true">
+                                            <tr class="contents cursor-context-menu">
+                                                <TableCell>{{ user.id }}</TableCell>
+                                                <TableCell>{{ user.name }}</TableCell>
+                                                <TableCell>{{ user.email }}</TableCell>
+                                                <TableCell>
+                        <span :class="`px-2 py-1 text-xs font-medium rounded-full ${
+                            user.role === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                            user.role === 'doctor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        }`">
+                            {{ user.role === 'admin' ? 'Administrator' : user.role === 'doctor' ? 'Lekarz' : 'Pacjent' }}
+                        </span>
+                                                </TableCell>
+                                                <TableCell>{{ formatDate(user.created_at) }}</TableCell>
+                                            </tr>
+                                        </ContextMenuTrigger>
+                                        <ContextMenuContent>
+                                            <ContextMenuItem @click="editUser(user)">
+                                                <Icon name="edit" size="16" class="mr-2"/>
+                                                Edytuj
+                                            </ContextMenuItem>
+                                            <ContextMenuSeparator v-if="user.role !== 'admin'" />
+                                            <ContextMenuItem
+                                                v-if="user.role !== 'admin'"
+                                                @click="deleteUser(user.id)"
+                                                class="text-red-600 cursor-pointer">
+                                                <Icon name="trash2" size="16" class="mr-2"/>
+                                                Usuń
+                                            </ContextMenuItem>
+                                        </ContextMenuContent>
+                                    </ContextMenu>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </ScrollArea>
 
                 <!-- Paginacja -->
                 <div
-                    class="flex justify-center items-center px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    class="flex justify-center items-center px-4 py-3  dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                     <div class="mt-4 flex justify-center">
                         <Pagination
                             v-if="totalPages > 1"
