@@ -62,6 +62,11 @@ const adminNavItems: NavItem[] = [
         to: { name: 'admin.users' },
         icon: Users,
     },
+    {
+        title: 'Lekarze',
+        to: { name: 'admin.doctors' },
+        icon: Stethoscope,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

@@ -287,7 +287,7 @@ onMounted(async () => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-6">
             <div class="flex items-center">
-                <Label class="text-3xl font-bold text-nova-primary">Panel Administratora</Label>
+                <Label class="text-3xl font-bold text-nova-darkest dark:text-nova-light">Panel Administratora</Label>
             </div>
 
             <div v-if="loading" class="flex flex-col h-full w-full rounded-xl border border-sidebar-border/70 dark:border-sidebar-border mx-0 p-6 justify-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
@@ -324,7 +324,7 @@ onMounted(async () => {
                         <template #content>
                             <div class="p-4">
                                 <h3 class="text-lg font-medium mb-1">Pacjenci</h3>
-                                <p class="text-2xl font-bold text-nova-primary">{{ stats.users.patientCount }}</p>
+                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.patientCount }}</p>
                             </div>
                         </template>
                     </Card>
@@ -333,7 +333,7 @@ onMounted(async () => {
                         <template #content>
                             <div class="p-4">
                                 <h3 class="text-lg font-medium mb-1">Lekarze</h3>
-                                <p class="text-2xl font-bold text-nova-primary">{{ stats.users.doctorCount }}</p>
+                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.doctorCount }}</p>
                             </div>
                         </template>
                     </Card>
@@ -342,7 +342,7 @@ onMounted(async () => {
                         <template #content>
                             <div class="p-4">
                                 <h3 class="text-lg font-medium mb-1">Procedury medyczne</h3>
-                                <p class="text-2xl font-bold text-nova-primary">{{ stats.totalProcedures }}</p>
+                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.totalProcedures }}</p>
                             </div>
                         </template>
                     </Card>
@@ -354,7 +354,7 @@ onMounted(async () => {
                         <template #content>
                             <div class="p-4">
                                 <h3 class="text-lg font-medium mb-1">Wszystkie wizyty</h3>
-                                <p class="text-2xl font-bold text-nova-primary">{{ stats.appointments.total }}</p>
+                                <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.appointments.total }}</p>
                             </div>
                         </template>
                     </Card>
@@ -394,7 +394,7 @@ onMounted(async () => {
                         <template #content>
                             <div class="p-4">
                                 <h3 class="text-lg font-medium mb-4">Wizyty w ciągu roku</h3>
-                                <div style="height: 320px">
+                                <div style="height: 320px;">
                                     <Chart type="line" :data="appointmentsChartData" :options="appointmentsChartOptions" />
                                 </div>
                             </div>

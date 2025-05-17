@@ -14,11 +14,21 @@ class DoctorResource extends JsonResource
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
-            'full_name' => $this->first_name . ' ' . $this->last_name,
+            'full_name' => $this->full_name,
             'specialization' => $this->specialization,
             'bio' => $this->bio,
             'price_modifier' => $this->price_modifier,
-            'avatar_url' => $this->profile_picture_path ? Storage::disk('public')->url($this->profile_picture_path) : null,
+            'avatar_url' => $this->avatar_url,
+            'user' => $this->whenLoaded('user', function () {
+                return [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'email' => $this->user->email,
+                    'role' => $this->user->role,
+                ];
+            }),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

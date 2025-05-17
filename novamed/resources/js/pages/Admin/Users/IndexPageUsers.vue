@@ -386,12 +386,12 @@ onMounted(() => {
         />
         <div class="flex flex-col gap-5 p-6">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                <h1 class="text-2xl font-bold text-nova-primary">Zarządzanie Użytkownikami</h1>
+                <h1 class="text-2xl font-bold text-nova-darkest dark:text-nova-light">Zarządzanie Użytkownikami</h1>
 
                 <!-- Zamieniony Popover na zwykły przycisk -->
                 <Button
                     variant="default"
-                    class="flex bg-nova-primary hover:bg-nova-accent items-center gap-2"
+                    class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
                     @click="showAddUserForm = true"
                 >
                     <Icon name="userPlus" size="18"/>
@@ -401,13 +401,14 @@ onMounted(() => {
 
             <!-- Filtry i wyszukiwanie -->
             <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-800 p-4 border rounded-xl">
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-900 p-4 border rounded-xl">
                 <div class="space-y-2">
                     <Label for="search">Wyszukiwanie</Label>
                     <Input
                         id="search"
                         v-model="query.search"
                         placeholder="Szukaj po nazwie lub emailu..."
+                        class="dark:bg-background"
                     />
                 </div>
 

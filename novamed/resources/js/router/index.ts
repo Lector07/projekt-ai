@@ -14,9 +14,8 @@ import DoctorsPage from "@/pages/SharedProtected/DoctorsPage.vue";
 import ProcedureDetailPage from "@/pages/SharedProtected/ProcedureDetailPage.vue";
 import DoctorDetailPage from "@/pages/SharedProtected/DoctorDetailPage.vue";
 import DashboardAdmin from "@/pages/Admin/DashboardAdmin.vue";
-import IndexPage from "@/pages/Admin/Users/IndexPage.vue";
-import CreatePage from "@/pages/Admin/Users/CreatePage.vue";
-import EditPage from "@/pages/Admin/Users/EditPage.vue";
+import IndexPageUsers from "@/pages/Admin/Users/IndexPageUsers.vue";
+import IndexPageDoctorsDoctors from "@/pages/Admin/Doctors/IndexPageDoctors.vue";
 
 // Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -33,13 +32,23 @@ const adminRoutes: Array<RouteRecordRaw> = [
     {
       path:'/admin/users'
         , name:'admin.users',
-        component: IndexPage,
+        component: IndexPageUsers,
         meta: {
             title: 'Użytkownicy',
             requiresAuth: true,
             requiresAdmin: true
         }
     },
+    {
+        path: '/admin/doctors',
+        name: 'admin.doctors',
+        component: IndexPageDoctorsDoctors,
+        meta: {
+            title: 'Lekarze',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    }
 
 
 ];

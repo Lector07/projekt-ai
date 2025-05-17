@@ -22,10 +22,36 @@ class AdminDoctorController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Doctor::class);
-        $doctors = Doctor::orderBy('last_name')->orderBy('first_name')->paginate(15);
+
+        $query = Doctor::query()->with('user');
+
+        // Wyszukiwanie
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('user', function($userQuery) use ($searchTerm) {
+                        $userQuery->where('email', 'like', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        // Filtrowanie po specjalizacji
+        if ($request->has('specialization') && !empty($request->specialization)) {
+            $query->where('specialization', $request->specialization);
+        }
+
+        // Sortowanie
+        $query->orderBy('last_name')->orderBy('first_name');
+
+        // Paginacja
+        $perPage = $request->input('per_page', 10);
+        $doctors = $query->paginate($perPage);
+
         return DoctorResource::collection($doctors);
     }
 
@@ -51,7 +77,7 @@ class AdminDoctorController extends Controller
     public function show(Doctor $doctor): DoctorResource
     {
         $this->authorize('view', $doctor);
-        return new DoctorResource($doctor);
+        return new DoctorResource($doctor->load('user'));
     }
 
     /**
@@ -73,7 +99,12 @@ class AdminDoctorController extends Controller
     public function destroy(Doctor $doctor): Response
     {
         $this->authorize('delete', $doctor);
-        // TODO: Logika usuwania zdjęcia z dysku, jeśli istnieje ($doctor->profile_picture_path)
+
+        // Usuwanie zdjęcia jeśli istnieje
+        if ($doctor->profile_picture_path) {
+            Storage::disk('public')->delete($doctor->profile_picture_path);
+        }
+
         $doctor->delete();
         return response()->noContent();
     }
