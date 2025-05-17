@@ -67,6 +67,11 @@ const adminNavItems: NavItem[] = [
         to: { name: 'admin.doctors' },
         icon: Stethoscope,
     },
+    {
+        title: 'Zabiegi',
+        to: { name: 'admin.procedures' },
+        icon: ClipboardList,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

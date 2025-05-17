@@ -16,6 +16,7 @@ import DoctorDetailPage from "@/pages/SharedProtected/DoctorDetailPage.vue";
 import DashboardAdmin from "@/pages/Admin/DashboardAdmin.vue";
 import IndexPageUsers from "@/pages/Admin/Users/IndexPageUsers.vue";
 import IndexPageDoctorsDoctors from "@/pages/Admin/Doctors/IndexPageDoctors.vue";
+import IndexPageProcedures from "@/pages/Admin/Procedures/IndexPageProcedures.vue";
 
 // Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -48,7 +49,17 @@ const adminRoutes: Array<RouteRecordRaw> = [
             requiresAuth: true,
             requiresAdmin: true
         }
-    }
+    },
+    {
+        path: '/admin/procedures',
+        name: 'admin.procedures',
+        component: IndexPageProcedures,
+        meta: {
+            title: 'Zabiegi',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
 
 
 ];

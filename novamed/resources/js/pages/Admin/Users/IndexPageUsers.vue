@@ -404,12 +404,18 @@ onMounted(() => {
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-900 p-4 border rounded-xl">
                 <div class="space-y-2">
                     <Label for="search">Wyszukiwanie</Label>
-                    <Input
-                        id="search"
-                        v-model="query.search"
-                        placeholder="Szukaj po nazwie lub emailu..."
-                        class="dark:bg-background"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="search"
+                            v-model="query.search"
+                            placeholder="Szukaj po imieniu, nazwisku..."
+                            @keyup.enter="resetPagination(); loadUsers()"
+                            class="dark:bg-background pr-10"
+                        />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer" @click="resetPagination(); loadUsers()">
+                            <Icon name="search" size="16" class="text-gray-400" />
+                        </div>
+                    </div>
                 </div>
 
                 <div class="space-y-2">

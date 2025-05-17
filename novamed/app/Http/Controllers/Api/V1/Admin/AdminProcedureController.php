@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\Admin\StoreProcedureRequest;   // <<< Import
-use App\Http\Requests\Api\V1\Admin\UpdateProcedureRequest;   // <<< Import
-use App\Http\Resources\Api\V1\ProcedureResource;            // <<< Import
+use App\Http\Requests\Api\V1\Admin\StoreProcedureRequest;
+use App\Http\Requests\Api\V1\Admin\UpdateProcedureRequest;
+use App\Http\Resources\Api\V1\ProcedureResource;
+use App\Http\Resources\Api\V1\ProcedureCategoryResource;
 use App\Models\Procedure;
+use App\Models\ProcedureCategory; // Poprawiono z Category na ProcedureCategory
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class AdminProcedureController extends Controller
 {
@@ -20,11 +23,48 @@ class AdminProcedureController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Procedure::class);
-        $procedures = Procedure::with('category')->orderBy('name')->paginate(15);
+
+        $query = Procedure::query()->with('category');
+
+        // Wyszukiwanie po nazwie
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where('name', 'like', "%{$searchTerm}%");
+        }
+
+        // Filtrowanie po kategorii
+        if ($request->filled('category_id')) {
+            $query->where('procedure_category_id', $request->category_id); // Zmieniono z category_id
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $procedures = $query->orderBy('name')->paginate($perPage);
+
         return ProcedureResource::collection($procedures);
+    }
+
+    /**
+     * Get all categories.
+     */
+    public function categories(): JsonResponse
+    {
+        try {
+            $this->authorize('viewAny', Procedure::class);
+
+            $categories = ProcedureCategory::orderBy('name')->get(); // Zmieniono model
+
+            // Zwracamy kolekcję zasobów
+            return response()->json([
+                'data' => ProcedureCategoryResource::collection($categories)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Błąd podczas pobierania kategorii: ' . $e->getMessage());
+            return response()->json(['message' => 'Wystąpił błąd podczas pobierania kategorii'], 500);
+        }
     }
 
     /**
@@ -36,8 +76,8 @@ class AdminProcedureController extends Controller
         $validated = $request->validated();
         $procedure = Procedure::create($validated);
 
-        return (new ProcedureResource($procedure->load('category'))) // Załaduj kategorię dla odpowiedzi
-        ->response()
+        return (new ProcedureResource($procedure->load('category')))
+            ->response()
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
@@ -47,7 +87,7 @@ class AdminProcedureController extends Controller
     public function show(Procedure $procedure): ProcedureResource
     {
         $this->authorize('view', $procedure);
-        return new ProcedureResource($procedure->load('category')); // Załaduj kategorię
+        return new ProcedureResource($procedure->load('category'));
     }
 
     /**
@@ -59,7 +99,7 @@ class AdminProcedureController extends Controller
         $validated = $request->validated();
         $procedure->update($validated);
 
-        return new ProcedureResource($procedure->fresh()->load('category')); // Załaduj kategorię
+        return new ProcedureResource($procedure->fresh()->load('category'));
     }
 
     /**

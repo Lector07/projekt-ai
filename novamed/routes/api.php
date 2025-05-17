@@ -39,6 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('admin.')
         ->group(function () {
             Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index']);
+
+            // Trasa do kategorii MUSI być przed apiResource
+            Route::get('/procedures/categories', [Admin\AdminProcedureController::class, 'categories'])
+                ->name('procedures.categories');
+
+            // Trasy apiResource poniżej
             Route::apiResource('/users', Admin\AdminUserController::class);
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
