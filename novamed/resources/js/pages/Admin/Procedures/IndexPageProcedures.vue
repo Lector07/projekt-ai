@@ -257,9 +257,9 @@ Miesiąc 3-6: ...`;
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto py-6 px-2 sm:px-4 lg:px-6">
             <!-- Nagłówek i wyszukiwarka -->
-            <div class="rounded-lg border border-border shadow-sm bg-card mb-3 md:mb-4 overflow-hidden">
+            <div class="rounded-lg border border-border  shadow-sm bg-card mb-3 md:mb-4 overflow-hidden">
                 <div class="p-2 sm:p-4 border-b">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div class="flex flex-col  sm:flex-row justify-between items-start sm:items-center">
                         <div>
                             <h2 class="text-2xl font-bold leading-7 text-foreground">Zabiegi Medyczne</h2>
                             <p class="text-sm text-muted-foreground mt-1">Zarządzaj dostępnymi zabiegami</p>
@@ -316,6 +316,8 @@ Miesiąc 3-6: ...`;
                 </div>
             </div>
 
+            <p class="text-sm  mt-1 ml-2 mb-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
+
             <!-- Tabela procedur w responsywnym kontenerze -->
             <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-hidden">
                 <!-- Stany ładowania i błędów -->
@@ -333,7 +335,7 @@ Miesiąc 3-6: ...`;
                 </div>
 
                 <!-- ScrollArea z tabelą -->
-                <div v-else class="w-full overflow-x-auto">
+                <div v-else class="w-full overflow-x-auto dark:bg-gray-800">
                     <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                         <Table class="w-full">
                             <TableHeader class="sticky top-0 bg-card z-10">
@@ -659,4 +661,42 @@ Miesiąc 3-6: ...`;
         font-size: 0.875rem;
     }
 }
+
+
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+th:first-child {
+    border-top-left-radius: 0.5rem;
+}
+
+th:last-child {
+    border-top-right-radius: 0.5rem;
+}
+
+tr:last-child td:first-child {
+    border-bottom-left-radius: 0.5rem;
+}
+
+tr:last-child td:last-child {
+    border-bottom-right-radius: 0.5rem;
+}
+
+:deep(thead th) {
+    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
+    color: #374151; /* Zastępuje var(--table-header-color) */
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+
+:deep(tbody td) {
+    padding: 1rem !important;
+    vertical-align: middle;
+}
+/* Stylizacja przycisków w tabeli */
 </style>

@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Trasy apiResource poniżej
             Route::apiResource('/users', Admin\AdminUserController::class);
-            Route::apiResource('procedure-categories', AdminProcedureCategoryController::class);
+            Route::apiResource('procedure-categories', Admin\AdminProcedureCategoryController::class);
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
             Route::apiResource('/appointments', Admin\AdminAppointmentController::class);

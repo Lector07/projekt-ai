@@ -438,8 +438,10 @@ onMounted(() => {
                 </div>
             </div>
 
+            <p class="text-sm flex justify-end mt-1 mr-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
+
             <!-- Wskaźnik ładowania -->
-            <div v-if="loading" class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <div v-if="loading" class="bg-white mt-2 dark:bg-gray-800 rounded-xl shadow-sm p-4">
                 <div v-for="i in 5" :key="i" class="mb-3">
                     <Skeleton class="h-12 w-full"/>
                 </div>
@@ -458,7 +460,7 @@ onMounted(() => {
             </div>
 
             <!-- Tabela użytkowników z Data Table -->
-            <div v-else-if="!loading && !error" class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div v-else-if="!loading && !error" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <div class="overflow-x-auto">
                         <Table>

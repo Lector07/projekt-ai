@@ -48,6 +48,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {Separator} from "@/components/ui/separator";
 
 // Komponent do wyświetlania błędów formularza
 const InputError = (props: { message?: string }) => {
@@ -361,7 +362,7 @@ onMounted(() => {
         <div class="flex flex-col gap-5 p-6">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h1 class="text-2xl font-bold text-nova-darkest dark:text-nova-light">Zarządzanie Lekarzami</h1>
-                <Button variant="default" class="flex bg-nova-primary hover:bg-nova-accent items-center gap-2"
+                <Button variant="default" class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
                         @click="openAddForm">
                     <Icon name="userPlus" size="18"/>
                     <span>Dodaj Nowego Lekarza</span>
@@ -396,7 +397,11 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div v-if="loading" class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <Separator class="my-1"/>
+
+            <p class="text-sm  mt-1 ml-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
+
+            <div v-if="loading" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
                 <div v-for="i in 5" :key="i" class="mb-3">
                     <Skeleton class="h-12 w-full"/>
                 </div>
@@ -408,7 +413,7 @@ onMounted(() => {
             </div>
 
             <div v-else-if="!loading && !error"
-                 class="bg-white mt-10 dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                 class="bg-white  dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table>
                         <TableHeader>
@@ -434,11 +439,11 @@ onMounted(() => {
                                             <TableCell>{{ doctor.specialization }}</TableCell>
                                             <TableCell class="max-w-[200px]">
                                                 <div v-if="doctor.bio" class="truncate">
-                                                    {{ truncateText(doctor.bio, 60) }}
-                                                    <TooltipProvider v-if="doctor.bio.length > 60">
+                                                    {{ truncateText(doctor.bio, 50) }}
+                                                    <TooltipProvider v-if="doctor.bio.length > 50">
                                                         <Tooltip>
                                                             <TooltipTrigger as="span"
-                                                                            class="text-nova-primary ml-1 cursor-help">
+                                                                            class="text-nova-primary dark:text-nova-accent ml-1 cursor-help">
                                                                 [więcej]
                                                             </TooltipTrigger>
                                                             <TooltipContent class="max-w-md whitespace-normal">
@@ -476,7 +481,7 @@ onMounted(() => {
                 </ScrollArea>
             </div>
             <div
-                class="flex justify-center items-center px-4 py-3  dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                class="flex justify-center items-center px-4 py-3  border-t border-gray-200">
                 <div class="mt-4 flex justify-center">
                     <Pagination
                         v-if="totalPages > 1"
@@ -519,25 +524,30 @@ onMounted(() => {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-1"><Label for="new-first_name">Imię</Label><Input id="new-first_name"
                                                                                               v-model="newDoctor.first_name"
-                                                                                              :class="{'border-red-500': doctorFormErrors.first_name}"/>
+                                                                                              :class="{'border-red-500': doctorFormErrors.first_name}"
+                                                                                              class="border border-nova-primary focus:shadow-nova-accent"
+                        placeholder="Wpisz imię"/>
                             <InputError :message="doctorFormErrors.first_name?.[0]"/>
                         </div>
                         <div class="space-y-1"><Label for="new-last_name">Nazwisko</Label>
                             <Input id="new-last_name" v-model="newDoctor.last_name"
-                                   :class="{'border-red-500': doctorFormErrors.last_name}"/>
+                                   :class="{'border-red-500': doctorFormErrors.last_name}"
+                            placeholder="Wpisz nazwisko"/>
                             <InputError :message="doctorFormErrors.last_name?.[0]"/>
                         </div>
                     </div>
                     <div class="space-y-1"><Label for="new-specialization">Specjalizacja</Label><Input
                         id="new-specialization" v-model="newDoctor.specialization"
-                        :class="{'border-red-500': doctorFormErrors.specialization}"/>
+                        :class="{'border-red-500': doctorFormErrors.specialization}"
+                    placeholder="Wpisz specjalizację lekarza"/>
                         <InputError :message="doctorFormErrors.specialization?.[0]"/>
                     </div>
                     <div class="space-y-1">
                         <Label for="new-bio">Bio (opcjonalnie)</Label>
                         <Input id="new-bio"
                                v-model="newBioValue"
-                               :class="{'border-red-500': doctorFormErrors.bio}"/>
+                               :class="{'border-red-500': doctorFormErrors.bio}"
+                        placeholder="Dodaj opis lekarza"/>
                         <div v-if="doctorFormErrors.bio" class="text-sm text-red-500">
                             {{ doctorFormErrors.bio[0] }}
                         </div>
@@ -594,7 +604,8 @@ onMounted(() => {
                         <div class="space-y-1 mt-2"><Label for="new-doctor-password-confirm">Potwierdź
                             hasło</Label><Input id="new-doctor-password-confirm" type="password"
                                                 v-model="(newDoctor as any).password_confirmation"
-                                                :class="{'border-red-500': doctorFormErrors.password_confirmation}"/>
+                                                :class="{'border-red-500': doctorFormErrors.password_confirmation}"
+                        placeholder="Wpisz ponownie hasło"/>
                             <InputError :message="doctorFormErrors.password_confirmation?.[0]"/>
                         </div>
                     </div>
@@ -740,6 +751,12 @@ tr:last-child td:last-child {
 
 :deep(.p-toast) {
     font-family: 'Inter', sans-serif;
+}
+
+:deep(.input:focus-visible) {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--nova-accent, #5c6ac4);
+    border-color: var(--nova-accent, #5c6ac4);
 }
 
 </style>
