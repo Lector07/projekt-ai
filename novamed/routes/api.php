@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\Admin\AdminProcedureCategoryController;
 
 // Importuj kontrolery V1 i Admin
 
@@ -46,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Trasy apiResource poniżej
             Route::apiResource('/users', Admin\AdminUserController::class);
+            Route::apiResource('procedure-categories', AdminProcedureCategoryController::class);
             Route::apiResource('/doctors', Admin\AdminDoctorController::class);
             Route::apiResource('/procedures', Admin\AdminProcedureController::class);
             Route::apiResource('/appointments', Admin\AdminAppointmentController::class);

@@ -72,6 +72,11 @@ const adminNavItems: NavItem[] = [
         to: { name: 'admin.procedures' },
         icon: ClipboardList,
     },
+    {
+        title: 'Kategorie zabiegów',
+        to: { name: 'admin.procedure-categories' },
+        icon: Folder,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

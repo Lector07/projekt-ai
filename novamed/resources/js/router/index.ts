@@ -17,6 +17,7 @@ import DashboardAdmin from "@/pages/Admin/DashboardAdmin.vue";
 import IndexPageUsers from "@/pages/Admin/Users/IndexPageUsers.vue";
 import IndexPageDoctorsDoctors from "@/pages/Admin/Doctors/IndexPageDoctors.vue";
 import IndexPageProcedures from "@/pages/Admin/Procedures/IndexPageProcedures.vue";
+import IndexPageCategories from "@/pages/Admin/ProcedureCategories/IndexPageCategories.vue";
 
 // Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -60,8 +61,16 @@ const adminRoutes: Array<RouteRecordRaw> = [
             requiresAdmin: true
         }
     },
-
-
+    {
+        path: '/admin/procedure-categories',  // Poprawiona ścieżka URL
+        name: 'admin.procedure-categories',
+        component: IndexPageCategories,
+        meta: {
+            title: 'Kategorie procedur',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
 ];
 
 const routes: Array<RouteRecordRaw> = [

@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\Appointment;
+use App\Models\ProcedureCategory;
 use App\Policies\AppointmentPolicy;
 use App\Models\Doctor;
 use App\Policies\DoctorPolicy;
 use App\Models\Procedure;
 use App\Policies\ProcedurePolicy;
+use App\Policies\ProcedureCategoryPolicy;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -28,6 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         Doctor::class => DoctorPolicy::class,
         Procedure::class => ProcedurePolicy::class,
         Appointment::class => AppointmentPolicy::class,
+        ProcedureCategory::class => ProcedureCategoryPolicy::class,
     ];
 
     /**
