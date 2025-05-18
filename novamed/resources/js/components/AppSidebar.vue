@@ -77,6 +77,11 @@ const adminNavItems: NavItem[] = [
         to: { name: 'admin.procedure-categories' },
         icon: Folder,
     },
+    {
+        title: 'Wizyty',
+        to: { name: 'admin.appointments' },
+        icon: Calendar,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

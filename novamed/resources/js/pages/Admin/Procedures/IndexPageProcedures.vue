@@ -256,7 +256,6 @@ Miesiąc 3-6: ...`;
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto py-6 px-2 sm:px-4 lg:px-6">
-            <!-- Nagłówek i wyszukiwarka -->
             <div class="rounded-lg border border-border  shadow-sm bg-card mb-3 md:mb-4 overflow-hidden">
                 <div class="p-2 sm:p-4 border-b">
                     <div class="flex flex-col  sm:flex-row justify-between items-start sm:items-center">
@@ -316,11 +315,7 @@ Miesiąc 3-6: ...`;
                 </div>
             </div>
 
-            <p class="text-sm  mt-1 ml-2 mb-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
-
-            <!-- Tabela procedur w responsywnym kontenerze -->
             <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-hidden">
-                <!-- Stany ładowania i błędów -->
                 <div v-if="loading" class="flex justify-center items-center p-8">
                     <Icon name="loader2" size="32" class="animate-spin text-nova-primary"/>
                 </div>
@@ -334,7 +329,6 @@ Miesiąc 3-6: ...`;
                     <Button variant="link" @click="resetFilters">Wyczyść filtry</Button>
                 </div>
 
-                <!-- ScrollArea z tabelą -->
                 <div v-else class="w-full overflow-x-auto dark:bg-gray-800">
                     <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                         <Table class="w-full">
@@ -353,15 +347,7 @@ Miesiąc 3-6: ...`;
                                     <TableCell class="font-medium">{{ procedure.name }}</TableCell>
                                     <TableCell class="text-sm text-gray-500 max-w-[200px] min-w-[150px]">
                                         <div v-if="procedure.description" class="truncate">
-                                            <span :title="procedure.description">{{ truncateText(procedure.description, 80) }}</span>
-                                            <TooltipProvider v-if="procedure.description.length > 60">
-                                                <Tooltip>
-                                                    <TooltipTrigger as="span" class="text-nova-primary ml-1 cursor-help whitespace-nowrap">[więcej]</TooltipTrigger>
-                                                    <TooltipContent class="max-w-md whitespace-normal">
-                                                        <p class="text-sm">{{ procedure.description }}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
+                                            <span :title="procedure.description">{{ truncateText(procedure.description, 40) }}</span>
                                         </div>
                                         <div v-else class="text-gray-400">Brak opisu</div>
                                     </TableCell>
@@ -370,8 +356,8 @@ Miesiąc 3-6: ...`;
                                             {{ procedure.category?.name || 'Brak kategorii' }}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell class="text-center">{{ formatPrice(procedure.base_price) }}</TableCell>
-                                    <TableCell class="text-center">
+                                    <TableCell class="text-left">{{ formatPrice(procedure.base_price) }}</TableCell>
+                                    <TableCell class="text-left">
                                         <TooltipProvider class="flex space-x-1">
                                             <Tooltip>
                                                 <TooltipTrigger>
@@ -402,7 +388,6 @@ Miesiąc 3-6: ...`;
                     </ScrollArea>
                 </div>
 
-                <!-- Paginacja w ramach tego samego kontenera -->
                 <div v-if="totalPages > 1 && procedures.length > 0"
                      class="flex justify-center items-center p-3 sm:p-4 border-t border-border">
                     <Pagination
@@ -434,6 +419,7 @@ Miesiąc 3-6: ...`;
                             <PaginationLast @click="goToPage(totalPages)"/>
                         </PaginationList>
                     </Pagination>
+                    <p class="text-sm justify-end text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
                 </div>
             </div>
         </div>

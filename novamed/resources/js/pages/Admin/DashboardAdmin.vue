@@ -17,6 +17,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from '@/components/ui/carousel'
+import {Separator} from "@/components/ui/separator";
 
 // Interfejs dla danych dashboardu
 interface DashboardStats {
@@ -403,7 +404,8 @@ onMounted(async () => {
                     <!-- Wykres wizyt miesięcznie -->
                     <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
                         <div class="p-4">
-                            <h3 class="text-lg font-medium mb-4">Wizyty w ciągu roku</h3>
+                            <h3 class="text-lg font-medium mb-2">Wizyty w ciągu roku</h3>
+                            <Separator class="mb-2" />
                             <div style="height: 320px;">
                                 <Chart type="line" :data="appointmentsChartData" :options="appointmentsChartOptions" />
                             </div>
@@ -413,7 +415,8 @@ onMounted(async () => {
                     <!-- Wykres popularnych procedur -->
                     <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
                         <div class="p-4">
-                            <h3 class="text-lg font-medium mb-4">Popularne procedury</h3>
+                            <h3 class="text-lg font-medium mb-2">Popularne procedury</h3>
+                            <Separator class="mb-2" />
                             <div style="height: 320px">
                                 <Chart type="pie" :data="proceduresChartData" :options="proceduresChartOptions" />
                             </div>

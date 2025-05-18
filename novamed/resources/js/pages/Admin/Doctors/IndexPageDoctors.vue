@@ -260,14 +260,36 @@ const addDoctor = async () => {
     if (!validateDoctorForm(newDoctor.value)) return;
     doctorFormLoading.value = true;
     try {
-        await axios.post('/api/v1/admin/doctors', newDoctor.value);
+        const doctorData = { ...newDoctor.value };
+
+        // Zapewnij prawidłowe przesłanie user_id
+        if (doctorData.user_id) {
+            console.log('Wybrano user_id:', doctorData.user_id);
+            const user = availableUsers.value.find(u => u.id === doctorData.user_id);
+            if (user) {
+                console.log('Znaleziono użytkownika:', user);
+                doctorData.user = {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+                };
+            }
+        } else {
+            console.log('Brak wybranego user_id');
+        }
+
+        console.log('Dane wysyłane do API:', doctorData);
+
+        await axios.post('/api/v1/admin/doctors', doctorData);
         showAddDoctorForm.value = false;
         resetDoctorForm();
         loadDoctors();
         showSuccessToast('Sukces', 'Lekarz został dodany pomyślnie.');
     } catch (err: any) {
+        console.error('Błąd podczas dodawania lekarza:', err);
         if (err.response?.status === 422) {
             doctorFormErrors.value = err.response.data.errors;
+            console.log('Błędy walidacji:', err.response.data.errors);
         } else {
             showErrorToast('Błąd', err.response?.data?.message || 'Wystąpił błąd podczas dodawania lekarza.');
         }
@@ -341,10 +363,38 @@ const formatDate = (dateString?: string | null) => {
     }
 };
 
+const populateFormFromUser = (userId: number) => {
+    if (!userId) {
+        return;
+    }
+
+    const selectedUser = availableUsers.value.find(user => user.id === userId);
+    if (selectedUser) {
+        // Rozdziel pełne imię na części (zakładając format "Imię Nazwisko")
+        const nameParts = selectedUser.name.split(' ');
+        if (nameParts.length >= 2) {
+            newDoctor.value.first_name = nameParts[0];
+            newDoctor.value.last_name = nameParts.slice(1).join(' ');
+        } else {
+            newDoctor.value.first_name = selectedUser.name;
+            newDoctor.value.last_name = '';
+        }
+
+        // Dodanie emaila do formularza
+        (newDoctor.value as any).email = selectedUser.email;
+    }
+};
+
 const truncateText = (text: string, maxLength: number): string => {
     if (!text || text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
 };
+
+watch(() => newDoctor.value.user_id, (newValue) => {
+    if (newValue) {
+        populateFormFromUser(newValue);
+    }
+}, {immediate: true});
 
 watch(() => query.value.search, resetPagination);
 watch(() => query.value.specialization, resetPagination);
@@ -362,7 +412,8 @@ onMounted(() => {
         <div class="flex flex-col gap-5 p-6">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h1 class="text-2xl font-bold text-nova-darkest dark:text-nova-light">Zarządzanie Lekarzami</h1>
-                <Button variant="default" class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
+                <Button variant="default"
+                        class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
                         @click="openAddForm">
                     <Icon name="userPlus" size="18"/>
                     <span>Dodaj Nowego Lekarza</span>
@@ -398,9 +449,6 @@ onMounted(() => {
             </div>
 
             <Separator class="my-1"/>
-
-            <p class="text-sm  mt-1 ml-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
-
             <div v-if="loading" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
                 <div v-for="i in 5" :key="i" class="mb-3">
                     <Skeleton class="h-12 w-full"/>
@@ -439,18 +487,7 @@ onMounted(() => {
                                             <TableCell>{{ doctor.specialization }}</TableCell>
                                             <TableCell class="max-w-[200px]">
                                                 <div v-if="doctor.bio" class="truncate">
-                                                    {{ truncateText(doctor.bio, 50) }}
-                                                    <TooltipProvider v-if="doctor.bio.length > 50">
-                                                        <Tooltip>
-                                                            <TooltipTrigger as="span"
-                                                                            class="text-nova-primary dark:text-nova-accent ml-1 cursor-help">
-                                                                [więcej]
-                                                            </TooltipTrigger>
-                                                            <TooltipContent class="max-w-md whitespace-normal">
-                                                                <p class="text-sm">{{ doctor.bio }}</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </TooltipProvider>
+                                                    {{ truncateText(doctor.bio, 40) }}
                                                 </div>
                                                 <div v-else class="text-gray-400">Brak</div>
                                             </TableCell>
@@ -497,7 +534,11 @@ onMounted(() => {
                             <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
-                                    <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
+                                    <Button
+                                        :variant="currentPage === item.value ? 'default' : 'outline'"
+                                        :class="currentPage === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : ''"
+                                        size="sm"
+                                    >
                                         {{ item.value }}
                                     </Button>
                                 </PaginationListItem>
@@ -507,6 +548,7 @@ onMounted(() => {
                             <PaginationLast @click="goToPage(totalPages)"/>
                         </PaginationList>
                     </Pagination>
+                    <p class="text-sm justify-end text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
                 </div>
             </div>
         </div>
@@ -522,32 +564,42 @@ onMounted(() => {
                 </div>
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-1"><Label for="new-first_name">Imię</Label><Input id="new-first_name"
-                                                                                              v-model="newDoctor.first_name"
-                                                                                              :class="{'border-red-500': doctorFormErrors.first_name}"
-                                                                                              class="border border-nova-primary focus:shadow-nova-accent"
-                        placeholder="Wpisz imię"/>
+                        <div class="space-y-1"><Label for="new-first_name">Imię</Label>
+                            <Input id="new-first_name"
+                                   v-model="newDoctor.first_name"
+                                   :class="{'border-red-500': doctorFormErrors.first_name}"
+                                   class="border border-nova-primary focus:shadow-nova-accent"
+                                   placeholder="Wpisz imię"/>
                             <InputError :message="doctorFormErrors.first_name?.[0]"/>
                         </div>
                         <div class="space-y-1"><Label for="new-last_name">Nazwisko</Label>
                             <Input id="new-last_name" v-model="newDoctor.last_name"
                                    :class="{'border-red-500': doctorFormErrors.last_name}"
-                            placeholder="Wpisz nazwisko"/>
+                                   placeholder="Wpisz nazwisko"/>
                             <InputError :message="doctorFormErrors.last_name?.[0]"/>
                         </div>
                     </div>
                     <div class="space-y-1"><Label for="new-specialization">Specjalizacja</Label><Input
                         id="new-specialization" v-model="newDoctor.specialization"
                         :class="{'border-red-500': doctorFormErrors.specialization}"
-                    placeholder="Wpisz specjalizację lekarza"/>
+                        placeholder="Wpisz specjalizację lekarza"/>
                         <InputError :message="doctorFormErrors.specialization?.[0]"/>
+                    </div>
+                    <div v-if="newDoctor.user_id" class="space-y-1 mt-2">
+                        <Label>Email wybranego użytkownika</Label>
+                        <div
+                            class="px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            {{ availableUsers.find(u => u.id === newDoctor.user_id)?.email || 'Brak emaila' }}
+                        </div>
+                        <p class="text-xs text-muted-foreground mt-1">Email zostanie automatycznie używany dla konta
+                            lekarza.</p>
                     </div>
                     <div class="space-y-1">
                         <Label for="new-bio">Bio (opcjonalnie)</Label>
                         <Input id="new-bio"
                                v-model="newBioValue"
                                :class="{'border-red-500': doctorFormErrors.bio}"
-                        placeholder="Dodaj opis lekarza"/>
+                               placeholder="Dodaj opis lekarza"/>
                         <div v-if="doctorFormErrors.bio" class="text-sm text-red-500">
                             {{ doctorFormErrors.bio[0] }}
                         </div>
@@ -605,7 +657,7 @@ onMounted(() => {
                             hasło</Label><Input id="new-doctor-password-confirm" type="password"
                                                 v-model="(newDoctor as any).password_confirmation"
                                                 :class="{'border-red-500': doctorFormErrors.password_confirmation}"
-                        placeholder="Wpisz ponownie hasło"/>
+                                                placeholder="Wpisz ponownie hasło"/>
                             <InputError :message="doctorFormErrors.password_confirmation?.[0]"/>
                         </div>
                     </div>
@@ -753,10 +805,5 @@ tr:last-child td:last-child {
     font-family: 'Inter', sans-serif;
 }
 
-:deep(.input:focus-visible) {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--nova-accent, #5c6ac4);
-    border-color: var(--nova-accent, #5c6ac4);
-}
 
 </style>

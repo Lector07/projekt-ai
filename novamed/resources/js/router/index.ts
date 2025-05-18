@@ -18,6 +18,7 @@ import IndexPageUsers from "@/pages/Admin/Users/IndexPageUsers.vue";
 import IndexPageDoctorsDoctors from "@/pages/Admin/Doctors/IndexPageDoctors.vue";
 import IndexPageProcedures from "@/pages/Admin/Procedures/IndexPageProcedures.vue";
 import IndexPageCategories from "@/pages/Admin/ProcedureCategories/IndexPageCategories.vue";
+import IndexPageAppointments from "@/pages/Admin/Appointments/IndexPageAppointments.vue";
 
 // Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -67,6 +68,16 @@ const adminRoutes: Array<RouteRecordRaw> = [
         component: IndexPageCategories,
         meta: {
             title: 'Kategorie procedur',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+    {
+        path: '/admin/appointments',
+        name: 'admin.appointments',
+        component: IndexPageAppointments,
+        meta: {
+            title: 'Wizyty',
             requiresAuth: true,
             requiresAdmin: true
         }

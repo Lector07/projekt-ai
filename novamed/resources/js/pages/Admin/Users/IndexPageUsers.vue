@@ -52,6 +52,7 @@ import {
     ScrollArea,
     ScrollBar
 } from "@/components/ui/scroll-area";
+import {TooltipContent} from "@/components/ui/tooltip";
 
 // Interfejs dla danych użytkownika
 interface User {
@@ -393,7 +394,6 @@ onMounted(() => {
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h1 class="text-2xl font-bold text-nova-darkest dark:text-nova-light">Zarządzanie Użytkownikami</h1>
 
-                <!-- Zamieniony Popover na zwykły przycisk -->
                 <Button
                     variant="default"
                     class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
@@ -404,7 +404,6 @@ onMounted(() => {
                 </Button>
             </div>
 
-            <!-- Filtry i wyszukiwanie -->
             <div
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-900 p-4 border rounded-xl">
                 <div class="space-y-2">
@@ -438,28 +437,22 @@ onMounted(() => {
                 </div>
             </div>
 
-            <p class="text-sm flex justify-end mt-1 mr-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
-
-            <!-- Wskaźnik ładowania -->
             <div v-if="loading" class="bg-white mt-2 dark:bg-gray-800 rounded-xl shadow-sm p-4">
                 <div v-for="i in 5" :key="i" class="mb-3">
                     <Skeleton class="h-12 w-full"/>
                 </div>
             </div>
 
-            <!-- Komunikat o błędzie -->
             <div v-else-if="error"
                  class="p-6 bg-red-50 text-red-500 rounded-xl border border-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                 {{ error }}
             </div>
 
-            <!-- Tabela użytkowników -->
             <div v-if="!loading && !error && users.length === 0"
                  class="p-8 text-center text-gray-500 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
                 Nie znaleziono użytkowników pasujących do kryteriów wyszukiwania.
             </div>
 
-            <!-- Tabela użytkowników z Data Table -->
             <div v-else-if="!loading && !error" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <div class="overflow-x-auto">
@@ -514,7 +507,6 @@ onMounted(() => {
                     </div>
                 </ScrollArea>
 
-                <!-- Paginacja -->
                 <div
                     class="flex justify-center items-center px-4 py-3  dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
                     <div class="mt-4 flex justify-center">
@@ -534,8 +526,9 @@ onMounted(() => {
                                 <template v-for="(item, index) in items" :key="index">
                                     <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
                                         <Button
-                                            :variant="currentPage === item.value ? 'outline' : 'ghost'"
-                                            :class="currentPage === item.value ? 'bg-muted' : ''"
+                                            :variant="currentPage === item.value ? 'default' : 'outline'"
+                                            :class="currentPage === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : ''"
+                                            size="sm"
                                         >
                                             {{ item.value }}
                                         </Button>

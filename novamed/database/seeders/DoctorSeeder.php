@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-// Usunięto import Role
 use App\Models\Doctor;
 
 class DoctorSeeder extends Seeder

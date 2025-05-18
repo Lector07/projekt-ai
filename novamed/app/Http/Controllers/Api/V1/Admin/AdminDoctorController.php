@@ -62,9 +62,23 @@ class AdminDoctorController extends Controller
     {
         $this->authorize('create', Doctor::class);
         $validated = $request->validated();
-        // TODO: Logika zapisu zdjęcia, jeśli jest w $validated['profile_picture']
-        // Na razie tworzymy bez zdjęcia
-        $doctor = Doctor::create(collect($validated)->except('profile_picture')->toArray());
+
+        $doctor = new Doctor();
+        $doctor->first_name = $validated['first_name'];
+        $doctor->last_name = $validated['last_name'];
+        $doctor->specialization = $validated['specialization'];
+
+        if (isset($validated['bio'])) $doctor->bio = $validated['bio'];
+        if (isset($validated['price_modifier'])) $doctor->price_modifier = $validated['price_modifier'];
+
+        if (isset($validated['user_id']) && !empty($validated['user_id'])) {
+            $doctor->user_id = $validated['user_id'];
+        } else {}
+
+        $doctor->save();
+
+        $doctor->refresh();
+        $doctor->load('user');
 
         return (new DoctorResource($doctor))
             ->response()

@@ -27,6 +27,7 @@ class StoreDoctorRequest extends FormRequest
             'specialization' => 'required|string|max:255',
             'bio' => 'nullable|string',
             'price_modifier' => 'nullable|numeric|min:0',
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }
