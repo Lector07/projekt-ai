@@ -22,18 +22,35 @@ class AdminAppointmentController extends Controller
         $query = Appointment::query()
             ->with(['patient', 'doctor', 'procedure']);
 
-        // Filtrowanie po ID lekarza
-        if ($request->has('doctor_id')) {
-            $query->where('doctor_id', $request->doctor_id);
+        // Filtrowanie po imieniu lub nazwisku lekarza
+        if ($request->has('doctor_name') && !empty($request->doctor_name)) {
+            $query->whereHas('doctor', function($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->doctor_name . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->doctor_name . '%');
+            });
         }
 
-        // Filtrowanie po ID pacjenta
-        if ($request->has('patient_id')) {
-            $query->where('patient_id', $request->patient_id);
+        // Filtrowanie po imieniu lub nazwisku pacjenta
+        if ($request->has('patient_name') && !empty($request->patient_name)) {
+            $query->whereHas('patient', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->patient_name . '%')
+                    ->orWhere('first_name', 'like', '%' . $request->patient_name . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->patient_name . '%');
+            });
+        }
+
+        // Filtrowanie po dacie od
+        if ($request->has('date_from') && !empty($request->date_from)) {
+            $query->whereDate('appointment_datetime', '>=', $request->date_from);
+        }
+
+        // Filtrowanie po dacie do
+        if ($request->has('date_to') && !empty($request->date_to)) {
+            $query->whereDate('appointment_datetime', '<=', $request->date_to);
         }
 
         // Filtrowanie po statusie
-        if ($request->has('status')) {
+        if ($request->has('status') && !empty($request->status)) {
             $query->where('status', $request->status);
         }
 

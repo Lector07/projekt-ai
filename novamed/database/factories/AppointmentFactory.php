@@ -37,7 +37,7 @@ class AppointmentFactory extends Factory
             'doctor_id' => $doctor->id,
             'procedure_id' => $procedure->id,
             'appointment_datetime' => $appointmentDateTime,
-            'status' => $this->faker->randomElement(['scheduled', 'completed', 'cancelled']),
+            'status' => $this->faker->randomElement(['scheduled', 'completed', 'cancelled', 'no_show']),
             'patient_notes' => fake()->optional(0.3)->sentence(),
             'admin_notes' => fake()->optional(0.2)->sentence(),
         ];

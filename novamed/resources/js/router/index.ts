@@ -19,6 +19,9 @@ import IndexPageDoctorsDoctors from "@/pages/Admin/Doctors/IndexPageDoctors.vue"
 import IndexPageProcedures from "@/pages/Admin/Procedures/IndexPageProcedures.vue";
 import IndexPageCategories from "@/pages/Admin/ProcedureCategories/IndexPageCategories.vue";
 import IndexPageAppointments from "@/pages/Admin/Appointments/IndexPageAppointments.vue";
+import DoctorDetailPageAdmin from "@/pages/Admin/Doctors/DoctorDetailPageAdmin.vue";
+import UserDetailPageAdmin from "@/pages/Admin/Users/UserDetailPageAdmin.vue";
+import AppointmentDetailPage from "@/pages/Admin/Appointments/AppointmentDetailPage.vue";
 
 // Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -78,6 +81,36 @@ const adminRoutes: Array<RouteRecordRaw> = [
         component: IndexPageAppointments,
         meta: {
             title: 'Wizyty',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+    {
+        path: '/admin/doctors/:id',
+        name: 'admin-doctor-details',
+        component: DoctorDetailPageAdmin,
+        meta: {
+            title: 'Szczegóły lekarza',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+    {
+        path: '/admin/patients/:id',
+        name: 'admin-patient-details',
+        component: UserDetailPageAdmin,
+        meta: {
+            title: 'Szczegóły pacjenta',
+            requiresAuth: true,
+            requiresAdmin: true
+        }
+    },
+    {
+        path: '/admin/appointment/:id',
+        name: 'admin-appointment-details',
+        component: AppointmentDetailPage,
+        meta: {
+            title: 'Szczegóły wizyty',
             requiresAuth: true,
             requiresAdmin: true
         }

@@ -31,8 +31,8 @@ class AppointmentResource extends JsonResource
             'doctor' => $this->whenLoaded('doctor', function() {
                 return [
                     'id' => $this->doctor->id,
-                    'name' => $this->doctor->name,
-                    'email' => $this->doctor->email
+                    'name' => $this->doctor->first_name . ' ' . $this->doctor->last_name,
+                    'specialization' => $this->doctor->specialization,
                 ];
             }),
             'procedure' => $this->whenLoaded('procedure', function() {
