@@ -207,7 +207,7 @@ onMounted(() => {
             </div>
 
             <!-- Tabela kategorii -->
-            <div v-else class="bg-white mt-2 dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            <div v-else class="bg-white mt-2 dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto ">
                     <Table class="w-full p-2">
                         <TableHeader class="bg-[#f9fafb]">

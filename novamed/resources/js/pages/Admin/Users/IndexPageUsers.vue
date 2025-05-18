@@ -405,7 +405,7 @@ onMounted(() => {
             </div>
 
             <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-900 p-4 border rounded-xl">
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 border rounded-xl">
                 <div class="space-y-2">
                     <Label for="search">Wyszukiwanie</Label>
                     <div class="relative">
@@ -437,7 +437,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div v-if="loading" class="bg-white mt-2 dark:bg-gray-800 rounded-xl shadow-sm p-4">
+            <div v-if="loading" class="bg-white mt-2 dark:bg-gray-900 rounded-xl shadow-sm p-4">
                 <div v-for="i in 5" :key="i" class="mb-3">
                     <Skeleton class="h-12 w-full"/>
                 </div>
@@ -449,12 +449,12 @@ onMounted(() => {
             </div>
 
             <div v-if="!loading && !error && users.length === 0"
-                 class="p-8 text-center text-gray-500 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                 class="p-8 text-center text-gray-500 dark:bg-gray-900 rounded-xl shadow-sm">
                 Nie znaleziono użytkowników pasujących do kryteriów wyszukiwania.
             </div>
 
-            <div v-else-if="!loading && !error" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
+            <div v-else-if="!loading && !error" class=" dark:bg-gray-900 rounded-xl dark:border-gray-600 shadow-sm overflow-hidden">
+                <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)] dark:border-gray-600">
                     <div class="overflow-x-auto">
                         <Table>
                             <TableHeader>
@@ -508,7 +508,7 @@ onMounted(() => {
                 </ScrollArea>
 
                 <div
-                    class="flex justify-center items-center px-4 py-3  dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    class="flex justify-center items-center border-2 rounded-b-xl px-4 py-3 border-t dark:bg-background border-gray-200 dark:border-gray-900">
                     <div class="mt-4 flex justify-center">
                         <Pagination
                             v-if="totalPages > 1"

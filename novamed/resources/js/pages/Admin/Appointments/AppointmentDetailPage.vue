@@ -279,7 +279,7 @@ onMounted(() => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            class="w-full sm:w-auto bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
+                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
                                         >
                                             Zobacz profil pacjenta
                                         </Button>
@@ -313,7 +313,7 @@ onMounted(() => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            class="w-full sm:w-auto bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
+                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
                                         >
                                             Zobacz profil lekarza
                                         </Button>
@@ -402,7 +402,7 @@ onMounted(() => {
                 <!-- Przyciski akcji -->
                 <div
                     class="p-2 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col sm:flex-row sm:justify-end gap-3">
-                    <Button variant="outline" class="w-full sm:w-auto bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light" @click="goBack">
+                    <Button variant="outline" class="w-full sm:w-auto text-nova-light bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light" @click="goBack">
                         Powrót
                     </Button>
                 </div>

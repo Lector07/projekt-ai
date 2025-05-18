@@ -421,7 +421,7 @@ onMounted(() => {
             </div>
 
             <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-white dark:bg-gray-900 p-4 border rounded-xl">
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 border rounded-xl">
                 <div class="space-y-2">
                     <Label for="search">Wyszukiwanie</Label>
                     <div class="relative">
@@ -461,7 +461,7 @@ onMounted(() => {
             </div>
 
             <div v-else-if="!loading && !error"
-                 class="bg-white  dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                 class="bg-white  dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table>
                         <TableHeader>

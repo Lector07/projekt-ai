@@ -329,7 +329,7 @@ Miesiąc 3-6: ...`;
                     <Button variant="link" @click="resetFilters">Wyczyść filtry</Button>
                 </div>
 
-                <div v-else class="w-full overflow-x-auto dark:bg-gray-800">
+                <div v-else class="w-full overflow-x-auto dark:bg-gray-900">
                     <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                         <Table class="w-full">
                             <TableHeader class="sticky top-0 bg-card z-10">
@@ -352,7 +352,7 @@ Miesiąc 3-6: ...`;
                                         <div v-else class="text-gray-400">Brak opisu</div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" class="bg-nova-primary text-nova-light">
+                                        <Badge variant="outline" class="bg-nova-primary dark:bg-nova-accent text-nova-light">
                                             {{ procedure.category?.name || 'Brak kategorii' }}
                                         </Badge>
                                     </TableCell>

@@ -338,10 +338,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
+        <!-- Komponent Toast do wyświetlania powiadomień -->
+        <Toast />
+
         <div class="container mx-auto px-2 py-4">
             <h1 class="text-2xl font-bold mb-1 dark:text-white">Zarządzanie Wizytami</h1>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-4 p-4 border dark:border-gray-700">
+            <div class="rounded-lg shadow-sm mb-4 p-4 border dark:border-gray-700">
                 <h2 class="text-lg font-semibold mb-2 dark:text-white">Filtry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -351,7 +354,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             v-model="filters.doctor_name"
                             type="text"
                             placeholder="Imię lub nazwisko lekarza"
-                            class="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            class="w-full"
                         />
                     </div>
                     <div>
@@ -361,7 +364,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             v-model="filters.patient_name"
                             type="text"
                             placeholder="Imię lub nazwisko pacjenta"
-                            class="w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            class="w-full"
                         />
                     </div>
                     <div>
@@ -369,7 +372,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <select
                             id="status-filter"
                             v-model="filters.status"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
                         >
                             <option v-for="status in statuses" :key="status.value" :value="status.value">
                                 {{ status.label }}
@@ -382,7 +385,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <PopoverTrigger as-child>
                                 <Button
                                     variant="outline"
-                                    class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                    class="w-full justify-start text-left font-normal "
                                     :class="!filters.date_from && 'text-muted-foreground dark:text-gray-400'"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
@@ -391,7 +394,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     }}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                            <PopoverContent class="w-auto p-0">
                                 <Calendar v-model="dateFrom" initial-focus mode="single"
                                           @update:model-value="onDateFromChange"
                                           class="dark:bg-gray-800 dark:text-white"/>
@@ -404,21 +407,21 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <PopoverTrigger as-child>
                                 <Button
                                     variant="outline"
-                                    class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                    class="w-full justify-start text-left font-normal "
                                     :class="!filters.date_to && 'text-muted-foreground dark:text-gray-400'"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
                                     {{ filters.date_to ? formatDisplayDate(filters.date_to) : "Wybierz datę końcową" }}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                            <PopoverContent class="w-auto p-0 ">
                                 <Calendar v-model="dateTo" initial-focus @update:model-value="onDateToChange"
                                           class="dark:bg-gray-800 dark:text-white"/>
                             </PopoverContent>
                         </Popover>
                     </div>
                     <div class="flex items-end space-x-2">
-                        <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent dark:text-nova-light dark:bg-nova-accent dark:hover:bg-nova-primary">
+                        <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
                             <Icon name="search" size="16" class="mr-2"/>
                             Filtruj
                         </Button>
@@ -431,7 +434,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
 
             <!-- Tabela wizyt -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border dark:border-gray-700">
+            <div class="rounded-lg dark:bg-gray-900 shadow-sm overflow-hidden border dark:border-gray-700">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table class="dark:text-gray-200">
                         <TableCaption v-if="appointments.length === 0" class="dark:text-gray-400">
@@ -479,9 +482,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <TableCell class="dark:text-gray-200">{{ appointment.procedure.name }}</TableCell>
                                 <TableCell class="dark:text-gray-200">{{ formatDateTime(appointment.appointment_datetime) }}</TableCell>
                                 <TableCell>
-                <span :class="`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(appointment.status)}`">
-                    {{ getStatusLabel(appointment.status) }}
-                </span>
+                                    <span :class="`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(appointment.status)}`">
+                                        {{ getStatusLabel(appointment.status) }}
+                                    </span>
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex space-x-2">
@@ -499,23 +502,21 @@ const breadcrumbs: BreadcrumbItem[] = [
                                             <Icon name="trash-2" size="14" class="mr-1"/>
                                             Usuń
                                         </Button>
-                                        <router-link :to="`/admin/appointment/${appointment.id}`">
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        class="flex items-center text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500 dark:hover:bg-blue-900/30"
-                                                        @click="router.push(`/admin/appointment/${appointment.id}`)"
-                                                    >
-                                                        <Icon name="info" size="14" class="mr-1"/>
-                                                    </Button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>Szczegóły wizyty</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </router-link>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    class="flex items-center text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500 dark:hover:bg-blue-900/30"
+                                                    @click="router.push(`/admin/appointment/${appointment.id}`)"
+                                                >
+                                                    <Icon name="info" size="14" class="mr-1"/>
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Szczegóły wizyty</p>
+                                            </TooltipContent>
+                                        </Tooltip>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -523,8 +524,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </Table>
                 </ScrollArea>
 
-                <!-- Paginacja -->
-                <div class="flex justify-center items-center p-3 border-t dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex justify-center items-center p-3 border-t dark:bg-background dark:border-gray-700 ">
                     <Pagination
                         v-if="meta.last_page > 1"
                         :items-per-page="meta.per_page"
@@ -678,7 +678,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         <Button
                             @click="updateAppointment"
                             :disabled="appointmentFormLoading"
-                            class="flex bg-nova-primary hover:bg-nova-accent items-center gap-2"
+                            class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                         >
                             <Icon v-if="appointmentFormLoading" name="loader2" class="animate-spin" size="16"/>
                             <span>Aktualizuj</span>
@@ -691,6 +691,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 </template>
 
 <style scoped>
+:deep(thead th) {
+    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
+    color: #374151; /* Zastępuje var(--table-header-color) */
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+}
+
 table {
     border-collapse: separate;
     border-spacing: 0;

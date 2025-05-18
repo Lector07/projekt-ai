@@ -32,6 +32,12 @@ const isPatient = computed(() => {
         ((authStore.user as any).roles && (authStore.user as any).roles.includes('patient'));
 });
 
+const isDoctor = computed(() => {
+    if (!authStore.user) return false;
+    return (authStore.user as any).role === 'doctor' ||
+        ((authStore.user as any).roles && (authStore.user as any).roles.includes('doctor'));
+});
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Strona główna',
@@ -107,7 +113,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain v-if="isPatient" :items="mainNavItems"/>
+            <NavMain v-if="!isAdmin && !isDoctor" :items="mainNavItems" label="Panel pacjenta" class="mt-4"/>
             <NavMain v-if="isAdmin" :items="adminNavItems" label="Administracja" class="mt-4"/>
         </SidebarContent>
 

@@ -346,21 +346,21 @@ onMounted(async () => {
             <div v-else class="flex flex-col h-full w-full gap-8">
                 <!-- Karty statystyk użytkowników -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Pacjenci</h3>
                             <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.patientCount }}</p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Lekarze</h3>
                             <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.users.doctorCount }}</p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Procedury medyczne</h3>
                             <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.totalProcedures }}</p>
@@ -370,28 +370,28 @@ onMounted(async () => {
 
                 <!-- Karty statystyk wizyt -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Wszystkie wizyty</h3>
                             <p class="text-2xl font-bold text-nova-primary dark:text-nova-accent">{{ stats.appointments.total }}</p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Nadchodzące wizyty</h3>
                             <p class="text-2xl font-bold text-nova-accent">{{ stats.appointments.upcoming }}</p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Zakończone wizyty</h3>
                             <p class="text-2xl font-bold text-green-500">{{ stats.appointments.completed }}</p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Anulowane wizyty</h3>
                             <p class="text-2xl font-bold text-red-500">{{ stats.appointments.cancelled }}</p>
@@ -402,7 +402,7 @@ onMounted(async () => {
                 <!-- Wykresy -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Wykres wizyt miesięcznie -->
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-2">Wizyty w ciągu roku</h3>
                             <Separator class="mb-2" />
@@ -413,7 +413,7 @@ onMounted(async () => {
                     </div>
 
                     <!-- Wykres popularnych procedur -->
-                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-800">
+                    <div class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-900">
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-2">Popularne procedury</h3>
                             <Separator class="mb-2" />
@@ -435,7 +435,7 @@ onMounted(async () => {
 }
 
 :deep(.p-card) {
-    border: 1;
+    border: 1px;
     border-radius: 0.5rem;
     overflow: hidden;
 }
