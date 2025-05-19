@@ -48,13 +48,11 @@ const breadcrumbs = ref([
     },
 ]);
 
-// Stan aplikacji
 const categories = ref<Category[]>([]);
 const loading = ref(true);
 const error = ref(false);
 const toast = useToast();
 
-// Dialog/formularz
 const isDialogOpen = ref(false);
 const isEditing = ref(false);
 const form = reactive({
@@ -63,26 +61,20 @@ const form = reactive({
 });
 const formErrors = ref<Record<string, string[]>>({});
 
-// Pobieranie kategorii z prawidłowej tabeli
 const fetchCategories = async () => {
     loading.value = true;
     error.value = false;
 
     try {
-        // Dodane logowanie
         console.log('Pobieranie kategorii...');
         const response = await axios.get('/api/v1/admin/procedure-categories');
         console.log('Odpowiedź API:', response);
 
-        // Sprawdź strukturę odpowiedzi
         if (response.data && Array.isArray(response.data)) {
-            // Gdy API zwraca bezpośrednio tablicę
             categories.value = response.data;
         } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-            // Gdy API zwraca obiekt z właściwością data
             categories.value = response.data.data;
         } else {
-            // Nieprawidłowa struktura odpowiedzi
             console.error('Nieprawidłowa struktura danych:', response.data);
             error.value = true;
             toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nieprawidłowy format danych.', life: 3000 });
@@ -97,7 +89,6 @@ const fetchCategories = async () => {
     }
 };
 
-// Dodawanie nowej kategorii
 const openNewCategoryDialog = () => {
     isEditing.value = false;
     form.id = null;
@@ -106,7 +97,6 @@ const openNewCategoryDialog = () => {
     isDialogOpen.value = true;
 };
 
-// Edycja kategorii
 const editCategory = (category: Category) => {
     isEditing.value = true;
     form.id = category.id;
@@ -115,23 +105,20 @@ const editCategory = (category: Category) => {
     isDialogOpen.value = true;
 };
 
-// Zapisywanie kategorii (nowej lub edytowanej)
 const saveCategory = async () => {
     formErrors.value = {};
 
     try {
         if (isEditing.value) {
-            // Aktualizacja
             await axios.put(`/api/admin/procedure-categories/${form.id}`, form);
             toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została zaktualizowana.', life: 3000 });
         } else {
-            // Tworzenie
             await axios.post('/api/admin/procedure-categories', form);
             toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została dodana.', life: 3000 });
         }
 
         isDialogOpen.value = false;
-        fetchCategories(); // Odśwież dane
+        fetchCategories();
     } catch (err: any) {
         if (err.response && err.response.status === 422) {
             formErrors.value = err.response.data.errors;
@@ -142,7 +129,6 @@ const saveCategory = async () => {
     }
 };
 
-// Usuwanie kategorii
 const deleteCategory = async (id: number) => {
     if (!confirm('Czy na pewno chcesz usunąć tę kategorię?')) return;
 
@@ -156,7 +142,6 @@ const deleteCategory = async (id: number) => {
     }
 };
 
-// Formatowanie daty
 const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('pl-PL');
@@ -183,7 +168,6 @@ onMounted(() => {
             <p class="text-sm  mt-1 ml-2 text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
 
 
-            <!-- Skeleton podczas ładowania -->
             <div v-if="loading" class="flex flex-col h-full w-full gap-8">
                 <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-gray-800">
                     <div class="p-4">
@@ -198,7 +182,6 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- Błąd -->
             <div v-else-if="error" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 text-center">
                 <p class="text-red-500 mb-4">
                     Wystąpił błąd podczas pobierania danych.
@@ -206,7 +189,6 @@ onMounted(() => {
                 <Button @click="fetchCategories">Spróbuj ponownie</Button>
             </div>
 
-            <!-- Tabela kategorii -->
             <div v-else class="bg-white mt-2 dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto ">
                     <Table class="w-full p-2">
@@ -246,7 +228,6 @@ onMounted(() => {
             </div>
 
 
-            <!-- Dialog formularz dodawania/edycji kategorii -->
             <Dialog v-model:open="isDialogOpen">
                 <DialogContent class="sm:max-w-md">
                     <DialogHeader>
@@ -295,8 +276,8 @@ tr:last-child td:last-child {
 }
 
 :deep(thead th) {
-    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
-    color: #374151; /* Zastępuje var(--table-header-color) */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;

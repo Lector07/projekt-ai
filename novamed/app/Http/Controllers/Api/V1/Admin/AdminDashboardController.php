@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -24,110 +23,120 @@ class AdminDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        Log::info('AdminDashboardController@index reached by user: ' . $request->user()?->email);
 
-        // Ręczne sprawdzenie polityki zamiast $this->authorize()
-        if (! Gate::allows('viewDashboard', User::class)) {
-            Log::warning('AdminDashboardController: User not authorized for viewDashboard');
-            return response()->json(['error' => 'Unauthorized'], 403);
+
+        $useTimeFilter = $request->has('start_date') || $request->has('end_date');
+
+        $startDate = $request->input('start_date')
+            ? Carbon::parse($request->input('start_date'))->startOfDay()
+            : Carbon::now()->startOfYear();
+
+        $endDate = $request->input('end_date')
+            ? Carbon::parse($request->input('end_date'))->endOfDay()
+            : Carbon::now();
+
+        Log::debug('Date filter enabled: ' . ($useTimeFilter ? 'yes' : 'no'));
+        if ($useTimeFilter) {
+            Log::debug('Date range:', ['start' => $startDate->toDateTimeString(), 'end' => $endDate->toDateTimeString()]);
         }
 
-        Log::info('AdminDashboardController: User authorized for viewDashboard');
+        // Podstawowe statystyki
+        $patientCount = User::where('role', 'patient')->count();
+        $doctorUserCount = User::where('role', 'doctor')->count();
+        $procedureCount = Procedure::count();
 
-        try {
-            // Pobieranie parametrów filtrowania (opcjonalnie)
-            $startDate = $request->input('start_date')
-                ? Carbon::parse($request->input('start_date'))->startOfDay()
-                : Carbon::now()->startOfYear();
+        // Pobierz bazowe zapytanie wizyt
+        $appointmentsQuery = Appointment::query();
 
-            $endDate = $request->input('end_date')
-                ? Carbon::parse($request->input('end_date'))->endOfDay()
-                : Carbon::now();
+        // Zastosuj filtr czasowy tylko jeśli podano parametry dat
+        if ($useTimeFilter) {
+            $appointmentsQuery->whereBetween('appointment_datetime', [$startDate, $endDate]);
+        }
 
-            // Poprawione zliczanie użytkowników według kolumny role
-            $patientCount = User::where('role', 'patient')->count();
-            $doctorUserCount = User::where('role', 'doctor')->count();
+        // Statystyki wizyt - bez filtrowania czasowego, jeśli nie podano parametrów
+        $totalAppointments = clone $appointmentsQuery;
+        $totalAppointments = $totalAppointments->count();
 
-            $procedureCount = Procedure::count();
+        $upcomingAppointments = clone $appointmentsQuery;
+        $upcomingAppointments = $upcomingAppointments->where('appointment_datetime', '>=', Carbon::now())
+            ->whereIn('status', ['scheduled', 'confirmed'])
+            ->count();
 
-            // Statystyki wizyt
-            $totalAppointments = Appointment::whereBetween('appointment_datetime', [$startDate, $endDate])->count();
-            $upcomingAppointments = Appointment::where('appointment_datetime', '>=', now())
-                ->whereBetween('appointment_datetime', [$startDate, $endDate])
-                ->whereIn('status', ['booked', 'confirmed'])
-                ->count();
-            $completedAppointments = Appointment::where('status', 'completed')
-                ->whereBetween('appointment_datetime', [$startDate, $endDate])
-                ->count();
-            $cancelledAppointments = Appointment::where('status', 'cancelled')
-                ->whereBetween('appointment_datetime', [$startDate, $endDate])
-                ->count();
+        $completedAppointments = clone $appointmentsQuery;
+        $completedAppointments = $completedAppointments->where('status', 'completed')
+            ->count();
 
-            // Wizyty per miesiąc
-            $appointmentsPerMonthData = DB::table('appointments')
-                ->selectRaw('EXTRACT(MONTH FROM appointment_datetime) as month_number, COUNT(*) as count')
-                ->whereBetween('appointment_datetime', [$startDate, $endDate])
-                ->groupBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
-                ->orderBy(DB::raw('EXTRACT(MONTH FROM appointment_datetime)'))
-                ->get();
+        $cancelledAppointments = clone $appointmentsQuery;
+        $cancelledAppointments = $cancelledAppointments->where('status', 'cancelled')
+            ->count();
 
-            $appointmentsPerMonthArray = array_fill(1, 12, 0);
-            foreach ($appointmentsPerMonthData as $result) {
-                if ($result->month_number >= 1 && $result->month_number <= 12) {
-                    $appointmentsPerMonthArray[(int)$result->month_number] = (int)$result->count;
+        // Pobierz wszystkie wizyty do analizy
+        $appointmentsForAnalysis = clone $appointmentsQuery;
+        $appointments = $appointmentsForAnalysis->get(['id', 'appointment_datetime', 'procedure_id']);
+
+        // Dane dla wykresu wizyt miesięcznych
+        $appointmentsPerMonthArray = array_fill(0, 12, 0);
+
+        foreach ($appointments as $appointment) {
+            $month = Carbon::parse($appointment->appointment_datetime)->month - 1; // 0-indeksowane dla JS
+            $appointmentsPerMonthArray[$month]++;
+        }
+
+        // Najpopularniejsze procedury
+        $procedureCounts = [];
+        foreach ($appointments as $appointment) {
+            if ($appointment->procedure_id) {
+                $procedureId = $appointment->procedure_id;
+                if (!isset($procedureCounts[$procedureId])) {
+                    $procedureCounts[$procedureId] = 0;
+                }
+                $procedureCounts[$procedureId]++;
+            }
+        }
+
+        // Sortowanie i wybieranie top 5
+        arsort($procedureCounts);
+        $topProcedureIds = array_slice(array_keys($procedureCounts), 0, 5);
+
+        $popularProcedures = [];
+        if (!empty($topProcedureIds)) {
+            $topProcedures = Procedure::whereIn('id', $topProcedureIds)->get();
+
+            foreach ($topProcedures as $procedure) {
+                if (isset($procedureCounts[$procedure->id])) {
+                    $popularProcedures[] = [
+                        'id' => $procedure->id,
+                        'name' => $procedure->name,
+                        'count' => $procedureCounts[$procedure->id]
+                    ];
                 }
             }
 
-            // Najpopularniejsze procedury
-            $popularProcedures = DB::table('appointments')
-                ->join('procedures', 'appointments.procedure_id', '=', 'procedures.id')
-                ->select('procedures.id as procedure_id', 'procedures.name as procedure_name', DB::raw('COUNT(appointments.id) as count'))
-                ->whereBetween('appointments.appointment_datetime', [$startDate, $endDate])
-                ->groupBy('procedures.id', 'procedures.name')
-                ->orderByDesc('count')
-                ->take(5)
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->procedure_id,
-                        'name' => $item->procedure_name,
-                        'count' => (int)$item->count,
-                    ];
-                })
-                ->all();
-
-            $stats = [
-                'users' => [
-                    'patientCount' => $patientCount,
-                    'doctorCount' => $doctorUserCount,
-                ],
-                'totalProcedures' => $procedureCount,
-                'appointments' => [
-                    'total' => $totalAppointments,
-                    'upcoming' => $upcomingAppointments,
-                    'completed' => $completedAppointments,
-                    'cancelled' => $cancelledAppointments,
-                ],
-                'charts' => [
-                    'appointmentsPerMonth' => $appointmentsPerMonthArray,
-                    'popularProcedures' => $popularProcedures,
-                ],
-            ];
-
-            // Dodatkowe logowanie danych JSON przed wysłaniem
-            $jsonData = json_encode($stats);
-            Log::info('AdminDashboardController: JSON data length: ' . strlen($jsonData));
-
-            // Jawnie ustawiamy nagłówki JSON
-            return response()->json($stats)
-                ->header('Content-Type', 'application/json')
-                ->header('X-Content-Type-Options', 'nosniff');
-
-        } catch (\Exception $e) {
-            Log::error('AdminDashboardController error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json(['error' => 'Server error', 'message' => $e->getMessage()], 500);
+            // Sortowanie według liczby wizyt
+            usort($popularProcedures, function ($a, $b) {
+                return $b['count'] <=> $a['count'];
+            });
         }
+
+        $stats = [
+            'users' => [
+                'patientCount' => $patientCount,
+                'doctorCount' => $doctorUserCount,
+            ],
+            'totalProcedures' => $procedureCount,
+            'appointments' => [
+                'total' => $totalAppointments,
+                'upcoming' => $upcomingAppointments,
+                'completed' => $completedAppointments,
+                'cancelled' => $cancelledAppointments,
+            ],
+            'charts' => [
+                'appointmentsPerMonth' => $appointmentsPerMonthArray,
+                'popularProcedures' => $popularProcedures,
+            ],
+        ];
+
+        return response()->json($stats);
+
     }
 }

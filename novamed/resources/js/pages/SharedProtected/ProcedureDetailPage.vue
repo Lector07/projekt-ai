@@ -54,7 +54,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Szczegóły zabiegu',
-        href: `/procedures/${procedureId}`,
     }
 ];
 
@@ -68,17 +67,13 @@ const categoryName = computed(() => {
     return 'Brak kategorii';
 });
 
-// Przekształcenie recovery_timeline_info na format odpowiedni dla steppera
 const timelineSteps = computed((): TimelineStep[] => {
     if (!procedure.value || !procedure.value.recovery_timeline_info) return [];
 
     if (typeof procedure.value.recovery_timeline_info === 'string') {
-        // Jeśli dane są w formacie tekstowym, próbujemy je sparsować
         try {
-            // Próbujemy sprawdzić czy to JSON
             return JSON.parse(procedure.value.recovery_timeline_info);
         } catch {
-            // Jeśli to nie JSON, zakładamy format tekstowy z liniami "Etap: Opis"
             const lines = procedure.value.recovery_timeline_info.split('\n').filter(line => line.trim());
             return lines.map((line, index) => {
                 const [title, ...descParts] = line.split(':');
@@ -91,7 +86,6 @@ const timelineSteps = computed((): TimelineStep[] => {
             });
         }
     } else if (Array.isArray(procedure.value.recovery_timeline_info)) {
-        // Jeśli to już tablica obiektów
         return procedure.value.recovery_timeline_info.map((item, index) => ({
             step: index + 1,
             title: item.title || item.phase || `Etap ${index + 1}`,
@@ -143,7 +137,6 @@ onMounted(() => {
 
                 <Separator class="my-4" />
 
-                <!-- Opis procedury -->
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold mb-2">Opis</h2>
                     <p class="whitespace-pre-line text-gray-700 dark:text-gray-300">
@@ -158,7 +151,6 @@ onMounted(() => {
                     </p>
                 </div>
 
-                <!-- Harmonogram rekonwalescencji jako stepper -->
                 <div v-if="timelineSteps.length > 0" class="mb-6">
                     <h2 class="text-xl font-semibold mb-4">Harmonogram rekonwalescencji</h2>
 

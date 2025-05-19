@@ -89,7 +89,7 @@ class UserProfileController extends Controller
     public function updateAvatar(UpdateUserAvatarRequest $request): UserResource
     {
         $user = $request->user();
-        $this->authorize('update', $user); // Zakładając, że UserPolicy ma metodę update
+        $this->authorize('update', $user);
 
         if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
             if ($user->profile_picture_path) {

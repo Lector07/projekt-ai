@@ -25,19 +25,16 @@ const form = ref({
 const isLoading = ref(false);
 const errors = ref<Record<string, string[]>>({});
 
-// Upewnijmy się, że axios jest skonfigurowany z odpowiednimi nagłówkami
 axios.defaults.headers.common['Accept'] = 'application/json';
-axios.defaults.withCredentials = true; // Ważne dla Sanctum - przesyła ciasteczka sesji
+axios.defaults.withCredentials = true;
 
 async function submit() {
     isLoading.value = true;
     errors.value = {};
 
     try {
-        // Pobranie tokenu CSRF
         await axios.get('/sanctum/csrf-cookie');
 
-        // Rejestracja użytkownika
         const registerResponse = await axios.post('/api/v1/register', form.value, {
             headers: {
                 'Accept': 'application/json',
@@ -47,11 +44,7 @@ async function submit() {
 
         console.log('Rejestracja udana:', registerResponse);
 
-        // Nie próbujemy już automatycznie się logować przez /login (błąd 405)
-        // Zamiast tego sprawdzamy, czy rejestracja automatycznie zalogowała użytkownika
-
         try {
-            // Pobieramy dane użytkownika
             const userResponse = await axios.get('/api/v1/user', {
                 headers: { 'Accept': 'application/json' }
             });
@@ -65,7 +58,6 @@ async function submit() {
             console.log('Nie można pobrać danych użytkownika', authError);
         }
 
-        // Przekieruj do strony logowania jeśli nie udało się automatycznie zalogować
         alert('Rejestracja udana! Zaloguj się, aby kontynuować.');
         router.push({ name: 'login' });
     } catch (error: any) {

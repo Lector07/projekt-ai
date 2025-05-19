@@ -3,7 +3,6 @@
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import { type BreadcrumbItem } from '@/types';
-
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 
@@ -14,7 +13,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
     {
         title: 'Ustawienia wyglądu',
-        href: '/settings/appearance',
     },
 ];
 </script>

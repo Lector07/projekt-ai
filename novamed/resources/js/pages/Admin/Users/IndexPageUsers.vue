@@ -366,13 +366,11 @@ const deleteUser = async (id: number) => {
     }
 };
 
-// Formatowanie daty
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pl-PL').format(date);
 };
 
-// Śledzenie zmian w zapytaniu
 watch(() => query.value.search, resetPagination);
 watch(() => query.value.role, resetPagination);
 watch(query, loadUsers, {deep: true});
@@ -475,13 +473,13 @@ onMounted(() => {
                                                 <TableCell>{{ user.name }}</TableCell>
                                                 <TableCell>{{ user.email }}</TableCell>
                                                 <TableCell>
-                        <span :class="`px-2 py-1 text-xs font-medium rounded-full ${
-                            user.role === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                            user.role === 'doctor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        }`">
-                            {{ user.role === 'admin' ? 'Administrator' : user.role === 'doctor' ? 'Lekarz' : 'Pacjent' }}
-                        </span>
+                                                    <span :class="`px-2 py-1 text-xs font-medium rounded-full ${
+                                                        user.role === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                                                        user.role === 'doctor' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                                        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                    }`">
+                                                        {{ user.role === 'admin' ? 'Administrator' : user.role === 'doctor' ? 'Lekarz' : 'Pacjent' }}
+                                                    </span>
                                                 </TableCell>
                                                 <TableCell>{{ formatDate(user.created_at) }}</TableCell>
                                             </tr>
@@ -545,7 +543,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal do dodawania nowego użytkownika -->
         <div v-if="showAddUserForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
@@ -556,7 +553,6 @@ onMounted(() => {
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Imię i nazwisko -->
                     <div class="space-y-2">
                         <Label for="new-name">Imię i nazwisko</Label>
                         <Input
@@ -570,7 +566,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Email -->
                     <div class="space-y-2">
                         <Label for="new-email">Email</Label>
                         <Input
@@ -585,7 +580,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Hasło -->
                     <div class="space-y-2">
                         <Label for="new-password">Hasło</Label>
                         <Input
@@ -600,7 +594,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Potwierdzenie hasła -->
                     <div class="space-y-2">
                         <Label for="new-password-confirmation">Potwierdzenie hasła</Label>
                         <Input
@@ -615,7 +608,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Wybór roli -->
                     <div class="space-y-2">
                         <Label for="new-role">Rola użytkownika</Label>
                         <select
@@ -633,7 +625,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Przyciski -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -768,7 +759,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* Styles that need to be global to affect PrimeVue components */
 .p-toast {
     opacity: 1 !important;
 }
@@ -822,7 +812,6 @@ onMounted(() => {
     background: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Success message */
 .p-toast .p-toast-message.p-toast-message-success {
     background-color: #ecfdf5 !important;
     border-color: #10b981 !important;
@@ -837,7 +826,6 @@ onMounted(() => {
     color: #047857 !important;
 }
 
-/* Info message */
 .p-toast .p-toast-message.p-toast-message-info {
     background-color: #eff6ff !important;
     border-color: #3b82f6 !important;
@@ -852,7 +840,6 @@ onMounted(() => {
     color: #1d4ed8 !important;
 }
 
-/* Warning message */
 .p-toast .p-toast-message.p-toast-message-warn {
     background-color: #fffbeb !important;
     border-color: #f59e0b !important;
@@ -867,7 +854,6 @@ onMounted(() => {
     color: #b45309 !important;
 }
 
-/* Error message */
 .p-toast .p-toast-message.p-toast-message-error {
     background-color: #fef2f2 !important;
     border-color: #ef4444 !important;
@@ -907,8 +893,8 @@ tr:last-child td:last-child {
 }
 
 :deep(thead th) {
-    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
-    color: #374151; /* Zastępuje var(--table-header-color) */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
@@ -928,7 +914,6 @@ tr:last-child td:last-child {
     z-index: 50;
 }
 
-/* Niestandardowe style dla toastów */
 .custom-toast {
     --p-toast-width: 350px;
     --p-toast-border-radius: 8px;

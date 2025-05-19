@@ -26,5 +26,4 @@ app.use(PrimeVue);
 app.use(ToastService);
 
 
-
 app.mount('#app');

@@ -7,18 +7,15 @@ import {Button} from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import {Label} from '@/components/ui/label';
 import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
-// Jeśli brakuje modułu kalendarza, należy go zainstalować lub stworzyć
 import {Calendar} from '@/components/ui/calendar';
 import type {BreadcrumbItem} from "@/types";
 
-// Zmienne stanu
 const route = useRoute();
 const router = useRouter();
 const loading = ref(true);
 const error = ref<string | null>(null);
 const appointment = ref<any>(null);
 
-// Funkcje pomocnicze
 const formatDateTime = (dateString?: string): string => {
     if (!dateString) return 'Brak danych';
     try {
@@ -61,7 +58,6 @@ const getStatusClass = (status: string): string => {
     }
 };
 
-// Pobieranie danych wizyty
 const fetchAppointment = async () => {
     try {
         loading.value = true;
@@ -72,7 +68,6 @@ const fetchAppointment = async () => {
 
         console.log("Początkowe dane wizyty:", appointment.value);
 
-        // Pobierz dodatkowe dane lekarza
         if (appointment.value?.doctor?.id) {
             try {
                 const doctorResponse = await axios.get(`/api/v1/admin/doctors/${appointment.value.doctor.id}`);
@@ -88,7 +83,6 @@ const fetchAppointment = async () => {
             }
         }
 
-        // Pobierz dodatkowe dane procedury
         if (appointment.value?.procedure?.id) {
             try {
                 const procedureResponse = await axios.get(`/api/v1/admin/procedures/${appointment.value.procedure.id}`);
@@ -118,7 +112,6 @@ const selectedDate = ref<Date | null>(null);
 const appointmentErrors = ref<Record<string, string[]>>({});
 const appointmentFormLoading = ref(false);
 
-// Status wizyty - opcje dla selecta
 const statusOptions = [
     {value: 'scheduled', label: 'Zaplanowana'},
     {value: 'completed', label: 'Zakończona'},
@@ -126,15 +119,12 @@ const statusOptions = [
     {value: 'no-show', label: 'Nieobecność'}
 ];
 
-// Funkcja powrotu do listy wizyt
 const goBack = () => {
     router.push('/admin/appointments');
 };
 
-// Funkcja edycji wizyty
 const goToEdit = () => {
     if (appointment.value) {
-        // Ustaw datę na podstawie istniejącej wizyty
         if (appointment.value.appointment_datetime) {
             selectedDate.value = new Date(appointment.value.appointment_datetime);
         }
@@ -142,7 +132,6 @@ const goToEdit = () => {
     }
 };
 
-// Funkcje obsługi formularza
 const closeEditForm = () => {
     showEditModal.value = false;
     appointmentErrors.value = {};
@@ -166,10 +155,8 @@ const updateAppointment = async () => {
 
         await axios.put(`/api/v1/admin/appointments/${appointment.value.id}`, formData);
 
-        // Odśwież dane wizyty
         await fetchAppointment();
 
-        // Zamknij formularz
         showEditModal.value = false;
 
     } catch (error: any) {
@@ -193,7 +180,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ];
 
-// Inicjalizacja
 onMounted(() => {
     fetchAppointment();
 });
@@ -202,7 +188,6 @@ onMounted(() => {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="container mx-auto px-4 sm:px-6 py-8">
-            <!-- Nagłówek -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight">
@@ -216,12 +201,10 @@ onMounted(() => {
                 </Button>
             </div>
 
-            <!-- Wskaźnik ładowania -->
             <div v-if="loading" class="py-12 flex justify-center">
                 <Icon name="loader2" class="animate-spin h-8 w-8 text-gray-500"/>
             </div>
 
-            <!-- Komunikat błędu -->
             <div v-else-if="error" class="py-6 bg-red-50 text-red-600 px-4 rounded-lg shadow-sm">
                 <div class="flex items-center">
                     <Icon name="alert-triangle" class="h-5 w-5 mr-2 flex-shrink-0"/>
@@ -229,9 +212,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- Dane wizyty -->
             <div v-else-if="appointment" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <!-- Status wizyty -->
                 <div class="p-2 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                         <div>
@@ -248,11 +229,8 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Podstawowe informacje -->
                 <div class="p-2 sm:p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Lewa kolumna -->
                     <div class="space-y-2">
-                        <!-- Informacje o pacjencie -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">
                                 Pacjent</h3>
@@ -288,7 +266,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Informacje o lekarzu -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">
                                 Lekarz</h3>
@@ -322,7 +299,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Procedura -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">
                                 Procedura</h3>
@@ -343,9 +319,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Prawa kolumna -->
                     <div class="space-y-2">
-                        <!-- Termin wizyty -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">Termin
                                 wizyty</h3>
@@ -357,7 +331,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Notatki pacjenta -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">Notatki
                                 pacjenta</h3>
@@ -368,7 +341,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Notatki lekarza -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">Notatki
                                 lekarza</h3>
@@ -379,7 +351,6 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Historia zmian -->
                         <div class="space-y-2">
                             <h3 class="text-md font-medium border-b pb-1 border-gray-200 dark:border-gray-700">
                                 Historia</h3>
@@ -399,7 +370,6 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Przyciski akcji -->
                 <div
                     class="p-2 sm:p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col sm:flex-row sm:justify-end gap-3">
                     <Button variant="outline" class="w-full sm:w-auto text-nova-light bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light" @click="goBack">
@@ -409,7 +379,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal edycji wizyty -->
         <div v-if="showEditModal && appointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
@@ -421,19 +390,16 @@ onMounted(() => {
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Pacjent (tylko informacyjnie) -->
                     <div class="space-y-2">
                         <Label>Pacjent</Label>
                         <p class="text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">{{ appointment.patient.name }}</p>
                     </div>
 
-                    <!-- Lekarz (tylko informacyjnie) -->
                     <div class="space-y-2">
                         <Label>Lekarz</Label>
                         <p class="text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">{{ appointment.doctor.name }}</p>
                     </div>
 
-                    <!-- Data wizyty -->
                     <div class="space-y-2">
                         <Label>Data wizyty</Label>
                         <Popover>
@@ -458,7 +424,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Status -->
                     <div class="space-y-2">
                         <Label for="edit-status">Status wizyty</Label>
                         <select
@@ -476,7 +441,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Notatki pacjenta -->
                     <div class="space-y-2">
                         <Label for="patient-notes">Notatki pacjenta</Label>
                         <textarea
@@ -492,7 +456,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Notatki lekarza -->
                     <div class="space-y-2">
                         <Label for="doctor-notes">Notatki lekarza</Label>
                         <textarea
@@ -508,7 +471,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Przyciski -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"

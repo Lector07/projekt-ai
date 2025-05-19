@@ -55,7 +55,6 @@ const InputError = (props: { message?: string }) => {
     return props.message ? h('p', {class: 'text-xs text-red-500 mt-1'}, props.message) : null;
 };
 
-// Poprawiony interfejs dla danych Lekarza
 interface Doctor {
     id: number;
     first_name: string;
@@ -88,7 +87,6 @@ interface DoctorForm {
     } | null;
 }
 
-// Parametry zapytania
 const query = ref({
     page: 1,
     per_page: 10,
@@ -96,7 +94,6 @@ const query = ref({
     specialization: '',
 });
 
-// Zmienne reaktywne
 const doctors = ref<Doctor[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -105,14 +102,12 @@ const totalItems = ref(0);
 const currentPage = computed(() => query.value.page);
 const itemsPerPage = computed(() => query.value.per_page);
 
-// Stan dla formularzy
 const showAddDoctorForm = ref(false);
 const showEditDoctorForm = ref(false);
 const selectedDoctor = ref<DoctorForm | null>(null);
 const doctorFormLoading = ref(false);
 const doctorFormErrors = ref<Record<string, string[]>>({});
 
-// Formularz nowego lekarza
 const newDoctor = ref<DoctorForm>({
     first_name: '',
     last_name: '',
@@ -122,7 +117,6 @@ const newDoctor = ref<DoctorForm>({
     user_id: undefined,
 });
 
-// Opcje dla selecta specjalizacji
 const specializations = ref<string[]>([
     'Chirurg Plastyczny',
     'Medycyna Estetyczna',
@@ -130,7 +124,6 @@ const specializations = ref<string[]>([
     'Fleobolog',
 ]);
 
-// Lista użytkowników do wyboru
 const availableUsers = ref<Array<{ id: number; name: string; email: string }>>([]);
 
 const router = useRouter();
@@ -141,7 +134,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     {title: 'Zarządzanie Lekarzami'},
 ];
 
-// Funkcja do ładowania lekarzy
 const loadDoctors = async () => {
     loading.value = true;
     error.value = null;
@@ -152,7 +144,6 @@ const loadDoctors = async () => {
         if (query.value.search) params.append('search', query.value.search);
         if (query.value.specialization) params.append('specialization', query.value.specialization);
 
-        // Dodanie parametru include, aby dołączyć relację user
         params.append('include', 'user');
 
         const response = await axios.get(`/api/v1/admin/doctors?${params.toString()}`);
@@ -176,7 +167,6 @@ const loadDoctors = async () => {
     }
 };
 
-// Funkcja do ładowania użytkowników
 const loadAvailableUsers = async () => {
     try {
         const response = await axios.get('/api/v1/admin/users?role=patient');
@@ -195,7 +185,6 @@ const goToPage = (page: number) => {
     query.value.page = page;
 };
 
-// Toast Functions
 const showSuccessToast = (summary: string, detail: string) => toast.add({
     severity: 'success',
     summary,
@@ -262,7 +251,6 @@ const addDoctor = async () => {
     try {
         const doctorData = { ...newDoctor.value };
 
-        // Zapewnij prawidłowe przesłanie user_id
         if (doctorData.user_id) {
             console.log('Wybrano user_id:', doctorData.user_id);
             const user = availableUsers.value.find(u => u.id === doctorData.user_id);
@@ -334,10 +322,8 @@ const deleteDoctor = async (id: number) => {
 };
 
 const formatDate = (dateString?: string | null) => {
-    // Dodaj debugowanie
     console.log('Formatowanie daty:', dateString);
 
-    // Jeśli wartość jest pusta
     if (dateString === undefined || dateString === null || dateString === '') {
         return 'Brak daty';
     }
@@ -345,13 +331,11 @@ const formatDate = (dateString?: string | null) => {
     try {
         const date = new Date(dateString);
 
-        // Sprawdź czy data jest poprawna
         if (isNaN(date.getTime())) {
             console.warn('Nieprawidłowy format daty:', dateString);
             return 'Nieprawidłowa data';
         }
 
-        // Formatowanie poprawnej daty
         return new Intl.DateTimeFormat('pl-PL', {
             year: 'numeric',
             month: '2-digit',
@@ -370,7 +354,6 @@ const populateFormFromUser = (userId: number) => {
 
     const selectedUser = availableUsers.value.find(user => user.id === userId);
     if (selectedUser) {
-        // Rozdziel pełne imię na części (zakładając format "Imię Nazwisko")
         const nameParts = selectedUser.name.split(' ');
         if (nameParts.length >= 2) {
             newDoctor.value.first_name = nameParts[0];
@@ -380,7 +363,6 @@ const populateFormFromUser = (userId: number) => {
             newDoctor.value.last_name = '';
         }
 
-        // Dodanie emaila do formularza
         (newDoctor.value as any).email = selectedUser.email;
     }
 };
@@ -552,7 +534,6 @@ onMounted(() => {
                 </div>
             </div>
         </div>
-        <!-- Modal Dodawania Lekarza -->
         <div v-if="showAddDoctorForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
                 class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-lg w-full mx-auto shadow-lg overflow-y-auto max-h-[90vh]">
@@ -672,7 +653,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal Edycji Lekarza -->
         <div v-if="showEditDoctorForm && selectedDoctor"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
@@ -735,7 +715,6 @@ onMounted(() => {
                             +10%</p>
                         <InputError :message="doctorFormErrors.price_modifier?.[0]"/>
                     </div>
-                    <!-- Pole user_id jest zazwyczaj nieedytowalne po utworzeniu -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" @click="showEditDoctorForm = false">Anuluj</Button>
                         <Button @click="updateDoctor" :disabled="doctorFormLoading"
@@ -773,8 +752,8 @@ tr:last-child td:last-child {
 }
 
 :deep(thead th) {
-    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
-    color: #374151; /* Zastępuje var(--table-header-color) */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
@@ -794,7 +773,6 @@ tr:last-child td:last-child {
     z-index: 50;
 }
 
-/* Niestandardowe style dla toastów */
 .custom-toast {
     --p-toast-width: 350px;
     --p-toast-border-radius: 8px;

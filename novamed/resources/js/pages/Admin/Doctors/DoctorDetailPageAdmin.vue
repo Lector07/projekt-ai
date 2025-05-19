@@ -106,7 +106,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </div>
                 </div>
 
-                <!-- Prawa kolumna z kartą informacyjną -->
                 <div class="lg:col-span-2">
                     <Card class="border border-gray-200 dark:border-gray-700 shadow-md" style="--p-card-border-radius: 0.75rem;">
                         <template #title>

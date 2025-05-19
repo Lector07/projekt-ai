@@ -45,7 +45,6 @@ import {pl} from 'date-fns/locale';
 import {TooltipContent} from "@/components/ui/tooltip";
 import {Tooltip, TooltipTrigger} from "@/components/ui/tooltip";
 
-// Definicje interfejsów
 interface Patient {
     id: number;
     name: string;
@@ -77,12 +76,11 @@ interface AppointmentFilters {
     date_from: string;
     date_to: string;
 
-    [key: string]: string; // Sygnatura indeksu dla dynamicznego dostępu
+    [key: string]: string;
 }
 
 const toast = useToast();
 
-// Dane wizyt z poprawnym typowaniem
 const appointments = ref<Appointment[]>([]);
 const loading = ref(true);
 const meta = ref({
@@ -94,7 +92,6 @@ const meta = ref({
     total: 0,
 });
 
-// Filtry z sygnaturą indeksu
 const filters = reactive<AppointmentFilters>({
     doctor_name: '',
     patient_name: '',
@@ -103,7 +100,6 @@ const filters = reactive<AppointmentFilters>({
     date_to: '',
 });
 
-// Lista statusów
 const statuses = [
     {value: '', label: 'Wszystkie statusy'},
     {value: 'scheduled', label: 'Zarezerwowana'},
@@ -118,7 +114,6 @@ const appointmentErrors = ref<any>({});
 const appointmentFormLoading = ref(false);
 const selectedDate = ref<Date | null>(null);
 
-// Lista dostępnych statusów dla formularza edycji
 const statusOptions = [
     {value: 'scheduled', label: 'Zarezerwowana'},
     {value: 'completed', label: 'Zakończona'},
@@ -126,7 +121,6 @@ const statusOptions = [
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
-// Obsługa paginacji
 const changePage = (page: number) => {
     meta.value.current_page = page;
     loadAppointments();
@@ -135,7 +129,6 @@ const changePage = (page: number) => {
 const dateFrom = ref<Date | null>(null);
 const dateTo = ref<Date | null>(null);
 
-// Funkcje obsługi zmiany daty
 const onDateFromChange = (date: Date | null) => {
     if (date) {
         filters.date_from = format(date, 'yyyy-MM-dd');
@@ -158,7 +151,6 @@ const formatDisplayDate = (dateString: string) => {
     return format(date, 'd MMMM yyyy', {locale: pl});
 };
 
-// Ładowanie listy wizyt
 const loadAppointments = async () => {
     loading.value = true;
     try {
@@ -180,7 +172,6 @@ const loadAppointments = async () => {
     }
 };
 
-// Resetowanie filtrów
 const resetFilters = () => {
     Object.keys(filters).forEach((key) => {
         filters[key] = '';
@@ -189,7 +180,6 @@ const resetFilters = () => {
     loadAppointments();
 };
 
-// Usuwanie wizyty
 const deleteAppointment = async (id: number) => {
     if (!confirm('Czy na pewno chcesz usunąć tę wizytę?')) return;
 
@@ -211,7 +201,6 @@ const openEditForm = async (appointment: Appointment) => {
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
         selectedAppointment.value = response.data.data;
 
-        // Ustawienie daty dla pola kalendarza
         if (selectedAppointment.value.appointment_datetime) {
             selectedDate.value = new Date(selectedAppointment.value.appointment_datetime);
         }
@@ -225,25 +214,21 @@ const openEditForm = async (appointment: Appointment) => {
     }
 };
 
-// Zamknięcie formularza
 const closeEditForm = () => {
     showEditAppointmentForm.value = false;
     selectedAppointment.value = null;
     appointmentErrors.value = {};
 };
 
-// Aktualizacja daty wizyty
 const onAppointmentDateChange = (date: Date | null) => {
     selectedDate.value = date;
     if (date && selectedAppointment.value) {
-        // Zachowaj godzinę z oryginalnej daty
         const originalDate = new Date(selectedAppointment.value.appointment_datetime);
         date.setHours(originalDate.getHours(), originalDate.getMinutes());
         selectedAppointment.value.appointment_datetime = date.toISOString();
     }
 };
 
-// Aktualizacja wizyty
 const updateAppointment = async () => {
     appointmentFormLoading.value = true;
     appointmentErrors.value = {};
@@ -272,7 +257,6 @@ const updateAppointment = async () => {
     }
 };
 
-// Toasty
 const showSuccessToast = (title: string, content: string) => {
     toast.add({
         severity: 'success',
@@ -291,7 +275,6 @@ const showErrorToast = (title: string, content: string) => {
     });
 };
 
-// Formatowanie daty
 const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr);
     return date.toLocaleString('pl-PL', {
@@ -303,13 +286,11 @@ const formatDateTime = (dateTimeStr: string) => {
     });
 };
 
-// Tłumaczenie statusów
 const getStatusLabel = (status: string) => {
     const statusObj = statuses.find(s => s.value === status);
     return statusObj ? statusObj.label : status;
 };
 
-// Klasa CSS dla statusu
 const getStatusClass = (status: string) => {
     switch (status) {
         case 'scheduled':
@@ -338,7 +319,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <!-- Komponent Toast do wyświetlania powiadomień -->
         <Toast />
 
         <div class="container mx-auto px-2 py-4">
@@ -433,7 +413,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
             </div>
 
-            <!-- Tabela wizyt -->
             <div class="rounded-lg dark:bg-gray-900 shadow-sm overflow-hidden border dark:border-gray-700">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table class="dark:text-gray-200">
@@ -448,7 +427,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <TableHead class="dark:text-gray-200">Procedura</TableHead>
                                 <TableHead class="dark:text-gray-200">Data i godzina</TableHead>
                                 <TableHead class="dark:text-gray-200">Status</TableHead>
-                                <TableHead class="dark:text-gray-200">Akcje</TableHead>
+                                <TableHead class="text-center dark:text-gray-200">Akcje</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -559,7 +538,6 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
         </div>
 
-        <!-- Modal edycji wizyty -->
         <div v-if="showEditAppointmentForm && selectedAppointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
@@ -571,25 +549,21 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Pacjent (tylko informacyjnie) -->
                     <div class="space-y-2">
                         <Label class="dark:text-gray-200">Pacjent</Label>
                         <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.patient.name }}</p>
                     </div>
 
-                    <!-- Lekarz (tylko informacyjnie) -->
                     <div class="space-y-2">
                         <Label class="dark:text-gray-200">Lekarz</Label>
                         <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.doctor.name }}</p>
                     </div>
 
-                    <!-- Procedura (tylko informacyjnie) -->
                     <div class="space-y-2">
                         <Label class="dark:text-gray-200">Procedura</Label>
                         <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.procedure.name }}</p>
                     </div>
 
-                    <!-- Data wizyty -->
                     <div class="space-y-2">
                         <Label class="dark:text-gray-200">Data wizyty</Label>
                         <Popover>
@@ -615,7 +589,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
 
-                    <!-- Status -->
                     <div class="space-y-2">
                         <Label for="edit-status" class="dark:text-gray-200">Status wizyty</Label>
                         <select
@@ -633,7 +606,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
 
-                    <!-- Notatki pacjenta -->
                     <div class="space-y-2">
                         <Label for="patient-notes" class="dark:text-gray-200">Notatki pacjenta</Label>
                         <textarea
@@ -649,7 +621,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
 
-                    <!-- Notatki lekarza -->
                     <div class="space-y-2">
                         <Label for="doctor-notes" class="dark:text-gray-200">Notatki lekarza</Label>
                         <textarea
@@ -665,7 +636,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </div>
                     </div>
 
-                    <!-- Przyciski -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -692,8 +662,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 <style scoped>
 :deep(thead th) {
-    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
-    color: #374151; /* Zastępuje var(--table-header-color) */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;

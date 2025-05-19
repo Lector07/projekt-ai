@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import PlaceholderPattern from '../../components/PlaceholderPattern.vue';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,6 @@ const totalPages = ref(1);
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Zabiegi',
-        to: '/procedures',
     },
 ];
 
@@ -124,18 +122,15 @@ const getCategoryName = (procedure: Procedure): string => {
     return 'Brak kategorii';
 };
 
-// Generuje numery stron do wyświetlenia
 const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
 
     if (totalPages.value <= maxVisible) {
-        // Jeśli jest mniej stron niż maxVisible, pokaż wszystkie
         for (let i = 1; i <= totalPages.value; i++) {
             pages.push(i);
         }
     } else {
-        // Zawsze pokazuj pierwszą stronę
         pages.push(1);
 
         const startPage = Math.max(2, currentPage.value - 1);
@@ -153,7 +148,6 @@ const getPageNumbers = () => {
             pages.push('...');
         }
 
-        // Zawsze pokazuj ostatnią stronę
         pages.push(totalPages.value);
     }
 
@@ -164,7 +158,6 @@ const getPageNumbers = () => {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <!-- Filtr kategorii -->
             <div class="flex gap-2">
                 <select
                     v-model="selectedCategory"
@@ -178,8 +171,6 @@ const getPageNumbers = () => {
                 </select>
             </div>
 
-            <!-- Ładowanie - struktura odpowiadająca kontenerowi z kartami -->
-            <!-- Ładowanie - struktura odpowiadająca zawartości ScrollArea z zabiegami -->
             <div v-if="loading">
                 <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
                     <div class="p-4">
@@ -206,19 +197,16 @@ const getPageNumbers = () => {
                 </ScrollArea>
             </div>
 
-            <!-- Błąd -->
             <div v-else-if="error" class="p-4 text-center text-red-500">
                 {{ error }}
             </div>
 
-            <!-- Lista zabiegów w ScrollArea -->
             <div v-else>
                 <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
                     <div class="p-4">
                         <h4 class="mb-4 text-lg font-medium leading-none">
                             Lista dostępnych zabiegów
                         </h4>
-
                         <div v-if="procedures.length === 0" class="py-4 text-center text-gray-500">
                             Brak zabiegów do wyświetlenia.
                         </div>
@@ -248,7 +236,6 @@ const getPageNumbers = () => {
                     </div>
                 </ScrollArea>
 
-                <!-- Paginacja - używając tylko lokalnych komponentów -->
                 <div class="mt-4 flex justify-center">
                     <Pagination
                         v-if="totalPages > 1"

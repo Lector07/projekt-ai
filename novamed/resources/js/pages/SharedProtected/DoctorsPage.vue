@@ -3,8 +3,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {type BreadcrumbItem} from '@/types';
 import {ref, onMounted} from 'vue';
 import axios from 'axios';
-import PlaceholderPattern from '../../components/PlaceholderPattern.vue';
-import {Separator} from '@/components/ui/separator';
 import {Button} from '@/components/ui/button';
 import Card from 'primevue/card';
 import {

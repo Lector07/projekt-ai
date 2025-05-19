@@ -41,7 +41,6 @@ import type {BreadcrumbItem} from "@/types";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Separator} from "@/components/ui/separator";
 
-// Stan
 const toast = useToast();
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -49,17 +48,14 @@ const procedures = ref<any[]>([]);
 const categories = ref<any[]>([]);
 const selectedProcedure = ref<any>(null);
 
-// Wyszukiwanie i filtrowanie
 const searchQuery = ref('');
 const selectedCategory = ref<string | null>(null);
 
-// Paginacja
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 const totalItems = ref(0);
 const totalPages = ref(0);
 
-// Formularze
 const showAddForm = ref(false);
 const showEditForm = ref(false);
 const formLoading = ref(false);
@@ -73,7 +69,6 @@ const newProcedure = ref({
     category_id: null
 });
 
-// Pobieranie procedur
 const loadProcedures = async () => {
     loading.value = true;
     error.value = null;
@@ -101,10 +96,8 @@ const loadProcedures = async () => {
     }
 };
 
-// Pobieranie kategorii
 const loadCategories = async () => {
     try {
-        // Poprawiony endpoint zgodny z kontrolerem
         const response = await axios.get('/api/v1/admin/procedures/categories');
         categories.value = response.data.data;
         console.log('Załadowane kategorie:', categories.value);
@@ -114,7 +107,6 @@ const loadCategories = async () => {
     }
 };
 
-// Dodawanie procedury
 const addProcedure = async () => {
     formLoading.value = true;
     formErrors.value = {};
@@ -135,13 +127,11 @@ const addProcedure = async () => {
     }
 };
 
-// Edycja procedury
 const editProcedure = (procedure: any) => {
     selectedProcedure.value = {...procedure};
     showEditForm.value = true;
 };
 
-// Aktualizacja procedury
 const updateProcedure = async () => {
     if (!selectedProcedure.value) return;
 
@@ -162,7 +152,6 @@ const updateProcedure = async () => {
     }
 };
 
-// Usuwanie procedury
 const deleteProcedure = async (id: number) => {
     if (!confirm('Czy na pewno chcesz usunąć tę procedurę?')) return;
 
@@ -176,13 +165,11 @@ const deleteProcedure = async (id: number) => {
     }
 };
 
-// Paginacja
 const goToPage = (page: number) => {
     currentPage.value = page;
     loadProcedures();
 };
 
-// Resetowanie formularza
 const resetForm = () => {
     newProcedure.value = {
         name: '',
@@ -227,13 +214,11 @@ const showErrorToast = (summary: string, detail: string) => {
     });
 };
 
-// Inicjalizacja
 onMounted(() => {
     loadProcedures();
     loadCategories();
 });
 
-// Formatowanie ceny
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pl-PL', {
         style: 'currency',
@@ -245,7 +230,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     {title: 'Zarządzanie zabiegamiami'},
 ];
 
-// Placeholder dla rekonwalescencji
 const recoveryPlaceholder = `Dzień 1-3: ...
 Tydzień 1-2: ...
 Miesiąc 1-2: ...
@@ -424,7 +408,6 @@ Miesiąc 3-6: ...`;
             </div>
         </div>
 
-        <!-- Modal dodawania procedury -->
         <div v-if="showAddForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card class="max-w-xl w-full mx-auto shadow-lg max-h-[90vh] overflow-y-auto">
                 <CardHeader class="flex justify-between items-center border-b">
@@ -530,7 +513,6 @@ Miesiąc 3-6: ...`;
             </Card>
         </div>
 
-        <!-- Modal edycji procedury -->
         <div v-if="showEditForm && selectedProcedure"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card class="max-w-xl w-full mx-auto shadow-lg max-h-[90vh] overflow-y-auto">
@@ -640,7 +622,6 @@ Miesiąc 3-6: ...`;
 </template>
 
 <style scoped>
-/* Optymalizacja tabeli na mniejszych ekranach */
 @media (max-width: 768px) {
     :deep(th), :deep(td) {
         padding: 0.5rem;
@@ -672,8 +653,8 @@ tr:last-child td:last-child {
 }
 
 :deep(thead th) {
-    background-color: #f9fafb; /* Zastępuje var(--table-header-bg) */
-    color: #374151; /* Zastępuje var(--table-header-color) */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
@@ -684,5 +665,4 @@ tr:last-child td:last-child {
     padding: 1rem !important;
     vertical-align: middle;
 }
-/* Stylizacja przycisków w tabeli */
 </style>

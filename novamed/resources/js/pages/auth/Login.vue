@@ -29,7 +29,6 @@ async function submit() {
     errors.value = {};
 
     try {
-        // Pobierz CSRF token
         await axios.get('/sanctum/csrf-cookie');
 
         const response = await axios.post('/api/v1/login', form.value, {
@@ -39,7 +38,6 @@ async function submit() {
             }
         });
 
-        // Pobierz dane użytkownika
         try {
             await authStore.initAuth();
         } catch (authError) {

@@ -17,7 +17,6 @@ class ProcedureController extends Controller
     {
         $query = Procedure::with('category');
 
-        // Filtrowanie po ID kategorii
         if ($request->has('procedure_category_id') && $request->procedure_category_id !== null) {
             $query->where('procedure_category_id', $request->procedure_category_id);
         }

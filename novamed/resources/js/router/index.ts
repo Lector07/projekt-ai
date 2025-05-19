@@ -23,7 +23,6 @@ import DoctorDetailPageAdmin from "@/pages/Admin/Doctors/DoctorDetailPageAdmin.v
 import UserDetailPageAdmin from "@/pages/Admin/Users/UserDetailPageAdmin.vue";
 import AppointmentDetailPage from "@/pages/Admin/Appointments/AppointmentDetailPage.vue";
 
-// Trasy administracyjne
 const adminRoutes: Array<RouteRecordRaw> = [
     {
         path: '/admin/dashboard',
@@ -66,7 +65,7 @@ const adminRoutes: Array<RouteRecordRaw> = [
         }
     },
     {
-        path: '/admin/procedure-categories',  // Poprawiona ścieżka URL
+        path: '/admin/procedure-categories',
         name: 'admin.procedure-categories',
         component: IndexPageCategories,
         meta: {
@@ -127,22 +126,18 @@ const routes: Array<RouteRecordRaw> = [
         component: DashboardPage,
         meta: {
             requiresAuth: true,
-            dynamicTitle: true // flaga wskazująca na dynamiczny tytuł
+            dynamicTitle: true
         },
         beforeEnter: (to, from, next) => {
             const authStore = useAuthStore();
 
-            // Poprawione sprawdzanie roli użytkownika z obsługą przypadku gdy user jest null
             if (authStore.user) {
-                // Sprawdzamy dostępność pola role/roles bezpiecznie używając operatora opcjonalnego chaining
                 const userRole =
-                    // Używamy typowanych asercji aby uniknąć błędów TypeScript
                     (authStore.user as any).role ||
                     ((authStore.user as any).roles && (authStore.user as any).roles[0]) ||
                     'patient'; // Domyślna rola
 
                 if (userRole === 'admin') {
-                    // Przekierowanie administratora na dedykowany panel
                     return next({ name: 'admin.dashboard' });
                 } else if (userRole === 'doctor') {
                     to.meta.title = 'Panel Lekarza';
@@ -150,14 +145,12 @@ const routes: Array<RouteRecordRaw> = [
                     to.meta.title = 'Panel Pacjenta';
                 }
             } else {
-                // Domyślny tytuł jeśli user jest null
                 to.meta.title = 'Panel';
             }
 
             next();
         }
     },
-    // Przekierowanie głównego widoku ustawień do profilu
     {
         path: '/settings',
         name: 'settings',
@@ -230,7 +223,6 @@ const routes: Array<RouteRecordRaw> = [
         component: DoctorDetailPage,
         meta: {title: 'Szegóły lekarza', requiresAuth: true}
     },
-    // Dodajemy trasy administracyjne
     ...adminRoutes
 ];
 

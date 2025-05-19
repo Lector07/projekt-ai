@@ -3,8 +3,6 @@ import {ref, computed, watch} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import axios from 'axios';
 import {useRouter} from 'vue-router';
-
-// Komponenty
 import DeleteUser from '@/components/DeleteUser.vue';
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import InputError from '@/components/InputError.vue';
@@ -14,7 +12,6 @@ import {Label} from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import {type BreadcrumbItem} from '@/types';
-import {Transition} from 'vue';
 
 const authStore = useAuthStore();
 const user = computed(() => authStore.user);
@@ -37,6 +34,7 @@ const form = ref({
     name: '',
     email: '',
 });
+
 const profileErrors = ref<Record<string, string[]>>({});
 const profileProcessing = ref(false);
 const profileRecentlySuccessful = ref(false);
