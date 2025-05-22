@@ -85,6 +85,9 @@ interface DoctorForm {
         name: string;
         email: string;
     } | null;
+    email?: string;
+    password?: string;
+    password_confirmation?: string;
 }
 
 const query = ref({
@@ -251,35 +254,50 @@ const addDoctor = async () => {
     try {
         const doctorData = { ...newDoctor.value };
 
-        if (doctorData.user_id) {
-            console.log('Wybrano user_id:', doctorData.user_id);
-            const user = availableUsers.value.find(u => u.id === doctorData.user_id);
-            if (user) {
-                console.log('Znaleziono użytkownika:', user);
-                doctorData.user = {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email
-                };
-            }
-        } else {
+        if (!doctorData.user_id) {
             console.log('Brak wybranego user_id');
+            if (!doctorData.email || !doctorData.password) {
+                doctorFormErrors.value = {
+                    email: ['Email jest wymagany gdy nie wybrano istniejącego użytkownika'],
+                    password: ['Hasło jest wymagane gdy nie wybrano istniejącego użytkownika']
+                };
+                doctorFormLoading.value = false;
+                return;
+            }
         }
 
         console.log('Dane wysyłane do API:', doctorData);
-
-        await axios.post('/api/v1/admin/doctors', doctorData);
+        const response = await axios.post('/api/v1/admin/doctors', doctorData);
+        console.log('Odpowiedź API:', response.data);
         showAddDoctorForm.value = false;
         resetDoctorForm();
         loadDoctors();
         showSuccessToast('Sukces', 'Lekarz został dodany pomyślnie.');
-    } catch (err: any) {
-        console.error('Błąd podczas dodawania lekarza:', err);
-        if (err.response?.status === 422) {
-            doctorFormErrors.value = err.response.data.errors;
-            console.log('Błędy walidacji:', err.response.data.errors);
+    } catch (error: any) { // Typowanie błędu jako 'any' rozwiąże problemy z typem 'unknown'
+        console.error('Błąd podczas dodawania lekarza:', error);
+
+        // Szczegółowa diagnostyka błędu
+        if (error.response) {
+            console.error('Szczegóły błędu:', {
+                status: error.response.status,
+                data: error.response.data,
+                headers: error.response.headers
+            });
+
+            if (error.response.status === 422) {
+                doctorFormErrors.value = error.response.data.errors;
+            } else {
+                showErrorToast('Błąd',
+                    error.response.data?.message ||
+                    error.response.data?.error ||
+                    'Wystąpił błąd podczas dodawania lekarza.');
+            }
+        } else if (error.request) {
+            console.error('Brak odpowiedzi:', error.request);
+            showErrorToast('Błąd', 'Brak odpowiedzi z serwera.');
         } else {
-            showErrorToast('Błąd', err.response?.data?.message || 'Wystąpił błąd podczas dodawania lekarza.');
+            console.error('Błąd konfiguracji:', error.message);
+            showErrorToast('Błąd', 'Błąd podczas konfigurowania żądania.');
         }
     } finally {
         doctorFormLoading.value = false;

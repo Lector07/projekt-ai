@@ -8,7 +8,6 @@ class UpdateDoctorAvatarRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Zakładamy, że trasa jest chroniona przez middleware 'auth.admin'
         return true;
     }
 

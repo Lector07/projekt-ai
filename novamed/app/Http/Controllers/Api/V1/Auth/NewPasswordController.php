@@ -15,9 +15,7 @@ class NewPasswordController extends Controller
 {
     public function store(ResetPasswordRequest $request): JsonResponse
     {
-        // Dane są już zwalidowane przez ResetPasswordRequest
 
-        // Próba resetowania hasła
         $status = Password::broker()->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
@@ -27,7 +25,6 @@ class NewPasswordController extends Controller
             }
         );
 
-        // Sprawdzenie statusu i zwrócenie odpowiedzi
         if ($status === Password::PASSWORD_RESET) {
             return response()->json([
                 'status' => true,
@@ -35,7 +32,6 @@ class NewPasswordController extends Controller
             ], 200);
         }
 
-        // W przypadku błędu zwracamy kod 422 z odpowiednim komunikatem
         return response()->json([
             'status' => false,
             'message' => Lang::get($status),

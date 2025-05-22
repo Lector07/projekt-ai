@@ -1,6 +1,3 @@
-// resources/js/bootstrap.js (jeśli używasz JS)
-// lub resources/js/bootstrap.ts (jeśli używasz TS)
-
 import axios from 'axios';
 
 window.axios = axios;

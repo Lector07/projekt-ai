@@ -8,19 +8,12 @@ use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     * Zakładamy, że każdy zalogowany użytkownik może aktualizować SWÓJ profil.
-     * Middleware 'auth:sanctum' na trasie zapewni, że użytkownik jest zalogowany.
-     */
     public function authorize(): bool
     {
-        return true; // Pozwól zalogowanemu użytkownikowi na wysłanie żądania
+        return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     * Te reguły są poprawne.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
@@ -34,12 +27,9 @@ class ProfileUpdateRequest extends FormRequest
                 'lowercase',
                 'email',
                 'max:255',
-                // Poprawna reguła unikalności ignorująca obecnego użytkownika
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            // Możesz tu dodać walidację dla innych pól profilu, jeśli pozwolisz je edytować
         ];
     }
 
-    // Metoda update() została USUNIĘTA stąd!
 }

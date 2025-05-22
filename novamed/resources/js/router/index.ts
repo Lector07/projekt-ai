@@ -35,7 +35,7 @@ const adminRoutes: Array<RouteRecordRaw> = [
         }
     },
     {
-      path:'/admin/users'
+        path:'/admin/users'
         , name:'admin.users',
         component: IndexPageUsers,
         meta: {

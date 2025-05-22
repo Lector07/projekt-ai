@@ -27,8 +27,33 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', 'string', Rule::in(['admin', 'patient', 'doctor'])], // <<< Zmieniono walidację roli
+            'password' => [
+                'required',
+                'confirmed',
+                'string',
+                'min:8',
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised()
+            ],
+            'role' => ['required', 'string', Rule::in(['admin', 'patient', 'doctor'])],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Imię jest wymagane',
+            'email.required' => 'Adres email jest wymagany',
+            'email.email' => 'Podaj prawidłowy adres email',
+            'email.unique' => 'Ten adres email jest już zajęty',
+            'password.required' => 'Hasło jest wymagane',
+            'password.confirmed' => 'Hasła nie są identyczne',
+            'role.required' => 'Rola jest wymagana',
+            'role.in' => 'Nieprawidłowa rola użytkownika'
         ];
     }
 }

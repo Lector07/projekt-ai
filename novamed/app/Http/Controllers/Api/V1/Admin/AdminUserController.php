@@ -24,7 +24,6 @@ class AdminUserController extends Controller
 
         $query = User::query()->orderBy('name');
 
-        // Filtrowanie po wyszukiwaniu
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
             $query->where(function($q) use ($searchTerm) {
@@ -33,12 +32,10 @@ class AdminUserController extends Controller
             });
         }
 
-        // Filtrowanie po roli
         if ($request->filled('role')) {
             $query->where('role', $request->input('role'));
         }
 
-        // Paginacja z liczbą elementów na stronę
         $perPage = $request->input('per_page', 15);
         $users = $query->paginate($perPage);
 
@@ -50,12 +47,11 @@ class AdminUserController extends Controller
         $this->authorize('create', User::class);
         $validated = $request->validated();
 
-        // Pole 'role' jest już w $validated dzięki Form Request
         $userData = collect($validated)->except('password')->toArray();
         $userData['password'] = Hash::make($validated['password']);
+        $userData['role'] = $validated['role'] ?? 'patient';
 
         $user = User::create($userData);
-        // Nie ma potrzeby synchronizacji ról
 
         return (new UserResource($user))
             ->response()
@@ -65,7 +61,6 @@ class AdminUserController extends Controller
     public function show(User $user): UserResource
     {
         $this->authorize('view', $user);
-        // Nie ma potrzeby ładowania ról
         return new UserResource($user);
     }
 
@@ -74,7 +69,6 @@ class AdminUserController extends Controller
         $this->authorize('update', $user);
         $validated = $request->validated();
 
-        // Pole 'role' jest już w $validated
         $userData = collect($validated)->except('password')->toArray();
 
         $user->update($userData);
@@ -82,7 +76,6 @@ class AdminUserController extends Controller
         if (!empty($validated['password'])) {
             $user->update(['password' => Hash::make($validated['password'])]);
         }
-        // Nie ma potrzeby synchronizacji ról
 
         return new UserResource($user->fresh());
     }

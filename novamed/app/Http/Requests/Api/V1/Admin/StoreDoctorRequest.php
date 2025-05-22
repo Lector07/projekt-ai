@@ -26,8 +26,10 @@ class StoreDoctorRequest extends FormRequest
             'last_name' => 'required|string|max:255',
             'specialization' => 'required|string|max:255',
             'bio' => 'nullable|string',
-            'price_modifier' => 'nullable|numeric|min:0',
-            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'price_modifier' => 'nullable|numeric|min:0.5|max:2',
+            'user_id' => 'nullable|exists:users,id',
+            'email' => 'required_without:user_id|email|unique:users,email',
+            'password' => 'required_without:user_id|string|min:8',
         ];
     }
 }

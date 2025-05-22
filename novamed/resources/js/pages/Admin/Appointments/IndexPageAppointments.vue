@@ -7,6 +7,8 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Skeleton} from '@/components/ui/skeleton';
+import { parseDate, today, getLocalTimeZone } from '@internationalized/date';
+import type { DateValue } from '@internationalized/date';
 import Icon from '@/components/Icon.vue';
 import type {BreadcrumbItem} from '@/types';
 import {
@@ -112,7 +114,7 @@ const showEditAppointmentForm = ref(false);
 const selectedAppointment = ref<any>(null);
 const appointmentErrors = ref<any>({});
 const appointmentFormLoading = ref(false);
-const selectedDate = ref<Date | null>(null);
+
 
 const statusOptions = [
     {value: 'scheduled', label: 'Zarezerwowana'},
@@ -126,20 +128,22 @@ const changePage = (page: number) => {
     loadAppointments();
 };
 
-const dateFrom = ref<Date | null>(null);
-const dateTo = ref<Date | null>(null);
+const dateFrom = ref<DateValue | undefined>(undefined);
+const dateTo = ref<DateValue | undefined>(undefined);
+const selectedDate = ref<DateValue | undefined>(undefined);
 
-const onDateFromChange = (date: Date | null) => {
+const onDateFromChange = (date: DateValue | undefined) => {
     if (date) {
-        filters.date_from = format(date, 'yyyy-MM-dd');
+        // Używaj metod DateValue zamiast Date
+        filters.date_from = date.toString();
     } else {
         filters.date_from = '';
     }
 };
 
-const onDateToChange = (date: Date | null) => {
+const onDateToChange = (date: DateValue | undefined) => {
     if (date) {
-        filters.date_to = format(date, 'yyyy-MM-dd');
+        filters.date_to = date.toString();
     } else {
         filters.date_to = '';
     }
@@ -202,7 +206,9 @@ const openEditForm = async (appointment: Appointment) => {
         selectedAppointment.value = response.data.data;
 
         if (selectedAppointment.value.appointment_datetime) {
-            selectedDate.value = new Date(selectedAppointment.value.appointment_datetime);
+            // Konwersja string na DateValue
+            const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
+            selectedDate.value = parseDate(dateStr);
         }
 
         showEditAppointmentForm.value = true;
@@ -214,18 +220,23 @@ const openEditForm = async (appointment: Appointment) => {
     }
 };
 
+const formatDateValue = (dateValue: DateValue | undefined) => {
+    if (!dateValue) return '';
+    // Konwertuj DateValue na format ISO i następnie na obiekt Date
+    const date = new Date(dateValue.toString());
+    return format(date, 'd MMMM yyyy', {locale: pl});
+};
+
 const closeEditForm = () => {
     showEditAppointmentForm.value = false;
     selectedAppointment.value = null;
     appointmentErrors.value = {};
 };
 
-const onAppointmentDateChange = (date: Date | null) => {
+const onAppointmentDateChange = (date: DateValue | undefined) => {
     selectedDate.value = date;
     if (date && selectedAppointment.value) {
-        const originalDate = new Date(selectedAppointment.value.appointment_datetime);
-        date.setHours(originalDate.getHours(), originalDate.getMinutes());
-        selectedAppointment.value.appointment_datetime = date.toISOString();
+        selectedAppointment.value.appointment_datetime = date.toString();
     }
 };
 
@@ -296,7 +307,7 @@ const getStatusClass = (status: string) => {
         case 'scheduled':
             return 'bg-blue-100 text-blue-800';
         case 'completed':
-            return 'bg-purple-100 text-purple-800';
+            return 'bg-green-100 text-green-800';
         case 'cancelled':
             return 'bg-red-100 text-red-800';
         default:
@@ -574,7 +585,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
                                     {{
-                                        selectedDate ? formatDateTime(selectedDate.toISOString()) : "Wybierz datę wizyty"
+                                        selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty"
                                     }}
                                 </Button>
                             </PopoverTrigger>

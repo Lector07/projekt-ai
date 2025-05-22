@@ -35,25 +35,17 @@ class AdminDashboardController extends Controller
             ? Carbon::parse($request->input('end_date'))->endOfDay()
             : Carbon::now();
 
-        Log::debug('Date filter enabled: ' . ($useTimeFilter ? 'yes' : 'no'));
-        if ($useTimeFilter) {
-            Log::debug('Date range:', ['start' => $startDate->toDateTimeString(), 'end' => $endDate->toDateTimeString()]);
-        }
 
-        // Podstawowe statystyki
         $patientCount = User::where('role', 'patient')->count();
         $doctorUserCount = User::where('role', 'doctor')->count();
         $procedureCount = Procedure::count();
 
-        // Pobierz bazowe zapytanie wizyt
         $appointmentsQuery = Appointment::query();
 
-        // Zastosuj filtr czasowy tylko jeśli podano parametry dat
         if ($useTimeFilter) {
             $appointmentsQuery->whereBetween('appointment_datetime', [$startDate, $endDate]);
         }
 
-        // Statystyki wizyt - bez filtrowania czasowego, jeśli nie podano parametrów
         $totalAppointments = clone $appointmentsQuery;
         $totalAppointments = $totalAppointments->count();
 
@@ -70,19 +62,16 @@ class AdminDashboardController extends Controller
         $cancelledAppointments = $cancelledAppointments->where('status', 'cancelled')
             ->count();
 
-        // Pobierz wszystkie wizyty do analizy
         $appointmentsForAnalysis = clone $appointmentsQuery;
         $appointments = $appointmentsForAnalysis->get(['id', 'appointment_datetime', 'procedure_id']);
 
-        // Dane dla wykresu wizyt miesięcznych
         $appointmentsPerMonthArray = array_fill(0, 12, 0);
 
         foreach ($appointments as $appointment) {
-            $month = Carbon::parse($appointment->appointment_datetime)->month - 1; // 0-indeksowane dla JS
+            $month = Carbon::parse($appointment->appointment_datetime)->month - 1;
             $appointmentsPerMonthArray[$month]++;
         }
 
-        // Najpopularniejsze procedury
         $procedureCounts = [];
         foreach ($appointments as $appointment) {
             if ($appointment->procedure_id) {
@@ -94,7 +83,6 @@ class AdminDashboardController extends Controller
             }
         }
 
-        // Sortowanie i wybieranie top 5
         arsort($procedureCounts);
         $topProcedureIds = array_slice(array_keys($procedureCounts), 0, 5);
 
@@ -112,7 +100,7 @@ class AdminDashboardController extends Controller
                 }
             }
 
-            // Sortowanie według liczby wizyt
+
             usort($popularProcedures, function ($a, $b) {
                 return $b['count'] <=> $a['count'];
             });

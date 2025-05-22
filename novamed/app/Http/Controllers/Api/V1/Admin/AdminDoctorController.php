@@ -7,11 +7,13 @@ use App\Http\Requests\Api\V1\Admin\StoreDoctorRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateDoctorRequest;
 use App\Http\Resources\Api\V1\DoctorResource;
 use App\Models\Doctor;
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Api\V1\Admin\UpdateDoctorAvatarRequest;
 
@@ -28,7 +30,6 @@ class AdminDoctorController extends Controller
 
         $query = Doctor::query()->with('user');
 
-        // Wyszukiwanie
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
@@ -40,15 +41,12 @@ class AdminDoctorController extends Controller
             });
         }
 
-        // Filtrowanie po specjalizacji
         if ($request->has('specialization') && !empty($request->specialization)) {
             $query->where('specialization', $request->specialization);
         }
 
-        // Sortowanie
         $query->orderBy('last_name')->orderBy('first_name');
 
-        // Paginacja
         $perPage = $request->input('per_page', 10);
         $doctors = $query->paginate($perPage);
 
@@ -63,26 +61,45 @@ class AdminDoctorController extends Controller
         $this->authorize('create', Doctor::class);
         $validated = $request->validated();
 
-        $doctor = new Doctor();
-        $doctor->first_name = $validated['first_name'];
-        $doctor->last_name = $validated['last_name'];
-        $doctor->specialization = $validated['specialization'];
+        try {
+            $doctor = new Doctor();
+            $doctor->first_name = $validated['first_name'];
+            $doctor->last_name = $validated['last_name'];
+            $doctor->specialization = $validated['specialization'];
 
-        if (isset($validated['bio'])) $doctor->bio = $validated['bio'];
-        if (isset($validated['price_modifier'])) $doctor->price_modifier = $validated['price_modifier'];
+            if (isset($validated['bio'])) $doctor->bio = $validated['bio'];
+            if (isset($validated['price_modifier'])) $doctor->price_modifier = $validated['price_modifier'];
 
-        if (isset($validated['user_id']) && !empty($validated['user_id'])) {
-            $doctor->user_id = $validated['user_id'];
-        } else {}
+            if (isset($validated['user_id']) && !empty($validated['user_id'])) {
+                $doctor->user_id = $validated['user_id'];
+                $doctor->save();
+            } else {
+                if (isset($validated['email']) && isset($validated['password'])) {
+                    $doctor->save();
 
-        $doctor->save();
+                    $user = new User();
+                    $user->name = $validated['first_name'] . ' ' . $validated['last_name'];
+                    $user->email = $validated['email'];
+                    $user->password = Hash::make($validated['password']);
+                    $user->role = 'doctor';
+                    $user->save();
 
-        $doctor->refresh();
-        $doctor->load('user');
+                    $doctor->user_id = $user->id;
+                    $doctor->save();
+                } else {
+                    $doctor->save();
+                }
+            }
 
-        return (new DoctorResource($doctor))
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+            $doctor->refresh();
+            $doctor->load('user');
+
+            return (new DoctorResource($doctor))
+                ->response()
+                ->setStatusCode(Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Wystąpił błąd: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -114,7 +131,6 @@ class AdminDoctorController extends Controller
     {
         $this->authorize('delete', $doctor);
 
-        // Usuwanie zdjęcia jeśli istnieje
         if ($doctor->profile_picture_path) {
             Storage::disk('public')->delete($doctor->profile_picture_path);
         }

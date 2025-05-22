@@ -5,40 +5,36 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Models\User;
-use App\Models\Role;
-use Illuminate\Http\Request; // Brakujący import
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB; // Brakujący import
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
-    public function store(Request $request)
+    public function __invoke(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        DB::beginTransaction();
         try {
+            $validated = $request->validated();
+
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
             ]);
 
-            // Dodawanie ról lub inne operacje
+            event(new Registered($user));
 
-            DB::commit();
-            return response()->json(['message' => 'Użytkownik zarejestrowany pomyślnie'], 201);
+            return response()->json([
+                'user' => $user,
+                'message' => 'Konto utworzone pomyślnie'
+            ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Błąd rejestracji', 'error' => $e->getMessage()], 500);
+            Log::error('Błąd rejestracji: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'message' => 'Wystąpił błąd podczas rejestracji',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

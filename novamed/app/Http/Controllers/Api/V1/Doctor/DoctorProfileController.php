@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1\Doctor; // Poprawna przestrzeń nazw
+namespace App\Http\Controllers\Api\V1\Doctor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Doctor\UpdateDoctorProfileRequest; // Zakładamy, że ten istnieje dla pól tekstowych
@@ -9,7 +9,7 @@ use App\Http\Resources\Api\V1\DoctorResource;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse; // Dodaj, jeśli update zwraca JsonResponse
-use Illuminate\Support\Facades\Storage;                      // <<< DODAJ
+use Illuminate\Support\Facades\Storage;
 
 class DoctorProfileController extends Controller
 {
@@ -18,23 +18,22 @@ class DoctorProfileController extends Controller
     /**
      * Wyświetl profil zalogowanego lekarza.
      */
-    public function show(Request $request): JsonResponse|DoctorResource // Poprawiony typ zwrotny
+    public function show(Request $request): JsonResponse|DoctorResource
     {
-        $doctor = $request->user()?->doctor; // Użyj optional chaining
+        $doctor = $request->user()?->doctor;
 
         if (!$doctor) {
             return response()->json(['message' => 'Profil lekarza nie znaleziony lub nie jesteś lekarzem.'], 404);
         }
 
-        $this->authorize('view', $doctor); // Jeśli masz DoctorPolicy@view
+        $this->authorize('view', $doctor);
 
         return new DoctorResource($doctor);
     }
 
     /**
-     * Aktualizuj profil lekarza (dane tekstowe).
      */
-    public function update(UpdateDoctorProfileRequest $request): JsonResponse|DoctorResource // Poprawiony typ zwrotny
+    public function update(UpdateDoctorProfileRequest $request): JsonResponse|DoctorResource
     {
         $doctor = $request->user()?->doctor;
 

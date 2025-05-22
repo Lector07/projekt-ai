@@ -64,9 +64,8 @@ const newProcedure = ref({
     name: '',
     description: '',
     base_price: 0,
-    duration_minutes: 30,
-    recovery_info: '',
-    category_id: null
+    procedure_category_id: null,
+    recovery_timeline_info: '',
 });
 
 const loadProcedures = async () => {
@@ -175,12 +174,10 @@ const resetForm = () => {
         name: '',
         description: '',
         base_price: 0,
-        duration_minutes: 30,
-        recovery_info: '',
-        category_id: null
+        procedure_category_id: null,
+        recovery_timeline_info: ''
     };
     formErrors.value = {};
-
 };
 
 const truncateText = (text: string, maxLength: number): string => {
@@ -403,7 +400,6 @@ Miesiąc 3-6: ...`;
                             <PaginationLast @click="goToPage(totalPages)"/>
                         </PaginationList>
                     </Pagination>
-                    <p class="text-sm justify-end text-gray-400">Kliknij PPM aby usunąć lub edytować</p>
                 </div>
             </div>
         </div>
@@ -427,8 +423,8 @@ Miesiąc 3-6: ...`;
 
                         <div class="space-y-2">
                             <Label for="category_id">Kategoria</Label>
-                            <Select v-model="newProcedure.category_id">
-                                <SelectTrigger id="category_id" class="w-full">
+                            <Select v-model="newProcedure.procedure_category_id">
+                            <SelectTrigger id="category_id" class="w-full">
                                     <SelectValue :placeholder="'Wybierz kategorię'"/>
                                 </SelectTrigger>
                                 <SelectContent>
@@ -485,8 +481,8 @@ Miesiąc 3-6: ...`;
                             <Label for="recovery_info">Informacje o Rekonwalescencji</Label>
                             <FloatLabel>
                                 <Textarea
-                                    id="recovery_info"
-                                    v-model="newProcedure.recovery_info"
+                                    id="recovery_timeline_info"
+                                    v-model="newProcedure.recovery_timeline_info"
                                     rows="5"
                                     class="w-full resize-none"
                                     :class="{'p-invalid': formErrors.recovery_info}"
@@ -533,7 +529,7 @@ Miesiąc 3-6: ...`;
 
                         <div class="space-y-2">
                             <Label for="edit-category_id">Kategoria</Label>
-                            <Select v-model="selectedProcedure.category_id">
+                            <Select v-model="selectedProcedure.procedure_category_id">
                                 <SelectTrigger id="edit-category_id" class="w-full">
                                     <SelectValue :placeholder="'Wybierz kategorię'"/>
                                 </SelectTrigger>
@@ -591,8 +587,8 @@ Miesiąc 3-6: ...`;
                             <Label for="edit-recovery_info">Informacje o Rekonwalescencji</Label>
                             <FloatLabel>
                                 <Textarea
-                                    id="edit-recovery_info"
-                                    v-model="selectedProcedure.recovery_info"
+                                    id="edit-recovery_timeline_info"
+                                    v-model="selectedProcedure.recovery_timeline_info"
                                     rows="5"
                                     class="w-full resize-none"
                                     :class="{'p-invalid': formErrors.recovery_info}"

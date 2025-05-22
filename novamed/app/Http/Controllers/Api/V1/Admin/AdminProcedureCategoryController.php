@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Http\Requests\Api\V1\Admin\StoreProcedureCategoryRequest;
+use App\Http\Requests\Api\V1\Admin\UpdateProcedureCategoryRequest;
 
 class AdminProcedureCategoryController extends Controller
 {
@@ -39,16 +41,12 @@ class AdminProcedureCategoryController extends Controller
     /**
      * Zapisz nowo utworzoną kategorię w bazie danych.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreProcedureCategoryRequest $request): JsonResponse
     {
         try {
             $this->authorize('create', ProcedureCategory::class);
+            $validated = $request->validated();
 
-            $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:procedure_categories',
-            ]);
-
-            // Automatyczne generowanie sluga z nazwy
             $validated['slug'] = Str::slug($validated['name']);
 
             $category = ProcedureCategory::create($validated);
@@ -56,11 +54,9 @@ class AdminProcedureCategoryController extends Controller
             return (new ProcedureCategoryResource($category))
                 ->response()
                 ->setStatusCode(Response::HTTP_CREATED);
-
         } catch (\Exception $e) {
             Log::error('Błąd podczas tworzenia kategorii: ' . $e->getMessage());
 
-            // Obsługa błędów walidacji
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 return response()->json([
                     'message' => 'Błąd walidacji danych',
@@ -93,16 +89,12 @@ class AdminProcedureCategoryController extends Controller
     /**
      * Zaktualizuj określoną kategorię w bazie danych.
      */
-    public function update(Request $request, ProcedureCategory $procedureCategory): JsonResponse
+    public function update(UpdateProcedureCategoryRequest $request, ProcedureCategory $procedureCategory): JsonResponse
     {
         try {
             $this->authorize('update', $procedureCategory);
+            $validated = $request->validated();
 
-            $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:procedure_categories,name,' . $procedureCategory->id,
-            ]);
-
-            // Automatyczne generowanie sluga z nazwy
             $validated['slug'] = Str::slug($validated['name']);
 
             $procedureCategory->update($validated);
@@ -111,7 +103,6 @@ class AdminProcedureCategoryController extends Controller
                 'data' => new ProcedureCategoryResource($procedureCategory),
                 'message' => 'Kategoria została zaktualizowana'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Błąd podczas aktualizacji kategorii: ' . $e->getMessage());
 
@@ -129,7 +120,7 @@ class AdminProcedureCategoryController extends Controller
     /**
      * Usuń określoną kategorię z bazy danych.
      */
-    public function destroy(ProcedureCategory $procedureCategory): Response
+    public function destroy(ProcedureCategory $procedureCategory): JsonResponse
     {
         try {
             $this->authorize('delete', $procedureCategory);

@@ -1,12 +1,60 @@
 <script setup lang="ts">
-import {computed} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {useAuthStore} from '@/stores/auth';
+import axios from 'axios';
+ // Załóżmy, że InfoCard.vue jest w tym samym katalogu lub dostosuj ścieżkę
+
+// Definiowanie interfejsów dla danych
+interface Procedure {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+}
+
+interface Doctor {
+    id: number;
+    title: string;
+    name: string;
+    surname: string;
+    specialization: string;
+    description: string;
+}
 
 const authStore = useAuthStore();
 
 const isLoggedIn = computed(() => authStore.isLoggedIn);
-const user = computed(() => authStore.user);
+const user = computed(() => authStore.user); // User nie jest używany, ale może być w przyszłości
 
+// Dane z bazy z odpowiednim typowaniem
+const procedures = ref<Procedure[]>([]);
+const doctors = ref<Doctor[]>([]);
+const loading = ref(true);
+const error = ref(false);
+
+// Pobieranie danych z bazy
+const fetchData = async () => {
+    try {
+        loading.value = true;
+        error.value = false; // Resetuj błąd przed nowym żądaniem
+        // Pobierz procedury medyczne
+        const proceduresResponse = await axios.get('/api/procedures');
+        procedures.value = proceduresResponse.data.data;
+
+        // Pobierz lekarzy
+        const doctorsResponse = await axios.get('/api/doctors');
+        doctors.value = doctorsResponse.data.data;
+    } catch (e) {
+        error.value = true;
+        console.error('Błąd podczas pobierania danych:', e);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchData();
+});
 </script>
 
 <template>
@@ -19,11 +67,14 @@ const user = computed(() => authStore.user);
                 <div
                     class="flex-1 rounded-bl-lg rounded-br-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] lg:rounded-br-none lg:rounded-tl-lg lg:p-20"
                 >
-                    <h1 class="mb-1 font-bold text-2xl">Witaj w <span class="text-nova-primary">NOVA</span><span class="text-nova-accent">MED</span></h1>
+                    <h1 class="mb-1 font-bold text-2xl">Witaj w <span class="text-nova-primary">NOVA</span><span
+                        class="text-nova-accent">MED</span></h1>
                     <p class="mb-2 mt-4 text-algin text-[#706f6c] dark:text-[#A1A09A]">
-                        W NOVAMED łączymy nowoczesną technologię z doświadczeniem, oferując najwyższy standard opieki medycznej. Nasza misja to nie tylko poprawa wyglądu, ale przede wszystkim podniesienie jakości życia naszych pacjentów.
+                        W NOVAMED łączymy nowoczesną technologię z doświadczeniem, oferując najwyższy standard opieki
+                        medycznej. Nasza misja to nie tylko poprawa wyglądu, ale przede wszystkim podniesienie jakości
+                        życia naszych pacjentów.
                     </p>
-                    <ul class="mb-2 flex flex-col  lg:mb-6"> <span class="mb-1 text-base">Co możesz znaleźć w naszej aplikacji?</span>
+                    <ul class="mb-2 flex flex-col  lg:mb-6"><span class="mb-1 text-base">Co możesz znaleźć w naszej aplikacji?</span>
                         <li
                             class="relative flex items-center gap-4 py-2 before:absolute before:bottom-8 before:left-[0.4rem] before:top-0 before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]"
                         >
@@ -80,7 +131,7 @@ const user = computed(() => authStore.user);
                         class="transition-transform duration-1000 starting:scale-50 lg:scale-100"
                     >
                         <defs>
-                            <g />
+                            <g/>
                         </defs>
                         <g fill="#1282a2" fill-opacity="1">
                             <g transform="translate(62.445428, 451.838621)">
@@ -186,7 +237,7 @@ const user = computed(() => authStore.user);
                         <g fill="#1282a2" fill-opacity="1">
                             <g transform="translate(476.400877, 468.483984)">
                                 <g>
-                                    <path d="M 3 -22.3125 L 7.140625 -22.3125 L 7.140625 0 L 3 0 Z M 3 -22.3125 " />
+                                    <path d="M 3 -22.3125 L 7.140625 -22.3125 L 7.140625 0 L 3 0 Z M 3 -22.3125 "/>
                                 </g>
                             </g>
                         </g>
@@ -284,6 +335,51 @@ const user = computed(() => authStore.user);
                 </div>
             </main>
         </div>
-        <div class="h-14.5 hidden lg:block"></div>
+
+        <div class="w-full max-w-4xl mt-12 px-4 pt-8 pb-8 lg:pb-[90px] bg-white dark:bg-neutral-900 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Nasze Usługi Medyczne</h2>
+
+            <div v-if="loading" class="flex justify-center items-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nova-primary"></div>
+            </div>
+
+            <div v-else-if="error" class="text-center text-red-500 py-8">
+                Wystąpił błąd podczas pobierania danych. Spróbuj odświeżyć stronę.
+            </div>
+
+            <template v-else>
+                <div class="mb-10">
+                    <h3 class="text-xl font-semibold mb-4 text-nova-primary">Nasze Procedury</h3>
+                    <div v-if="procedures.length === 0" class="text-gray-500 dark:text-gray-400 text-center py-4">
+                        Brak dostępnych procedur.
+                    </div>
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <InfoCard
+                            v-for="procedure in procedures"
+                            :key="procedure.id"
+                            :title="procedure.name"
+                            :description="procedure.description"
+                            :price="procedure.price"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-nova-primary">Nasi Specjaliści</h3>
+                    <div v-if="doctors.length === 0" class="text-gray-500 dark:text-gray-400 text-center py-4">
+                        Brak dostępnych lekarzy.
+                    </div>
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <InfoCard
+                            v-for="doctor in doctors"
+                            :key="doctor.id"
+                            :title="`${doctor.title} ${doctor.name} ${doctor.surname}`"
+                            :subtitle="doctor.specialization"
+                            :description="doctor.description"
+                        />
+                    </div>
+                </div>
+            </template>
+        </div>
     </div>
 </template>

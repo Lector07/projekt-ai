@@ -29,15 +29,13 @@ class AdminProcedureController extends Controller
 
         $query = Procedure::query()->with('category');
 
-        // Wyszukiwanie po nazwie
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where('name', 'like', "%{$searchTerm}%");
         }
 
-        // Filtrowanie po kategorii
         if ($request->filled('category_id')) {
-            $query->where('procedure_category_id', $request->category_id); // Zmieniono z category_id
+            $query->where('procedure_category_id', $request->category_id);
         }
 
         $perPage = $request->input('per_page', 12);
@@ -54,9 +52,8 @@ class AdminProcedureController extends Controller
         try {
             $this->authorize('viewAny', Procedure::class);
 
-            $categories = ProcedureCategory::orderBy('name')->get(); // Zmieniono model
+            $categories = ProcedureCategory::orderBy('name')->get();
 
-            // Zwracamy kolekcję zasobów
             return response()->json([
                 'data' => ProcedureCategoryResource::collection($categories)
             ]);

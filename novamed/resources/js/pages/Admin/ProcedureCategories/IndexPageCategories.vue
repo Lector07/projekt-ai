@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/context-menu';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {Separator} from "@/components/ui/separator";
+import Toast from 'primevue/toast';
 
 interface Category {
     id: number;
@@ -110,10 +111,10 @@ const saveCategory = async () => {
 
     try {
         if (isEditing.value) {
-            await axios.put(`/api/admin/procedure-categories/${form.id}`, form);
+            await axios.put(`/api/v1/admin/procedure-categories/${form.id}`, form);
             toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została zaktualizowana.', life: 3000 });
         } else {
-            await axios.post('/api/admin/procedure-categories', form);
+            await axios.post('/api/v1/admin/procedure-categories', form);
             toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została dodana.', life: 3000 });
         }
 
@@ -133,7 +134,7 @@ const deleteCategory = async (id: number) => {
     if (!confirm('Czy na pewno chcesz usunąć tę kategorię?')) return;
 
     try {
-        await axios.delete(`/api/admin/procedure-categories/${id}`);
+        await axios.delete(`/api/v1/admin/procedure-categories/${id}`);
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została usunięta.', life: 3000 });
         fetchCategories(); // Odśwież dane
     } catch (err) {
@@ -154,6 +155,7 @@ onMounted(() => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
+        <Toast />
         <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center border rounded-md p-4 mb-6">
                 <h1 class="text-2xl font-semibold">Kategorie procedur <span> <p class="text-sm text-gray-500">Zarządzaj kategoriami procedur</p></span></h1>

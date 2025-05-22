@@ -11,7 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
+import {  onMounted } from 'vue';
+import { useToast } from "primevue/usetoast";
+import Toast from "primevue/toast";
 
+
+const toast = useToast();
 const router = useRouter();
 const authStore = useAuthStore();
 
@@ -42,43 +47,43 @@ async function submit() {
             }
         });
 
+        toast.add({
+            severity: 'success',
+            summary: 'Sukces',
+            detail: 'Konto zostało utworzone pomyślnie. Zaloguj się, aby kontynuować.',
+            life: 3000
+        });
+
         console.log('Rejestracja udana:', registerResponse);
 
-        try {
-            const userResponse = await axios.get('/api/v1/user', {
-                headers: { 'Accept': 'application/json' }
-            });
-
-            if (userResponse.data) {
-                authStore.$patch({ user: userResponse.data });
-                router.push({ name: 'dashboard' });
-                return;
-            }
-        } catch (authError) {
-            console.log('Nie można pobrać danych użytkownika', authError);
-        }
-
-        alert('Rejestracja udana! Zaloguj się, aby kontynuować.');
-        router.push({ name: 'login' });
     } catch (error: any) {
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors;
+            toast.add({
+                severity: 'error',
+                summary: 'Błąd walidacji',
+                detail: 'Sprawdź poprawność wprowadzonych danych',
+                life: 5000
+            });
         } else {
             console.error('Błąd rejestracji:', error);
             errors.value = { general: ['Wystąpił nieoczekiwany błąd podczas rejestracji.'] };
+            toast.add({
+                severity: 'error',
+                summary: 'Błąd',
+                detail: 'Wystąpił nieoczekiwany błąd podczas rejestracji',
+                life: 5000
+            });
         }
     } finally {
         isLoading.value = false;
-        if (Object.keys(errors.value).length === 0) {
-            form.value.password = '';
-            form.value.password_confirmation = '';
-        }
     }
 }
 </script>
 
 <template>
     <AuthBase title="Utwórz swoje konto" description="Wpisz dane poniżej aby utworzyć konto">
+        <Toast />
         <div v-if="errors.general" class="mb-4 text-center text-sm font-medium text-red-600">
             {{ errors.general[0] }}
         </div>

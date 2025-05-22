@@ -27,7 +27,6 @@ class UpdateDoctorRequest extends FormRequest
             'specialization' => 'sometimes|required|string|max:255',
             'bio' => 'sometimes|nullable|string',
             'price_modifier' => 'sometimes|nullable|numeric|min:0',
-            //
         ];
     }
 }

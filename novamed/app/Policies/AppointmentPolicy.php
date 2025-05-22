@@ -10,24 +10,21 @@ class AppointmentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true; // Kontroler filtruje
+        return true;
     }
 
     public function view(User $user, Appointment $appointment): bool
     {
-        // Użyj isAdmin() lub hasRole()
         return $user->id === $appointment->patient_id || $user->isAdmin();
     }
 
     public function create(User $user): bool
     {
-        // Użyj isPatient() lub hasRole()
         return $user->isPatient();
     }
 
     public function update(User $user, Appointment $appointment): bool
     {
-        // Użyj isAdmin() lub hasRole()
         return $user->isAdmin();
     }
 

@@ -10,12 +10,12 @@ class ProcedurePolicy
 {
     public function viewAny(User $user): bool
     {
-        return true; // Wszyscy mogą przeglądać listę procedur
+        return true;
     }
 
     public function view(User $user, Procedure $procedure): bool
     {
-        return true; // Wszyscy mogą przeglądać szczegóły procedur
+        return true;
     }
 
     public function create(User $user): bool
