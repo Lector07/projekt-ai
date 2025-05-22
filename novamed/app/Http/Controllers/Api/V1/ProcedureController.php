@@ -21,7 +21,7 @@ class ProcedureController extends Controller
             $query->where('procedure_category_id', $request->procedure_category_id);
         }
 
-        $procedures = $query->paginate($request->per_page ?? 10);
+        $procedures = $query->paginate($request->per_page ?? 9);
         return response()->json($procedures);
     }
 

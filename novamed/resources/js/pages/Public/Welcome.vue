@@ -2,23 +2,34 @@
 import {computed, onMounted, ref} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import axios from 'axios';
- // Załóżmy, że InfoCard.vue jest w tym samym katalogu lub dostosuj ścieżkę
+import {LoaderCircle} from 'lucide-vue-next';
+import Heading from "@/components/Heading.vue";
+import {Button} from '@/components/ui/button';
+import {
+    Pagination,
+    PaginationEllipsis,
+    PaginationFirst,
+    PaginationPrevious,
+    PaginationLast,
+    PaginationNext
+} from '@/components/ui/pagination';
+import {PaginationList, PaginationListItem} from 'reka-ui';
+import {Skeleton} from '@/components/ui/skeleton';
 
-// Definiowanie interfejsów dla danych
 interface Procedure {
     id: number;
     name: string;
     description: string;
-    price: number;
+    base_price: number;
 }
 
 interface Doctor {
     id: number;
-    title: string;
-    name: string;
-    surname: string;
+    title?: string;
+    first_name: string;  // zmienione z name
+    last_name: string;   // zmienione z surname
     specialization: string;
-    description: string;
+    bio: string;         // zmienione z description
 }
 
 const authStore = useAuthStore();
@@ -32,26 +43,106 @@ const doctors = ref<Doctor[]>([]);
 const loading = ref(true);
 const error = ref(false);
 
-// Pobieranie danych z bazy
-const fetchData = async () => {
-    try {
-        loading.value = true;
-        error.value = false; // Resetuj błąd przed nowym żądaniem
-        // Pobierz procedury medyczne
-        const proceduresResponse = await axios.get('/api/procedures');
-        procedures.value = proceduresResponse.data.data;
 
-        // Pobierz lekarzy
-        const doctorsResponse = await axios.get('/api/doctors');
-        doctors.value = doctorsResponse.data.data;
+const activeTab = ref(0);
+const getInitials = (firstName: string, lastName: string): string => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+};
+
+
+const doctorsCurrentPage = ref(1);
+const doctorsLastPage = ref(1);
+const doctorsMeta = ref({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 6
+});
+
+// Paginacja dla procedur
+const proceduresCurrentPage = ref(1);
+const proceduresLastPage = ref(1);
+const proceduresMeta = ref({
+    current_page: 1,
+    last_page: 1,
+    total: 0,
+    per_page: 9
+});
+
+// Zmodyfikowana funkcja pobierania danych
+const fetchData = async () => {
+    loading.value = true;
+    error.value = false;
+
+    try {
+        // Pobieramy tylko dane dla aktywnej zakładki
+        if (activeTab.value === 0) {
+            // Tylko procedury
+            const proceduresResponse = await axios.get('/api/procedures', {
+                params: {
+                    page: proceduresCurrentPage.value,
+                    per_page: proceduresMeta.value.per_page
+                }
+            });
+            procedures.value = proceduresResponse.data.data;
+            proceduresMeta.value = {
+                current_page: proceduresResponse.data.current_page,
+                last_page: proceduresResponse.data.last_page,
+                total: proceduresResponse.data.total,
+                per_page: proceduresResponse.data.per_page
+            };
+        } else {
+            // Tylko lekarze
+            const doctorsResponse = await axios.get('/api/doctors', {
+                params: {
+                    page: doctorsCurrentPage.value,
+                    per_page: doctorsMeta.value.per_page
+                }
+            });
+            doctors.value = doctorsResponse.data.data;
+            doctorsMeta.value = {
+                current_page: doctorsResponse.data.current_page,
+                last_page: doctorsResponse.data.last_page,
+                total: doctorsResponse.data.total,
+                per_page: doctorsResponse.data.per_page
+            };
+        }
     } catch (e) {
-        error.value = true;
         console.error('Błąd podczas pobierania danych:', e);
+        error.value = true;
     } finally {
         loading.value = false;
     }
 };
 
+// Funkcje do obsługi zmiany zakładek
+const changeTab = (index: number) => {
+    if (activeTab.value !== index) {
+        activeTab.value = index;
+        // Pobierz dane dla nowej zakładki tylko jeśli jeszcze nie były pobrane
+        if ((index === 0 && procedures.value.length === 0) ||
+            (index === 1 && doctors.value.length === 0)) {
+            fetchData();
+        }
+    }
+};
+
+// Funkcje do obsługi zmiany stron z zabezpieczeniem przed wielokrotnym kliknięciem
+const changeDoctorsPage = (page: number) => {
+    if (loading.value) return; // Zapobiega wielokrotnym żądaniom
+    if (doctorsCurrentPage.value !== page) {
+        doctorsCurrentPage.value = page;
+        fetchData();
+    }
+};
+
+const changeProceduresPage = (page: number) => {
+    if (loading.value) return; // Zapobiega wielokrotnym żądaniom
+    if (proceduresCurrentPage.value !== page) {
+        proceduresCurrentPage.value = page;
+        fetchData();
+    }
+};
 onMounted(() => {
     fetchData();
 });
@@ -59,11 +150,11 @@ onMounted(() => {
 
 <template>
     <div
-        class="flex min-h-screen flex-col items-center bg-nova-light p-6 text-[#1b1b18] lg:justify-center lg:p-8">
+        class="flex mt-14 min-h-screen flex-col items-center bg-nova-light p-6 text-[#1b1b18] lg:justify-center lg:p-8">
         <div
             class="duration-750 starting:opacity-0 flex w-full items-center justify-center opacity-100 transition-opacity lg:grow">
             <main
-                class="flex w-full max-w-[335px] flex-col-reverse overflow-hidden rounded-lg lg:max-w-4xl lg:flex-row">
+                class="flex w-full max-w-[450px] flex-col-reverse overflow-hidden rounded-lg min-h-[450px] lg:max-w-6xl lg:flex-row lg:min-h-[550px]">
                 <div
                     class="flex-1 rounded-bl-lg rounded-br-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] lg:rounded-br-none lg:rounded-tl-lg lg:p-20"
                 >
@@ -336,50 +427,224 @@ onMounted(() => {
             </main>
         </div>
 
-        <div class="w-full max-w-4xl mt-12 px-4 pt-8 pb-8 lg:pb-[90px] bg-white dark:bg-neutral-900 rounded-lg shadow-md">
-            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Nasze Usługi Medyczne</h2>
+        <div class="w-full max-w-8xl mx-auto mt-16 px-2 pb-16">
+            <Heading
+                title="Nasze Usługi Medyczne"
+                class="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100"
+            />
 
-            <div v-if="loading" class="flex justify-center items-center py-8">
-                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-nova-primary"></div>
+            <div v-if="error" class="text-center text-red-500 py-12 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div class="text-xl font-semibold mb-2">Wystąpił błąd</div>
+                <p>Nie udało się pobrać danych. Spróbuj odświeżyć stronę.</p>
             </div>
 
-            <div v-else-if="error" class="text-center text-red-500 py-8">
-                Wystąpił błąd podczas pobierania danych. Spróbuj odświeżyć stronę.
-            </div>
+            <div v-else class="relative">
+                <div class="flex flex-wrap justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
+                    <button
+                        v-for="(tab, index) in ['Procedury Medyczne', 'Nasi Specjaliści']"
+                        :key="index"
+                        @click="changeTab(index)"
+                        class="px-6 py-3 text-base font-medium transition-all duration-200 border-b-2 focus:outline-none"
+                        :class="[
+        activeTab === index
+            ? 'border-nova-primary text-nova-primary'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+    ]"
+                        :disabled="loading"
+                    >
+                        {{ tab }}
+                    </button>
+                </div>
 
-            <template v-else>
-                <div class="mb-10">
-                    <h3 class="text-xl font-semibold mb-4 text-nova-primary">Nasze Procedury</h3>
-                    <div v-if="procedures.length === 0" class="text-gray-500 dark:text-gray-400 text-center py-4">
-                        Brak dostępnych procedur.
+                <!-- Zakładka procedur -->
+                <div v-show="activeTab === 0" class="transition-opacity duration-300">
+                    <!-- Skeleton loader dla procedur -->
+                    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="i in 9" :key="i"
+                             class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-3">
+                                    <Skeleton class="h-6 w-2/3"/>
+                                    <Skeleton class="h-8 w-20 rounded-full"/>
+                                </div>
+                                <Skeleton class="h-4 w-full mb-2"/>
+                                <Skeleton class="h-4 w-5/6 mb-2"/>
+                                <Skeleton class="h-4 w-3/4"/>
+                            </div>
+                        </div>
                     </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <InfoCard
+
+                    <div v-else-if="procedures.length === 0"
+                         class="text-center bg-gray-50 dark:bg-neutral-800 rounded-lg p-8">
+                        <div class="text-gray-500 dark:text-gray-400">Brak dostępnych procedur</div>
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div
                             v-for="procedure in procedures"
                             :key="procedure.id"
-                            :title="procedure.name"
-                            :description="procedure.description"
-                            :price="procedure.price"
-                        />
+                            class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-neutral-700"
+                        >
+                            <div class="p-5">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{
+                                            procedure.name
+                                        }}</h3>
+                                    <span
+                                        class="bg-nova-primary/10 text-nova-primary px-6 py-2 rounded-full text-sm font-medium">
+                                {{ procedure.base_price }} zł
+                            </span>
+                                </div>
+                                <p class="mt-3 text-gray-600 dark:text-gray-300">{{ procedure.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="!loading && procedures.length > 0 && proceduresMeta && proceduresMeta.last_page > 1"
+                         class="mt-8 flex justify-center">
+                        <Pagination
+                            :items-per-page="proceduresMeta.per_page"
+                            :total="proceduresMeta.total"
+                            :sibling-count="1"
+                            show-edges
+                            :default-page="proceduresMeta.current_page"
+                            @update:page="changeProceduresPage"
+                        >
+                            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                                <PaginationFirst @click="changeProceduresPage(1)"
+                                                 class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                                 :disabled="loading"/>
+                                <PaginationPrevious
+                                    @click="changeProceduresPage(Math.max(1, proceduresMeta.current_page - 1))"
+                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
+
+                                <template v-for="(item, index) in items" :key="index">
+                                    <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
+                                        <Button
+                                            :variant="proceduresMeta.current_page === item.value ? 'default' : 'outline'"
+                                            :class="proceduresMeta.current_page === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:bg-gray-700 dark:text-white dark:border-gray-600'"
+                                            size="sm"
+                                            :disabled="loading"
+                                        >
+                                            {{ item.value }}
+                                        </Button>
+                                    </PaginationListItem>
+                                    <PaginationEllipsis v-else :index="index" class="dark:text-gray-400"/>
+                                </template>
+
+                                <PaginationNext
+                                    @click="changeProceduresPage(Math.min(proceduresMeta.last_page, proceduresMeta.current_page + 1))"
+                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
+                                <PaginationLast @click="changeProceduresPage(proceduresMeta.last_page)"
+                                                class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                                :disabled="loading"/>
+                            </PaginationList>
+                        </Pagination>
                     </div>
                 </div>
 
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-nova-primary">Nasi Specjaliści</h3>
-                    <div v-if="doctors.length === 0" class="text-gray-500 dark:text-gray-400 text-center py-4">
-                        Brak dostępnych lekarzy.
+                <!-- Zakładka specjalistów -->
+                <div v-show="activeTab === 1" class="transition-opacity duration-300">
+                    <!-- Skeleton loader dla specjalistów -->
+                    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="i in 6" :key="i"
+                             class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                            <!-- Gradient header -->
+                            <Skeleton class="h-32 w-full"/>
+                            <div class="relative p-5">
+                                <!-- Avatar/inicjały -->
+                                <div class="absolute -top-10 left-5">
+                                    <Skeleton class="w-16 h-16 rounded-full"/>
+                                </div>
+                                <div class="ml-20">
+                                    <!-- Imię i nazwisko lekarza -->
+                                    <Skeleton class="h-6 w-40 mb-2"/>
+                                    <!-- Specjalizacja -->
+                                    <Skeleton class="h-4 w-24"/>
+                                </div>
+                                <!-- Bio/opis -->
+                                <div class="mt-4">
+                                    <Skeleton class="h-4 w-full mb-2"/>
+                                    <Skeleton class="h-4 w-3/4 mb-2"/>
+                                    <Skeleton class="h-4 w-5/6"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <InfoCard
+
+                    <div v-else-if="doctors.length === 0"
+                         class="text-center bg-gray-50 dark:bg-neutral-800 rounded-lg p-8">
+                        <div class="text-gray-500 dark:text-gray-400">Brak dostępnych specjalistów</div>
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div
                             v-for="doctor in doctors"
                             :key="doctor.id"
-                            :title="`${doctor.title} ${doctor.name} ${doctor.surname}`"
-                            :subtitle="doctor.specialization"
-                            :description="doctor.description"
-                        />
+                            class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-neutral-700"
+                        >
+                            <div class="h-32 bg-gradient-to-r from-nova-primary/20 to-nova-accent/20"></div>
+                            <div class="relative p-5">
+                                <div class="absolute -top-10 left-5">
+                                    <div
+                                        class="w-16 h-16 rounded-full bg-nova-primary/20 flex items-center justify-center text-nova-primary text-xl font-bold">
+                                        {{ getInitials(doctor.first_name, doctor.last_name) }}
+                                    </div>
+                                </div>
+                                <div class="ml-20">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {{ doctor.title || 'Dr' }} {{ doctor.first_name }} {{ doctor.last_name }}
+                                    </h3>
+                                    <span class="text-nova-primary">{{ doctor.specialization }}</span>
+                                </div>
+                                <p class="mt-4 text-gray-600 dark:text-gray-300 line-clamp-3">{{ doctor.bio }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="!loading && doctors.length > 0 && doctorsMeta && doctorsMeta.last_page > 1"
+                         class="mt-6 flex justify-center">
+                        <Pagination
+                            :items-per-page="doctorsMeta.per_page"
+                            :total="doctorsMeta.total"
+                            :sibling-count="1"
+                            show-edges
+                            :default-page="doctorsMeta.current_page"
+                            @update:page="changeDoctorsPage"
+                        >
+                            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+                                <PaginationFirst @click="changeDoctorsPage(1)"
+                                                 class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                                 :disabled="loading"/>
+                                <PaginationPrevious
+                                    @click="changeDoctorsPage(Math.max(1, doctorsMeta.current_page - 1))"
+                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
+
+                                <template v-for="(item, index) in items" :key="index">
+                                    <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
+                                        <Button
+                                            :variant="doctorsMeta.current_page === item.value ? 'default' : 'outline'"
+                                            :class="doctorsMeta.current_page === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:bg-gray-700 dark:text-white dark:border-gray-600'"
+                                            size="sm"
+                                            :disabled="loading"
+                                        >
+                                            {{ item.value }}
+                                        </Button>
+                                    </PaginationListItem>
+                                    <PaginationEllipsis v-else :index="index" class="dark:text-gray-400"/>
+                                </template>
+
+                                <PaginationNext
+                                    @click="changeDoctorsPage(Math.min(doctorsMeta.last_page, doctorsMeta.current_page + 1))"
+                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
+                                <PaginationLast @click="changeDoctorsPage(doctorsMeta.last_page)"
+                                                class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                                :disabled="loading"/>
+                            </PaginationList>
+                        </Pagination>
                     </div>
                 </div>
-            </template>
+            </div>
         </div>
     </div>
 </template>
