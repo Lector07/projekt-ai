@@ -29,4 +29,31 @@ class StoreProcedureRequest extends FormRequest
             'recovery_timeline_info' => 'nullable|string|max:1000',
         ];
     }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nazwa procedury jest wymagana.',
+            'name.string' => 'Nazwa procedury musi być tekstem.',
+            'name.max' => 'Nazwa procedury nie może przekraczać 255 znaków.',
+
+            'description.string' => 'Opis procedury musi być tekstem.',
+            'description.max' => 'Opis procedury nie może przekraczać 1000 znaków.',
+
+            'base_price.required' => 'Cena podstawowa jest wymagana.',
+            'base_price.numeric' => 'Cena podstawowa musi być wartością liczbową.',
+            'base_price.min' => 'Cena podstawowa nie może być mniejsza niż 0.',
+
+            'procedure_category_id.required' => 'Kategoria procedury jest wymagana.',
+            'procedure_category_id.exists' => 'Wybrana kategoria procedury nie istnieje.',
+
+            'recovery_timeline_info.string' => 'Informacja o czasie rekonwalescencji musi być tekstem.',
+            'recovery_timeline_info.max' => 'Informacja o czasie rekonwalescencji nie może przekraczać 1000 znaków.',
+        ];
+    }
 }

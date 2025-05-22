@@ -82,4 +82,15 @@ class LoginRequest extends FormRequest
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Adres e-mail jest wymagany.',
+            'email.string' => 'Adres e-mail musi być ciągiem znaków.',
+            'email.email' => 'Adres e-mail musi być poprawnym adresem e-mail.',
+            'password.required' => 'Hasło jest wymagane.',
+            'password.string' => 'Hasło musi być ciągiem znaków.',
+        ];
+    }
 }

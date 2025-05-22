@@ -17,4 +17,19 @@ class StoreProcedureCategoryRequest extends FormRequest
             'name' => 'required|string|max:255|unique:procedure_categories',
         ];
     }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nazwa kategorii procedury jest wymagana.',
+            'name.string' => 'Nazwa kategorii procedury musi być tekstem.',
+            'name.max' => 'Nazwa kategorii procedury nie może być dłuższa niż 255 znaków.',
+            'name.unique' => 'Kategoria procedury o takiej nazwie już istnieje.',
+        ];
+    }
 }

@@ -36,4 +36,23 @@ class UpdateUserRequest extends FormRequest
             'role' => ['sometimes', 'required', 'string', Rule::in(['admin', 'patient', 'doctor'])], // <<< Zmieniono walidację roli
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nazwa jest wymagana.',
+            'name.string' => 'Nazwa musi być ciągiem znaków.',
+            'name.max' => 'Nazwa nie może przekraczać 255 znaków.',
+            'email.required' => 'Adres e-mail jest wymagany.',
+            'email.string' => 'Adres e-mail musi być ciągiem znaków.',
+            'email.lowercase' => 'Adres e-mail musi być małymi literami.',
+            'email.email' => 'Adres e-mail musi być poprawnym adresem e-mail.',
+            'email.max' => 'Adres e-mail nie może przekraczać 255 znaków.',
+            'email.unique' => 'Ten adres e-mail jest już zajęty.',
+            'password.confirmed' => 'Hasła nie pasują do siebie.',
+            'role.required' => 'Rola jest wymagana.',
+            'role.string' => 'Rola musi być ciągiem znaków.',
+            'role.in' => 'Nieprawidłowa rola użytkownika. Dozwolone wartości to: admin, patient, doctor.',
+        ];
+    }
 }

@@ -59,6 +59,7 @@ const isEditing = ref(false);
 const form = reactive({
     id: null as number | null,
     name: '',
+    slug: '',
 });
 const formErrors = ref<Record<string, string[]>>({});
 
@@ -94,6 +95,7 @@ const openNewCategoryDialog = () => {
     isEditing.value = false;
     form.id = null;
     form.name = '';
+    form.slug = '';
     formErrors.value = {};
     isDialogOpen.value = true;
 };
@@ -102,6 +104,7 @@ const editCategory = (category: Category) => {
     isEditing.value = true;
     form.id = category.id;
     form.name = category.name;
+    form.slug = category.slug;
     formErrors.value = {};
     isDialogOpen.value = true;
 };
@@ -198,7 +201,7 @@ onMounted(() => {
                             <TableRow>
                                 <TableHead class="w-16">ID</TableHead>
                                 <TableHead>Nazwa</TableHead>
-                                <TableHead>Slug</TableHead>
+                                <TableHead>Opis kategorii</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -241,6 +244,20 @@ onMounted(() => {
                             <Input id="name" v-model="form.name" placeholder="Wpisz nazwę nowej kategorii" />
                             <p v-if="formErrors.name" class="mt-2 text-sm text-red-600">
                                 {{ formErrors.name[0] }}
+                            </p>
+                        </div>
+                        <!-- Nowe pole tekstowe dla opisu -->
+                        <div>
+                            <Label for="slug" class="mb-2">Opis kategorii</Label>
+                            <textarea
+                                id="slug"
+                                v-model="form.slug"
+                                rows="4"
+                                class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Wprowadź szczegółowy opis kategorii zabiegów"
+                            ></textarea>
+                            <p v-if="formErrors.slug" class="mt-2 text-sm text-red-600">
+                                {{ formErrors.slug[0] }}
                             </p>
                         </div>
                         <DialogFooter>

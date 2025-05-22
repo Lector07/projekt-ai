@@ -27,4 +27,17 @@ class UpdateAppointmentRequest extends FormRequest
             'admin_notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
+
+
+    public function messages(): array
+    {
+        return [
+            'status.required' => 'The status field is required.',
+            'status.string' => 'The status must be a string.',
+            'status.in' => 'The selected status is invalid.',
+            'admin_notes.string' => 'The admin notes must be a string.',
+            'admin_notes.max' => 'The admin notes may not be greater than 1000 characters.',
+        ];
+
+    }
 }
