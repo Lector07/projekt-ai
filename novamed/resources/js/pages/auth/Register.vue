@@ -9,7 +9,7 @@ import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AuthBase from '@/layouts/AuthLayout.vue';
+import AuthBase from '@/layouts/auth/AuthSplitRsideLogoLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 import {  onMounted } from 'vue';
 import { useToast } from "primevue/usetoast";

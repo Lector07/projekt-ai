@@ -26,7 +26,8 @@ interface Doctor {
     last_name?: string;
     full_name?: string;
     specialization: string;
-    image_url?: string;
+    // image_url?: string; // Zmień to
+    profile_picture_url?: string; // Na to
     bio?: string;
 }
 
@@ -43,31 +44,45 @@ const fetchDoctors = async (page = 1) => {
         loading.value = true;
         error.value = null;
 
-        console.log(`Pobieranie lekarzy dla strony ${page}...`);
+        console.log(`Pobieranie lekarzy dla strony ${page} (per_page: ${itemsPerPage.value})...`);
 
         const response = await axios.get('/api/doctors', {
             params: {
                 page: page,
-                per_page: itemsPerPage.value
+                per_page: itemsPerPage.value // Wysyłamy preferowaną liczbę elementów na stronę
             }
         });
 
-        console.log('Odpowiedź API:', response.data);
+        console.log('Odpowiedź API (DoctorsPage.vue):', response.data);
 
-        if (!response.data.data || !Array.isArray(response.data.data)) {
+        // Sprawdzamy, czy odpowiedź ma oczekiwaną strukturę (data jako tablica i meta jako obiekt)
+        if (!response.data || !Array.isArray(response.data.data) || !response.data.meta) {
+            console.error('Nieprawidłowa struktura odpowiedzi API:', response.data);
             throw new Error('Nieprawidłowa struktura odpowiedzi API');
         }
 
-        doctors.value = response.data.data;
-        totalItems.value = response.data.total || 0;
-        currentPage.value = page;
-        totalPages.value = Math.ceil(totalItems.value / itemsPerPage.value);
+        doctors.value = response.data.data; // Tablica lekarzy
 
-        console.log(`Pobrano ${doctors.value.length} lekarzy dla strony ${currentPage.value}`);
-    } catch (err) {
-        console.error('Błąd podczas pobierania danych:', err);
-        error.value = 'Nie udało się pobrać listy lekarzy';
+        // Aktualizacja informacji o paginacji z obiektu 'meta'
+        totalItems.value = response.data.meta.total;
+        currentPage.value = response.data.meta.current_page; // Używamy current_page z odpowiedzi API
+        totalPages.value = response.data.meta.last_page;
+
+        // Opcjonalnie: zaktualizuj itemsPerPage, jeśli serwer zwrócił inną wartość niż żądana
+        // (np. serwer ma maksymalne per_page)
+        // itemsPerPage.value = parseInt(response.data.meta.per_page, 10);
+
+
+        console.log(`Pobrano ${doctors.value.length} lekarzy. Strona: ${currentPage.value}/${totalPages.value}. Total: ${totalItems.value}.`);
+
+    } catch (err: any) { // Lepiej typować 'err' jako 'any' lub bardziej szczegółowo, jeśli znasz strukturę błędu
+        console.error('Błąd podczas pobierania danych lekarzy:', err);
+        error.value = err.message || 'Nie udało się pobrać listy lekarzy';
         doctors.value = [];
+        // Resetowanie paginacji w przypadku błędu
+        totalItems.value = 0;
+        currentPage.value = 1;
+        totalPages.value = 1;
     } finally {
         loading.value = false;
     }
@@ -150,7 +165,7 @@ const getDoctorName = (doctor: Doctor): string => {
                             <div class="flex h-full">
                                 <div class="w-1/3" style="min-height: 250px;">
                                     <img
-                                        :src="doctor.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
+                                        :src="doctor.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
                                         :alt="`Dr. ${getDoctorName(doctor)}`"
                                         class="w-full h-full object-cover object-center"
                                     />

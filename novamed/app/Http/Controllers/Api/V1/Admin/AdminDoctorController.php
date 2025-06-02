@@ -45,7 +45,7 @@ class AdminDoctorController extends Controller
             $query->where('specialization', $request->specialization);
         }
 
-        $query->orderBy('last_name')->orderBy('first_name');
+        $query->orderBy('id')->orderBy('first_name');
 
         $perPage = $request->input('per_page', 10);
         $doctors = $query->paginate($perPage);
@@ -154,5 +154,17 @@ class AdminDoctorController extends Controller
         }
 
         return new DoctorResource($doctor->fresh());
+    }
+
+    public function list(): JsonResponse
+    {
+        $doctors = Doctor::all()->map(function ($doctor) {
+            return [
+                'id' => $doctor->id,
+                'name' => $doctor->first_name . ' ' . $doctor->last_name
+            ];
+        });
+
+        return response()->json(['data' => $doctors]);
     }
 }

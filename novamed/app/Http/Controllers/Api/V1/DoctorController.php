@@ -3,19 +3,22 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\DoctorResource; // Upewnij się, że ten import jest obecny
 use App\Models\Doctor;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; // Możesz go potrzebować do filtrowania/sortowania w przyszłości
 
 class DoctorController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // Dodaj Request $request
     {
-        $doctors = Doctor::paginate(6);
-        return response()->json($doctors);
-        //
+        // Pobierz itemsPerPage z requestu, z domyślną wartością, jeśli nie podano
+        $perPage = $request->input('per_page', 4); // Domyślnie 4, tak jak masz w DoctorsPage.vue
+
+        $doctors = Doctor::paginate($perPage);
+        return DoctorResource::collection($doctors); // <<< --- WAŻNA POPRAWKA
     }
 
     /**
@@ -23,16 +26,18 @@ class DoctorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // ... logika ...
+        // $newDoctor = Doctor::create($request->validated());
+        // return (new DoctorResource($newDoctor))->response()->setStatusCode(201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Doctor $doctor)
+    public function show(Doctor $doctor): DoctorResource
     {
-        return response()->json($doctor);
-        //
+        // $doctor->load('user'); // Jeśli potrzebujesz danych użytkownika
+        return new DoctorResource($doctor);
     }
 
     /**
@@ -40,7 +45,9 @@ class DoctorController extends Controller
      */
     public function update(Request $request, Doctor $doctor)
     {
-        //
+        // ... logika ...
+        // $doctor->update($request->validated());
+        // return new DoctorResource($doctor->fresh());
     }
 
     /**
@@ -48,6 +55,7 @@ class DoctorController extends Controller
      */
     public function destroy(Doctor $doctor)
     {
-        //
+        // ... logika ...
+        // return response()->noContent();
     }
 }

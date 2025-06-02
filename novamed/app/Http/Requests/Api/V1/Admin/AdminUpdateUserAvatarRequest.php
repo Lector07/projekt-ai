@@ -1,20 +1,17 @@
 <?php
 
-namespace App\Http\Requests\Api\V1;
+namespace App\Http\Requests\Api\V1\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateUserAvatarRequest extends FormRequest
+class AdminUpdateUserAvatarRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        // Użytkownik musi być zalogowany, aby zaktualizować swój awatar.
-        // Dalsza, bardziej szczegółowa autoryzacja (czy to na pewno ten użytkownik)
-        // jest w kontrolerze przez $this->authorize('update', $user).
-        return $this->user() ? true : false;
+        return $this->user()->isAdmin() || $this->user()->can('update', $this->route('user'));
     }
 
     /**

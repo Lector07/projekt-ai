@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\Admin\AdminUpdateUserAvatarRequest;
 use App\Http\Requests\Api\V1\Admin\StoreUserRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateUserRequest;
+use App\Http\Requests\Api\V1\UpdateUserAvatarRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -22,7 +24,7 @@ class AdminUserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $query = User::query()->orderBy('name');
+        $query = User::query()->orderBy('id', 'asc');
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -85,5 +87,40 @@ class AdminUserController extends Controller
         $this->authorize('delete', $user);
         $user->delete();
         return response()->noContent();
+    }
+
+    /**
+     * Zwraca listę pacjentów dla formularzy wyboru
+     */
+    public function patients(): JsonResponse
+    {
+        $patients = User::where('role', 'patient')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['data' => $patients]);
+    }
+
+    public function updateAvatar(AdminUpdateUserAvatarRequest $request, User $user): UserResource
+    {
+        // Zakładam, że AdminUpdateUserAvatarRequest ma podobne reguły jak dla lekarza lub użytkownika
+        // i że polityka autoryzacji jest odpowiednia (np. admin może 'update' użytkownika)
+        $this->authorize('update', $user); // Upewnij się, że UserPolicy@update to obsłuży poprawnie
+
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            // Usuń stary avatar, jeśli istnieje
+            if ($user->profile_picture_path) {
+                Storage::disk('public')->delete($user->profile_picture_path);
+            }
+
+            // Zapisz nowy avatar
+            // Używamy katalogu 'avatars/users' dla spójności z UserProfileController
+            $path = $request->file('avatar')->store('avatars/users', 'public');
+            $user->profile_picture_path = $path;
+            $user->save();
+        }
+
+        return new UserResource($user->fresh());
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Doctor;
+use App\Observers\DoctorObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\ResetPassword;
 
@@ -30,4 +32,8 @@ class AppServiceProvider extends ServiceProvider
             return \Faker\Factory::create(config('faker.locale', 'pl_PL'));
         });
     }
+
+    protected $observers = [ // <<<--- DODAJ LUB UZUPEŁNIJ TĘ TABLICĘ
+        Doctor::class => [DoctorObserver::class],
+    ];
 }

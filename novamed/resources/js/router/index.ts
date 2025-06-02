@@ -4,7 +4,7 @@ import {useAuthStore} from '@/stores/auth';
 import HomePage from '../pages/Public/Welcome.vue';
 import LoginPage from '../pages/auth/Login.vue';
 import RegisterPage from '../pages/auth/Register.vue';
-import DashboardPage from '../pages/Dashboard.vue';
+import DashboardPatientPage from '../pages/Patient/DashboardPatient.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
 import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
@@ -123,7 +123,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: DashboardPage,
+        component: DashboardPatientPage,
         meta: {
             requiresAuth: true,
             dynamicTitle: true

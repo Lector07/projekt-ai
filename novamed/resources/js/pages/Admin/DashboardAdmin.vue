@@ -10,13 +10,6 @@ import Chart from 'primevue/chart';
 import axios from 'axios';
 import {Label} from "@/components/ui/label";
 import {useAuthStore} from '@/stores/auth';
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
-} from '@/components/ui/carousel'
 import {Separator} from "@/components/ui/separator";
 
 // Interfejs dla danych dashboardu

@@ -12,7 +12,6 @@ import type {BreadcrumbItem} from '@/types';
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,

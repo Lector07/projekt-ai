@@ -28,4 +28,10 @@ export default defineConfig({
             'ziggy-js': resolve(__dirname, 'vendor/tightenco/ziggy'),
         },
     },
+    server: {
+        fs: {
+            strict: true
+        }
+    }
+
 });

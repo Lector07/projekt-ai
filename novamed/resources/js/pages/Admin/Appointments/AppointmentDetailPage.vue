@@ -9,6 +9,9 @@ import {Label} from '@/components/ui/label';
 import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
 import {Calendar} from '@/components/ui/calendar';
 import type {BreadcrumbItem} from "@/types";
+import {parseDate, today, getLocalTimeZone} from '@internationalized/date';
+import type {DateValue} from '@internationalized/date';
+
 
 const route = useRoute();
 const router = useRouter();
@@ -108,9 +111,15 @@ const fetchAppointment = async () => {
 };
 
 const showEditModal = ref(false);
-const selectedDate = ref<Date | null>(null);
+const selectedDate = ref<DateValue | undefined>(undefined);
 const appointmentErrors = ref<Record<string, string[]>>({});
 const appointmentFormLoading = ref(false);
+
+const allPatients = ref<{ id: number, name: string }[]>([]);
+const allDoctors = ref<{ id: number, name: string }[]>([]);
+const patientsLoading = ref(false);
+const doctorsLoading = ref(false);
+
 
 const statusOptions = [
     {value: 'scheduled', label: 'Zaplanowana'},
@@ -123,13 +132,29 @@ const goBack = () => {
     router.push('/admin/appointments');
 };
 
-const goToEdit = () => {
+const goToEdit = async () => {
     if (appointment.value) {
+        await Promise.all([loadPatients(), loadDoctors()]);
+
         if (appointment.value.appointment_datetime) {
-            selectedDate.value = new Date(appointment.value.appointment_datetime);
+            // Konwersja daty do formatu DateValue
+            try {
+                const dateTime = new Date(appointment.value.appointment_datetime);
+                selectedDate.value = parseDate(
+                    `${dateTime.getFullYear()}-${String(dateTime.getMonth() + 1).padStart(2, '0')}-${String(dateTime.getDate()).padStart(2, '0')}`
+                );
+            } catch (e) {
+                console.error('Błąd konwersji daty:', e);
+                selectedDate.value = undefined;
+            }
         }
         showEditModal.value = true;
     }
+};
+
+const formatDateValue = (dateValue: DateValue | undefined): string => {
+    if (!dateValue) return '';
+    return dateValue.toString();
 };
 
 const closeEditForm = () => {
@@ -137,7 +162,7 @@ const closeEditForm = () => {
     appointmentErrors.value = {};
 };
 
-const onAppointmentDateChange = (date: Date) => {
+const onAppointmentDateChange = (date: any) => {
     selectedDate.value = date;
 };
 
@@ -150,23 +175,46 @@ const updateAppointment = async () => {
             status: appointment.value.status,
             patient_notes: appointment.value.patient_notes,
             doctor_notes: appointment.value.doctor_notes,
-            appointment_datetime: selectedDate.value?.toISOString(),
+            appointment_datetime: selectedDate.value ? formatDateValue(selectedDate.value) : null,
+            patient_id: appointment.value.patient_id,
+            doctor_id: appointment.value.doctor_id
         };
 
         await axios.put(`/api/v1/admin/appointments/${appointment.value.id}`, formData);
-
         await fetchAppointment();
-
         showEditModal.value = false;
-
     } catch (error: any) {
         if (error.response?.status === 422) {
             appointmentErrors.value = error.response.data.errors;
-        } else {
-            console.error('Błąd podczas aktualizacji wizyty:', error);
         }
     } finally {
         appointmentFormLoading.value = false;
+    }
+};
+
+
+const loadPatients = async () => {
+    patientsLoading.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/patients');
+        allPatients.value = response.data.data || [];
+    } catch (error) {
+        console.error('Błąd podczas pobierania pacjentów:', error);
+    } finally {
+        patientsLoading.value = false;
+    }
+};
+
+
+const loadDoctors = async () => {
+    doctorsLoading.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/doctors');
+        allDoctors.value = response.data.data || [];
+    } catch (error) {
+        console.error('Błąd podczas pobierania lekarzy:', error);
+    } finally {
+        doctorsLoading.value = false;
     }
 };
 
@@ -383,7 +431,7 @@ onMounted(() => {
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium">Edycja wizyty #{{ appointment.id }}</h3>
+                    <h3 class="text-lg font-medium dark:text-gray-200">Edycja wizyty #{{ appointment.id }}</h3>
                     <Button variant="ghost" class="h-8 w-8 p-0" @click="closeEditForm">
                         <Icon name="x" size="18"/>
                     </Button>
@@ -391,32 +439,63 @@ onMounted(() => {
 
                 <div class="space-y-4">
                     <div class="space-y-2">
-                        <Label>Pacjent</Label>
-                        <p class="text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">{{ appointment.patient.name }}</p>
+                        <Label class="dark:text-gray-200">Pacjent</Label>
+                        <select
+                            id="edit-patient"
+                            v-model="appointment.patient_id"
+                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            :class="{'border-red-500': appointmentErrors.patient_id}"
+                        >
+                            <option value="" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
+                            <option v-for="patient in allPatients" :key="patient.id" :value="patient.id">
+                                {{ patient.name }}
+                            </option>
+                        </select>
+                        <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">
+                            {{ appointmentErrors.patient_id[0] }}
+                        </div>
                     </div>
 
                     <div class="space-y-2">
-                        <Label>Lekarz</Label>
-                        <p class="text-sm p-2 bg-gray-50 dark:bg-gray-900 rounded">{{ appointment.doctor.name }}</p>
+                        <Label class="dark:text-gray-200">Lekarz</Label>
+                        <select
+                            id="edit-doctor"
+                            v-model="appointment.doctor_id"
+                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            :class="{'border-red-500': appointmentErrors.doctor_id}"
+                        >
+                            <option value="" disabled>{{ doctorsLoading ? 'Ładowanie lekarzy...' : 'Wybierz lekarza' }}</option>
+                            <option v-for="doctor in allDoctors" :key="doctor.id" :value="doctor.id">
+                                {{ doctor.name }}
+                            </option>
+                        </select>
+                        <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">
+                            {{ appointmentErrors.doctor_id[0] }}
+                        </div>
                     </div>
 
                     <div class="space-y-2">
-                        <Label>Data wizyty</Label>
+                        <Label class="dark:text-gray-200">Data wizyty</Label>
                         <Popover>
                             <PopoverTrigger as-child>
                                 <Button
                                     variant="outline"
-                                    class="w-full justify-start text-left font-normal"
+                                    class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
                                     {{
-                                        selectedDate ? formatDateTime(selectedDate.toISOString()) : "Wybierz datę wizyty"
+                                        selectedDate ? formatDateTime(formatDateValue(selectedDate)) : "Wybierz datę wizyty"
                                     }}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent class="w-auto p-0">
-                                <Calendar v-model="selectedDate" initial-focus mode="single"
-                                          @update:model-value="onAppointmentDateChange"/>
+                                <Calendar
+                                    :model-value="selectedDate"
+                                    @update:model-value="onAppointmentDateChange"
+                                    initial-focus
+                                    mode="single"
+                                    class="dark:bg-gray-800 dark:text-white"
+                                />
                             </PopoverContent>
                         </Popover>
                         <div v-if="appointmentErrors.appointment_datetime" class="text-sm text-red-500">
@@ -425,11 +504,11 @@ onMounted(() => {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="edit-status">Status wizyty</Label>
+                        <Label for="edit-status" class="dark:text-gray-200">Status wizyty</Label>
                         <select
                             id="edit-status"
                             v-model="appointment.status"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             :class="{'border-red-500': appointmentErrors.status}"
                         >
                             <option v-for="status in statusOptions" :key="status.value" :value="status.value">
@@ -442,31 +521,31 @@ onMounted(() => {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="patient-notes">Notatki pacjenta</Label>
+                        <Label for="patient-notes" class="dark:text-gray-200">Notatki pacjenta</Label>
                         <textarea
                             id="patient-notes"
                             v-model="appointment.patient_notes"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             :class="{'border-red-500': appointmentErrors.patient_notes}"
                             rows="3"
                             placeholder="Notatki od pacjenta"
                         ></textarea>
-                        <div v-if="appointmentErrors.patient_notes" class="text-sm text-red-500">
+                        <div v-if="appointmentErrors.patient_notes" class="text-xs text-red-500">
                             {{ appointmentErrors.patient_notes[0] }}
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="doctor-notes">Notatki lekarza</Label>
+                        <Label for="doctor-notes" class="dark:text-gray-200">Notatki lekarza</Label>
                         <textarea
                             id="doctor-notes"
                             v-model="appointment.doctor_notes"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             :class="{'border-red-500': appointmentErrors.doctor_notes}"
                             rows="3"
                             placeholder="Notatki od lekarza"
                         ></textarea>
-                        <div v-if="appointmentErrors.doctor_notes" class="text-sm text-red-500">
+                        <div v-if="appointmentErrors.doctor_notes" class="text-xs text-red-500">
                             {{ appointmentErrors.doctor_notes[0] }}
                         </div>
                     </div>
@@ -476,16 +555,16 @@ onMounted(() => {
                             type="button"
                             variant="outline"
                             @click="closeEditForm"
-                            class="bg-nova-accent hover:bg-nova-primary dark:bg-nova-primary hover:dark:bg-nova-light hover:dark:text-nova-primary"
+                            class="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
                         >
                             Anuluj
                         </Button>
                         <Button
                             @click="updateAppointment"
                             :disabled="appointmentFormLoading"
-                            class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light items-center gap-2"
+                            class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                         >
-                            <Icon v-if="appointmentFormLoading" name="loader2" class="animate-spin " size="16"/>
+                            <Icon v-if="appointmentFormLoading" name="loader2" class="animate-spin" size="16"/>
                             <span>Aktualizuj</span>
                         </Button>
                     </div>

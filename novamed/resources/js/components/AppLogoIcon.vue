@@ -16,10 +16,10 @@ defineProps<Props>();
     <svg
         xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink"
-        width="96"
+        width="500"
         zoomAndPan="magnify"
         viewBox="0 0 600 599.999999"
-        height="96"
+        height="500"
         preserveAspectRatio="xMidYMid meet"
         version="1.0"
         :class="className"

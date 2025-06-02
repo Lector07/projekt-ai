@@ -34,13 +34,16 @@ const fetchDoctor = async () => {
         error.value = null;
 
         const doctorId = route.params.id;
-        const response = await axios.get(`/api/doctors/${doctorId}`);
+        const response = await axios.get(`/api/v1/admin/doctors/${doctorId}`);
+
+        console.log('Dane lekarza z API dla strony szczegółów:', response.data);
 
         if (!response.data) {
             throw new Error('Nie znaleziono danych lekarza');
         }
 
-        doctor.value = response.data;
+        doctor.value = response.data.data;
+
     } catch (err) {
         console.error('Błąd podczas pobierania danych lekarza:', err);
         error.value = 'Nie udało się pobrać danych lekarza';
@@ -99,7 +102,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <div class="lg:col-span-1 ">
                     <div class="rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
                         <img
-                            :src="doctor.image_url || doctor.profile_picture_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=500`"
+                            :src="doctor.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=500`"
                             :alt="`Dr. ${getDoctorName(doctor)}`"
                             class="w-full aspect-square object-cover"
                         />

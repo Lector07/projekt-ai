@@ -154,7 +154,7 @@ onMounted(() => {
         <div
             class="duration-750 starting:opacity-0 flex w-full items-center justify-center opacity-100 transition-opacity lg:grow">
             <main
-                class="flex w-full max-w-[450px] flex-col-reverse overflow-hidden rounded-lg min-h-[450px] lg:max-w-6xl lg:flex-row lg:min-h-[550px]">
+                class="flex w-full max-w-[550px] flex-col-reverse overflow-hidden rounded-lg min-h-[550px] lg:max-w-6xl lg:flex-row lg:min-h-[550px]">
                 <div
                     class="flex-1 rounded-bl-lg rounded-br-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] lg:rounded-br-none lg:rounded-tl-lg lg:p-20"
                 >
@@ -428,11 +428,6 @@ onMounted(() => {
         </div>
 
         <div class="w-full max-w-8xl mx-auto mt-16 px-2 pb-16">
-            <Heading
-                title="Nasze Usługi Medyczne"
-                class="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100"
-            />
-
             <div v-if="error" class="text-center text-red-500 py-12 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <div class="text-xl font-semibold mb-2">Wystąpił błąd</div>
                 <p>Nie udało się pobrać danych. Spróbuj odświeżyć stronę.</p>

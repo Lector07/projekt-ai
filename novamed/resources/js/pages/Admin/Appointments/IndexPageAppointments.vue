@@ -7,8 +7,8 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Skeleton} from '@/components/ui/skeleton';
-import { parseDate, today, getLocalTimeZone } from '@internationalized/date';
-import type { DateValue } from '@internationalized/date';
+import {parseDate, today, getLocalTimeZone} from '@internationalized/date';
+import type {DateValue} from '@internationalized/date';
 import Icon from '@/components/Icon.vue';
 import type {BreadcrumbItem} from '@/types';
 import {
@@ -110,11 +110,107 @@ const statuses = [
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
+const patientSearchQuery = ref('');
+const doctorSearchQuery = ref('');
+const allPatients = ref<Patient[]>([]);
+const allDoctors = ref<Doctor[]>([]);
+const filteredPatients = ref<Patient[]>([]);
+const filteredDoctors = ref<Doctor[]>([]);
+const showPatientResults = ref(false);
+const showDoctorResults = ref(false);
+const patientsLoading = ref(false);
+const doctorsLoading = ref(false);
 const showEditAppointmentForm = ref(false);
 const selectedAppointment = ref<any>(null);
 const appointmentErrors = ref<any>({});
 const appointmentFormLoading = ref(false);
 
+const handleApiResponse = (response: any, entityName: string) => {
+    if (response?.data?.data) {
+        return response.data.data;
+    }
+    console.error(`Nieprawidłowa odpowiedź API ${entityName}:`, response);
+    return [];
+};
+
+const loadPatients = async () => {
+    patientsLoading.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/patients');
+        allPatients.value = handleApiResponse(response, 'pacjentów');
+        console.log('Załadowano pacjentów:', allPatients.value.length);
+    } catch (error) {
+        console.error('Błąd podczas pobierania pacjentów:', error);
+        showErrorToast('Błąd', 'Nie udało się załadować listy pacjentów');
+        allPatients.value = [];
+    } finally {
+        patientsLoading.value = false;
+    }
+};
+
+const loadDoctors = async () => {
+    doctorsLoading.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/doctors');
+        allDoctors.value = handleApiResponse(response, 'lekarzy');
+        console.log('Załadowano lekarzy:', allDoctors.value.length);
+    } catch (error) {
+        console.error('Błąd podczas pobierania lekarzy:', error);
+        showErrorToast('Błąd', 'Nie udało się załadować listy lekarzy');
+        allDoctors.value = [];
+    } finally {
+        doctorsLoading.value = false;
+    }
+};
+
+// Funkcje wyszukiwania
+// Funkcje wyszukiwania
+const searchPatients = () => {
+    if (!allPatients.value || allPatients.value.length === 0) {
+        showPatientResults.value = false;
+        return;
+    }
+
+    if (patientSearchQuery.value.length >= 2) {
+        filteredPatients.value = allPatients.value.filter(patient =>
+            patient.name.toLowerCase().includes(patientSearchQuery.value.toLowerCase())
+        );
+        showPatientResults.value = true;
+    } else {
+        showPatientResults.value = false;
+    }
+};
+
+const searchDoctors = () => {
+    if (!allDoctors.value || allDoctors.value.length === 0) {
+        showDoctorResults.value = false;
+        return;
+    }
+
+    if (doctorSearchQuery.value.length >= 2) {
+        filteredDoctors.value = allDoctors.value.filter(doctor =>
+            doctor.name.toLowerCase().includes(doctorSearchQuery.value.toLowerCase())
+        );
+        showDoctorResults.value = true;
+    } else {
+        showDoctorResults.value = false;
+    }
+};
+
+// Funkcje wyboru
+const selectPatient = (patient: Patient) => {
+    selectedAppointment.value.patient = patient;
+    selectedAppointment.value.patient_id = patient.id;
+    patientSearchQuery.value = '';
+    showPatientResults.value = false;
+};
+
+const selectDoctor = (doctor: Doctor) => {
+    selectedAppointment.value.doctor = doctor;
+    selectedAppointment.value.doctor_id = doctor.id;
+    doctorSearchQuery.value = '';
+    showDoctorResults.value = false;
+};
 
 const statusOptions = [
     {value: 'scheduled', label: 'Zarezerwowana'},
@@ -122,6 +218,23 @@ const statusOptions = [
     {value: 'cancelled', label: 'Anulowana'},
     {value: 'no_show', label: 'Nieobecność'},
 ];
+
+const procedures = ref<{ id: number, name: string }[]>([]);
+const proceduresLoading = ref(false);
+
+// Dodaj funkcję ładowania procedur
+const loadProcedures = async () => {
+    proceduresLoading.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/procedures');
+        procedures.value = response.data.data;
+    } catch (error) {
+        console.error('Błąd podczas pobierania procedur:', error);
+        showErrorToast('Błąd', 'Nie udało się załadować listy procedur');
+    } finally {
+        proceduresLoading.value = false;
+    }
+};
 
 const changePage = (page: number) => {
     meta.value.current_page = page;
@@ -197,16 +310,29 @@ const deleteAppointment = async (id: number) => {
     }
 };
 
+// Zmodyfikuj funkcję openEditForm
 const openEditForm = async (appointment: Appointment) => {
     appointmentErrors.value = {};
     appointmentFormLoading.value = true;
 
     try {
+        // Pobierz najpierw dane wizyty
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
         selectedAppointment.value = response.data.data;
 
+        // Następnie załaduj dane pomocnicze
+        await Promise.all([
+            loadProcedures(),
+            loadPatients(),
+            loadDoctors()
+        ]);
+
+        // Po załadowaniu wszystkich danych, ustaw wartości
+        selectedAppointment.value.procedure_id = selectedAppointment.value.procedure.id;
+        selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
+        selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
+
         if (selectedAppointment.value.appointment_datetime) {
-            // Konwersja string na DateValue
             const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
             selectedDate.value = parseDate(dateStr);
         }
@@ -249,7 +375,10 @@ const updateAppointment = async () => {
             status: selectedAppointment.value.status,
             appointment_datetime: selectedAppointment.value.appointment_datetime,
             patient_notes: selectedAppointment.value.patient_notes,
-            doctor_notes: selectedAppointment.value.doctor_notes
+            doctor_notes: selectedAppointment.value.doctor_notes,
+            procedure_id: selectedAppointment.value.procedure_id,
+            patient_id: selectedAppointment.value.patient_id,
+            doctor_id: selectedAppointment.value.doctor_id
         });
 
         closeEditForm();
@@ -315,8 +444,17 @@ const getStatusClass = (status: string) => {
     }
 };
 
+// Dodaj do okna nasłuchiwanie kliknięć poza listą podpowiedzi
 onMounted(() => {
     loadAppointments();
+
+    document.addEventListener('click', (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('#edit-patient') && !target.closest('#edit-doctor')) {
+            showPatientResults.value = false;
+            showDoctorResults.value = false;
+        }
+    });
 });
 
 const router = useRouter();
@@ -330,7 +468,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <Toast />
+        <Toast/>
 
         <div class="container mx-auto px-2 py-4">
             <h1 class="text-2xl font-bold mb-1 dark:text-white">Zarządzanie Wizytami</h1>
@@ -412,11 +550,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </Popover>
                     </div>
                     <div class="flex items-end space-x-2">
-                        <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
+                        <Button @click="loadAppointments"
+                                class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
                             <Icon name="search" size="16" class="mr-2"/>
                             Filtruj
                         </Button>
-                        <Button variant="outline" @click="resetFilters" class="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                        <Button variant="outline" @click="resetFilters"
+                                class="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                             <Icon name="x" size="16" class="mr-2"/>
                             Wyczyść filtry
                         </Button>
@@ -470,15 +610,19 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     </router-link>
                                 </TableCell>
                                 <TableCell class="dark:text-gray-200">{{ appointment.procedure.name }}</TableCell>
-                                <TableCell class="dark:text-gray-200">{{ formatDateTime(appointment.appointment_datetime) }}</TableCell>
+                                <TableCell class="dark:text-gray-200">
+                                    {{ formatDateTime(appointment.appointment_datetime) }}
+                                </TableCell>
                                 <TableCell>
-                                    <span :class="`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(appointment.status)}`">
+                                    <span
+                                        :class="`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(appointment.status)}`">
                                         {{ getStatusLabel(appointment.status) }}
                                     </span>
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex space-x-2">
-                                        <Button variant="outline" size="sm" class="flex items-center dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
+                                        <Button variant="outline" size="sm"
+                                                class="flex items-center dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
                                                 @click="openEditForm(appointment)">
                                             <Icon name="edit" size="14" class="mr-1"/>
                                             Edytuj
@@ -525,8 +669,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                         @update:page="changePage"
                     >
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                            <PaginationFirst @click="changePage(1)" class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
-                            <PaginationPrevious @click="changePage(Math.max(1, meta.current_page - 1))" class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
+                            <PaginationFirst @click="changePage(1)"
+                                             class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
+                            <PaginationPrevious @click="changePage(Math.max(1, meta.current_page - 1))"
+                                                class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
 
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
@@ -541,8 +687,10 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <PaginationEllipsis v-else :index="index" class="dark:text-gray-400"/>
                             </template>
 
-                            <PaginationNext @click="changePage(Math.min(meta.last_page, meta.current_page + 1))" class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
-                            <PaginationLast @click="changePage(meta.last_page)" class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
+                            <PaginationNext @click="changePage(Math.min(meta.last_page, meta.current_page + 1))"
+                                            class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
+                            <PaginationLast @click="changePage(meta.last_page)"
+                                            class="dark:bg-gray-700 dark:text-white dark:border-gray-600"/>
                         </PaginationList>
                     </Pagination>
                 </div>
@@ -552,6 +700,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         <div v-if="showEditAppointmentForm && selectedAppointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
+
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium dark:text-white">Edycja Wizyty</h3>
                     <Button variant="ghost" class="h-8 w-8 p-0 dark:text-white dark:hover:bg-gray-700" @click="closeEditForm">
@@ -560,19 +709,64 @@ const breadcrumbs: BreadcrumbItem[] = [
                 </div>
 
                 <div class="space-y-4">
-                    <div class="space-y-2">
-                        <Label class="dark:text-gray-200">Pacjent</Label>
-                        <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.patient.name }}</p>
+                    <div class="space-y-1">
+                        <Label for="edit-patient" class="dark:text-gray-200 text-sm sm:text-base">Pacjent</Label>
+                        <select
+                            id="edit-patient"
+                            v-model="selectedAppointment.patient_id"
+                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            :class="{'border-red-500': appointmentErrors.patient_id}"
+                        >
+                            <option value="" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
+                            <option v-for="patient in allPatients || []" :key="patient.id" :value="patient.id">
+                                {{ patient.name }}
+                            </option>
+                        </select>
+                        <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">
+                            {{ appointmentErrors.patient_id[0] }}
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <Label for="edit-doctor" class="dark:text-gray-200 text-sm sm:text-base">Lekarz</Label>
+                        <select
+                            id="edit-doctor"
+                            v-model="selectedAppointment.doctor_id"
+                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            :class="{'border-red-500': appointmentErrors.doctor_id}"
+                        >
+                            <option value="" disabled>{{ doctorsLoading ? 'Ładowanie lekarzy...' : 'Wybierz lekarza' }}</option>
+                            <option v-for="doctor in allDoctors || []" :key="doctor.id" :value="doctor.id">
+                                {{ doctor.name }}
+                            </option>
+                        </select>
+                        <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">
+                            {{ appointmentErrors.doctor_id[0] }}
+                        </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <Label class="dark:text-gray-200">Lekarz</Label>
-                        <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.doctor.name }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label class="dark:text-gray-200">Procedura</Label>
-                        <p class="text-sm p-2 bg-gray-50 dark:bg-gray-700 rounded dark:text-white">{{ selectedAppointment.procedure.name }}</p>
+                    <!-- Procedura -->
+                    <div class="space-y-1">
+                        <Label for="edit-procedure" class="dark:text-gray-200 text-sm sm:text-base">Procedura</Label>
+                        <select
+                            id="edit-procedure"
+                            v-model="selectedAppointment.procedure_id"
+                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                            :class="{'border-red-500': appointmentErrors.procedure_id}"
+                        >
+                            <option value="" disabled>Wybierz procedurę</option>
+                            <option v-for="procedure in procedures || []" :key="procedure.id" :value="procedure.id">
+                                {{ procedure.name }}
+                            </option>
+                        </select>
+                        <div v-if="proceduresLoading" class="text-xs text-amber-500 mt-1">
+                            Ładowanie procedur...
+                        </div>
+                        <div v-if="!proceduresLoading && procedures && procedures.length === 0" class="text-xs text-amber-500 mt-1">
+                            Brak dostępnych procedur
+                        </div>
+                        <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">
+                            {{ appointmentErrors.procedure_id[0] }}
+                        </div>
                     </div>
 
                     <div class="space-y-2">
@@ -584,15 +778,17 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
-                                    {{
-                                        selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty"
-                                    }}
+                                    {{ selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty" }}
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
-                                <Calendar v-model="selectedDate" initial-focus mode="single"
-                                          @update:model-value="onAppointmentDateChange"
-                                          class="dark:bg-gray-800 dark:text-white"/>
+                                <Calendar
+                                    :model-value="selectedDate"
+                                    @update:model-value="onAppointmentDateChange"
+                                    initial-focus
+                                    mode="single"
+                                    class="dark:bg-gray-800 dark:text-white"
+                                />
                             </PopoverContent>
                         </Popover>
                         <div v-if="appointmentErrors.appointment_datetime" class="text-sm text-red-500">
@@ -627,7 +823,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             rows="3"
                             placeholder="Notatki od pacjenta"
                         ></textarea>
-                        <div v-if="appointmentErrors.patient_notes" class="text-sm text-red-500">
+                        <div v-if="appointmentErrors.patient_notes" class="text-xs text-red-500">
                             {{ appointmentErrors.patient_notes[0] }}
                         </div>
                     </div>
@@ -642,7 +838,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             rows="3"
                             placeholder="Notatki od lekarza"
                         ></textarea>
-                        <div v-if="appointmentErrors.doctor_notes" class="text-sm text-red-500">
+                        <div v-if="appointmentErrors.doctor_notes" class="text-xs text-red-500">
                             {{ appointmentErrors.doctor_notes[0] }}
                         </div>
                     </div>

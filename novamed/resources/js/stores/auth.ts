@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import type { User } from '@/types';
+import type { User } from '@/types/index'; // Upewnij się, że ścieżka i eksport User są poprawne
 
+/**
+ * Fetches user data from the API.
+ * It expects the API to return an object战争, where the actual user data is nested under a 'data' key,
+ * which is a common pattern for Laravel API Resources.
+ */
 const fetchUserData = async (): Promise<User | null> => {
     try {
         const response = await axios.get('/api/v1/user', {
@@ -10,14 +15,35 @@ const fetchUserData = async (): Promise<User | null> => {
             }
         });
 
+        console.log('auth.ts - Odpowiedź z API w fetchUserData:', response.data);
+
+        // Sprawdzamy, czy odpowiedź to nie HTML (na wypadek błędów przekierowań itp.)
         if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-            console.error('API zwróciło HTML zamiast danych JSON');
+            console.error('auth.ts - API zwróciło HTML zamiast danych JSON.');
             return null;
         }
 
-        return response.data;
+        // Laravel Resource dla pojedynczego obiektu domyślnie opakowuje go w klucz 'data'
+        if (response.data && response.data.data && typeof response.data.data === 'object') {
+            console.log('auth.ts - Zwracam response.data.data z fetchUserData.');
+            return response.data.data as User; // Zwracamy obiekt użytkownika znajdujący się pod kluczem 'data'
+        } else {
+            // Jeśli z jakiegoś powodu struktura jest inna (np. API zwraca bezpośrednio obiekt Usera bez opakowania 'data')
+            // To jest mniej prawdopodobne, jeśli używasz standardowego UserResource dla pojedynczego zasobu.
+            console.warn('auth.ts - Nieoczekiwana struktura danych użytkownika (brak opakowania "data"), próba zwrócenia response.data:', response.data);
+            // Jeśli jesteś pewien, że czasem API może zwrócić "płaski" obiekt użytkownika, możesz to obsłużyć:
+            // if (response.data && typeof response.data === 'object' && response.data.id) { // Proste sprawdzenie czy to obiekt Usera
+            //     return response.data as User;
+            // }
+            return null; // Lub zwróć null, jeśli struktura jest zawsze oczekiwana z 'data'
+        }
+
     } catch (error) {
-        console.error('Błąd podczas pobierania danych użytkownika:', error);
+        console.error('auth.ts - Błąd podczas pobierania danych użytkownika:', error);
+        // Możesz chcieć sprawdzić status błędu, np. 401 oznacza brak autoryzacji
+        // if (axios.isAxiosError(error) && error.response?.status === 401) {
+        //     console.log('auth.ts - Użytkownik nie jest zalogowany (401).');
+        // }
         return null;
     }
 };
@@ -25,69 +51,78 @@ const fetchUserData = async (): Promise<User | null> => {
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null as User | null,
-        isInitializing: true,
+        isInitializing: true, // Flaga informująca, czy trwa inicjalizacja
     }),
 
     getters: {
-        isLoggedIn: (state) => !!state.user,
+        isLoggedIn: (state): boolean => !!state.user,
+        // Getter dla avatara, jeśli potrzebujesz dodatkowej logiki (np. domyślny avatar)
+        // W tym przypadku, zakładając, że UserResource zwraca 'avatar' lub 'profile_picture_url'
+        // bezpośredni dostęp state.user.avatar będzie działał.
+        // userAvatar: (state): string | null => {
+        //     if (!state.user) return null;
+        //     return state.user.avatar || state.user.profile_picture_url || null; // Dostosuj do nazwy pola
+        // }
     },
 
     actions: {
         async initAuth() {
+            console.log('auth.ts - Rozpoczęcie initAuth.');
             this.isInitializing = true;
-
             try {
                 const userData = await fetchUserData();
-                this.user = userData;
-            } catch (error) {
-                console.error('Błąd podczas inicjalizacji autoryzacji:', error);
+                console.log('auth.ts - Dane użytkownika otrzymane przez initAuth:', JSON.parse(JSON.stringify(userData)));
+                this.user = userData; // Przypisanie danych użytkownika (lub null) do stanu
+            } catch (error) { // Ten catch jest na wszelki wypadek, fetchUserData już loguje błędy
+                console.error('auth.ts - Błąd w akcji initAuth podczas przypisywania danych:', error);
                 this.user = null;
             } finally {
                 this.isInitializing = false;
+                console.log('auth.ts - Zakończono initAuth. Stan użytkownika:', JSON.parse(JSON.stringify(this.user)));
             }
         },
 
         async logout() {
+            console.log('auth.ts - Rozpoczęcie wylogowywania.');
             try {
-                const xsrfTokenCookie = document.cookie
-                    .split('; ')
-                    .find(row => row.startsWith('XSRF-TOKEN='));
-
-                const xsrfToken = xsrfTokenCookie ?
-                    decodeURIComponent(xsrfTokenCookie.split('=')[1]) : '';
+                // Token CSRF jest zazwyczaj obsługiwany automatycznie przez Axios, jeśli Sanctum jest poprawnie skonfigurowane
+                // z ciasteczkiem XSRF-TOKEN. Poniższy kod jest dodatkowym zabezpieczeniem, ale może nie być konieczny.
+                // const xsrfTokenCookie = document.cookie
+                //     .split('; ')
+                //     .find(row => row.startsWith('XSRF-TOKEN='));
+                // const xsrfToken = xsrfTokenCookie ? decodeURIComponent(xsrfTokenCookie.split('=')[1]) : '';
 
                 try {
-                    await axios.post('/logout', {}, {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-XSRF-TOKEN': xsrfToken
-                        },
-                        withCredentials: true
-                    });
+                    // Laravel Sanctum dla SPA zazwyczaj używa endpointu /logout (lub /api/logout, jeśli tak zdefiniowałeś)
+                    // który obsługuje sesje webowe.
+                    await axios.post('/logout', {} /*, { headers: { 'X-XSRF-TOKEN': xsrfToken } }*/ );
+                    console.log('auth.ts - Wylogowanie przez /logout zakończone sukcesem.');
                 } catch (logoutError) {
-                    console.warn('Błąd wylogowania na standardowej ścieżce:', logoutError);
-
+                    console.warn('auth.ts - Błąd wylogowania na standardowej ścieżce (/logout), próba /api/v1/logout:', logoutError);
+                    // Próba wylogowania przez endpoint API, jeśli standardowy zawiódł lub nie istnieje
                     try {
-                        await axios.post('/api/v1/logout', {}, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-XSRF-TOKEN': xsrfToken
-                            },
-                            withCredentials: true
-                        });
+                        await axios.post('/api/v1/logout', {} /*, { headers: { 'X-XSRF-TOKEN': xsrfToken } }*/ );
+                        console.log('auth.ts - Wylogowanie przez /api/v1/logout zakończone sukcesem.');
                     } catch (apiLogoutError) {
-                        console.warn('Błąd wylogowania na ścieżce API:', apiLogoutError);
+                        console.warn('auth.ts - Błąd wylogowania na ścieżce API (/api/v1/logout):', apiLogoutError);
+                        // Nawet jeśli oba endpointy zawiodą, kontynuujemy czyszczenie po stronie klienta
                     }
                 }
 
                 this.user = null;
-                localStorage.removeItem('auth.token');
+                // localStorage.removeItem('auth.token'); // Zazwyczaj niepotrzebne przy Sanctum SPA auth (oparte na ciasteczkach)
+                // Chyba że przechowujesz tam dodatkowe tokeny ręcznie.
 
-                window.location.href = '/login';
+                // Przekierowanie na stronę główną. Można też użyć routera Vue, jeśli jest dostępny globalnie,
+                // ale window.location.href jest pewniejsze dla pełnego odświeżenia.
+                window.location.href = '/';
                 return true;
-            } catch (error) {
-                console.error('Błąd podczas wylogowywania:', error);
-                throw error;
+            } catch (error) { // Ten catch jest na wypadek nieprzewidzianych błędów w logice logout
+                console.error('auth.ts - Krytyczny błąd podczas wylogowywania:', error);
+                // Mimo błędu, spróbuj wyczyścić stan użytkownika lokalnie
+                this.user = null;
+                // localStorage.removeItem('auth.token');
+                throw error; // Rzuć błąd dalej, jeśli inne części aplikacji muszą na niego zareagować
             }
         }
     }
