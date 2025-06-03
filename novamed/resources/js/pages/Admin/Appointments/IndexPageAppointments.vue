@@ -54,7 +54,9 @@ interface Patient {
 
 interface Doctor {
     id: number;
-    name: string;
+    first_name: string;
+    last_name: string;
+    specialization: string;
 }
 
 interface Procedure {
@@ -107,6 +109,7 @@ const statuses = [
     {value: 'scheduled', label: 'Zarezerwowana'},
     {value: 'completed', label: 'Zakończona'},
     {value: 'cancelled', label: 'Anulowana'},
+    {value: 'cancelled_by_patient', label: 'Anulowano przez pacjenta'}, // Dodana opcja
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
@@ -216,6 +219,7 @@ const statusOptions = [
     {value: 'scheduled', label: 'Zarezerwowana'},
     {value: 'completed', label: 'Zakończona'},
     {value: 'cancelled', label: 'Anulowana'},
+    {value: 'cancelled_by_patient', label: 'Anulowana przez pacjenta'},
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
@@ -427,8 +431,20 @@ const formatDateTime = (dateTimeStr: string) => {
 };
 
 const getStatusLabel = (status: string) => {
-    const statusObj = statuses.find(s => s.value === status);
-    return statusObj ? statusObj.label : status;
+    switch (status) {
+        case 'scheduled':
+            return 'Zarezerwowana';
+        case 'completed':
+            return 'Zakończona';
+        case 'cancelled':
+            return 'Anulowana';
+        case 'cancelled_by_patient': // Dodana obsługa
+            return 'Anulowano przez pacjenta';
+        case 'no_show':
+            return 'Nieobecność';
+        default:
+            return status;
+    }
 };
 
 const getStatusClass = (status: string) => {
@@ -439,6 +455,8 @@ const getStatusClass = (status: string) => {
             return 'bg-green-100 text-green-800';
         case 'cancelled':
             return 'bg-red-100 text-red-800';
+        case 'cancelled_by_patient':
+            return 'bg-yellow-100 text-yellow-800';
         default:
             return 'bg-gray-100 text-gray-800';
     }
@@ -604,10 +622,14 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     </router-link>
                                 </TableCell>
                                 <TableCell>
-                                    <router-link :to="`/admin/doctors/${appointment.doctor.id}`"
-                                                 class="text-blue-600 hover:underline dark:text-blue-400">
-                                        {{ appointment.doctor.name }}
-                                    </router-link>
+                                    <div v-if="appointment.doctor">
+                                        <router-link
+                                            :to="`/admin/doctors/${appointment.doctor.id}`"
+                                            class="text-blue-600 hover:underline dark:text-blue-400">
+                                            {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}
+                                        </router-link>
+                                    </div>
+                                    <div v-else>Brak lekara</div>
                                 </TableCell>
                                 <TableCell class="dark:text-gray-200">{{ appointment.procedure.name }}</TableCell>
                                 <TableCell class="dark:text-gray-200">

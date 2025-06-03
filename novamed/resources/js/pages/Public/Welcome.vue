@@ -78,7 +78,7 @@ const fetchData = async () => {
         // Pobieramy tylko dane dla aktywnej zakładki
         if (activeTab.value === 0) {
             // Tylko procedury
-            const proceduresResponse = await axios.get('/api/procedures', {
+            const proceduresResponse = await axios.get('/api/v1/procedures', {
                 params: {
                     page: proceduresCurrentPage.value,
                     per_page: proceduresMeta.value.per_page
@@ -93,7 +93,7 @@ const fetchData = async () => {
             };
         } else {
             // Tylko lekarze
-            const doctorsResponse = await axios.get('/api/doctors', {
+            const doctorsResponse = await axios.get('/api/v1/doctors', {
                 params: {
                     page: doctorsCurrentPage.value,
                     per_page: doctorsMeta.value.per_page

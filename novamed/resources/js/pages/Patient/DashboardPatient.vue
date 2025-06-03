@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Icon from '@/components/Icon.vue'; // Komponent ikon
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { Separator } from '@/components/ui/separator';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -71,7 +72,7 @@ async function fetchSuggestedDoctors() {
     loadingDoctors.value = true;
     try {
         // Endpoint API do pobrania np. 3 losowych/popularnych lekarzy
-        const response = await axios.get('/api/v1doctors', { params: { limit: 3, popular: true } });
+        const response = await axios.get('/api/v1/doctors', { params: { limit: 3, popular: true } });
         suggestedDoctors.value = response.data.data || [];
     } catch (error) {
         console.error("Błąd podczas pobierania proponowanych lekarzy:", error);
@@ -94,7 +95,7 @@ async function fetchPopularProcedures() {
     loadingProcedures.value = true;
     try {
         // Endpoint API do pobrania np. 3 popularnych zabiegów
-        const response = await axios.get('/api/v1/procedures', { params: { limit: 3, popular: true } });
+        const response = await axios.get('/api/v1/procedures', { params: { limit: 6, popular: true } });
         popularProcedures.value = response.data.data || [];
     } catch (error) {
         console.error("Błąd podczas pobierania popularnych zabiegów:", error);
@@ -147,11 +148,27 @@ onMounted(() => {
                     </Button>
                 </CardContent>
             </Card>
+            <Separator/>
+            <Card class="dark:bg-gray-800">
+                <CardHeader>
+                    <CardTitle>Szybkie Akcje</CardTitle>
+                </CardHeader>
+                <CardContent class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button size="lg" class="w-full bg-nova-primary text-primary-foreground hover:bg-nova-primary/90" @click="router.push('/procedures')">
+                        <Icon name="plus-circle" class="mr-2 h-5 w-5" />
+                        Umów nową wizytę
+                    </Button>
+                    <Button size="lg" variant="secondary" class="w-full dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" @click="router.push('/patient/appointments')">
+                        <Icon name="history" class="mr-2 h-5 w-5" />
+                        Historia wizyt
+                    </Button>
+                </CardContent>
+            </Card>
 
             <!-- Główna siatka dashboardu -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Lewa kolumna (Nadchodzące wizyty i Szybkie Akcje) -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="lg:col-span-2 space-y-2">
                     <!-- Nadchodzące Wizyty -->
                     <Card class="dark:bg-gray-800">
                         <CardHeader>
@@ -166,12 +183,12 @@ onMounted(() => {
                                 </div>
                             </div>
                             <div v-else-if="nearestAppointment">
-                                <div class="bg-primary/10 dark:bg-primary/20 p-4 rounded-lg mb-4 border border-primary/30">
+                                <div class="bg-nova-primary/10 dark:bg-primary/20 p-4 rounded-lg mb-4 border border-nova-dark/30">
                                     <h3 class="font-semibold text-lg text-primary dark:text-blue-400">Najbliższa wizyta:</h3>
                                     <p><Icon name="calendar" class="inline-block mr-1 h-4 w-4" /> {{ formatDateTime(nearestAppointment.appointment_datetime) }}</p>
-                                    <p><Icon name="user-md" class="inline-block mr-1 h-4 w-4" /> Dr {{ nearestAppointment.doctor.name }} ({{ nearestAppointment.doctor.specialization }})</p>
+                                    <p><Icon name="user" class="inline-block mr-1 h-4 w-4" /> Dr {{ nearestAppointment.doctor.first_name }} {{ nearestAppointment.doctor.last_name }} ({{ nearestAppointment.doctor.specialization }})</p>
                                     <p><Icon name="stethoscope" class="inline-block mr-1 h-4 w-4" /> {{ nearestAppointment.procedure.name }}</p>
-                                    <Button size="sm" class="mt-2 bg-primary text-primary-foreground hover:bg-primary/90" @click="router.push(`/patient/appointments/${nearestAppointment.id}`)">
+                                    <Button size="sm" class="mt-2 bg-nova-primary text-primary-foreground hover:bg-nova-primary/90" @click="router.push(`/patient/appointments/${nearestAppointment.id}`)">
                                         Szczegóły wizyty
                                     </Button>
                                 </div>
@@ -187,7 +204,7 @@ onMounted(() => {
                                         </Button>
                                     </div>
                                 </div>
-                                <Button variant="outline" class="mt-4 w-full dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700" @click="router.push('/patient/appointments')">
+                                <Button variant="outline" class="mt-4 w-full bg-nova-primary hover:bg-nova-primary/80 text-nova-light hover:text-nova-light dark:bg-nova-primary dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700" @click="router.push('/patient/appointments')">
                                     <Icon name="calendar-days" class="mr-2 h-4 w-4" />
                                     Zobacz wszystkie moje wizyty
                                 </Button>
@@ -199,27 +216,6 @@ onMounted(() => {
                         </CardContent>
                     </Card>
 
-                    <!-- Szybkie Akcje -->
-                    <Card class="dark:bg-gray-800">
-                        <CardHeader>
-                            <CardTitle>Szybkie Akcje</CardTitle>
-                        </CardHeader>
-                        <CardContent class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Button size="lg" class="w-full bg-primary text-primary-foreground hover:bg-primary/90" @click="router.push('/procedures')">
-                                <Icon name="plus-circle" class="mr-2 h-5 w-5" />
-                                Umów nową wizytę
-                            </Button>
-                            <Button size="lg" variant="secondary" class="w-full dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" @click="router.push('/patient/appointments')">
-                                <Icon name="history" class="mr-2 h-5 w-5" />
-                                Historia wizyt
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <!-- Prawa kolumna (Proponowani lekarze i zabiegi) -->
-                <div class="space-y-6">
-                    <!-- Proponowani Lekarze -->
                     <Card class="dark:bg-gray-800">
                         <CardHeader>
                             <CardTitle>Polecani Specjaliści</CardTitle>
@@ -255,7 +251,11 @@ onMounted(() => {
                             <p v-else class="text-muted-foreground text-center py-4">Brak polecanych specjalistów.</p>
                         </CardContent>
                     </Card>
+                </div>
 
+                <!-- Prawa kolumna (Proponowani lekarze i zabiegi) -->
+                <div class="space-y-6">
+                    <!-- Proponowani Lekarze -->
                     <!-- Popularne Zabiegi -->
                     <Card class="dark:bg-gray-800">
                         <CardHeader>

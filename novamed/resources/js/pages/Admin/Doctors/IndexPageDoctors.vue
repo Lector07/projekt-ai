@@ -1,4 +1,4 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
@@ -17,7 +17,8 @@ import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { PaginationList, PaginationListItem } from 'reka-ui';
 import { computed, h, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router'; // Upewnij się, że useRouter jest zaimportowany
+import { useRouter } from 'vue-router';
+import Checkbox from 'primevue/checkbox';// Upewnij się, że useRouter jest zaimportowany
 
 import { Separator } from '@/components/ui/separator';
 
@@ -41,7 +42,13 @@ interface Doctor {
         email: string;
     } | null;
     created_at: string;
-    profile_picture_url?: string; // Dodane dla avatara
+    profile_picture_url?: string;
+    procedure_ids?: number[];// Dodane dla avatara
+}
+
+interface ProcedureListItem { // Prosty interfejs dla listy zabiegów
+    id: number;
+    name: string;
 }
 
 interface DoctorForm {
@@ -60,6 +67,7 @@ interface DoctorForm {
     email?: string;
     password?: string;
     password_confirmation?: string;
+    procedure_ids?: number[];
 }
 
 const query = ref({
@@ -90,6 +98,9 @@ const selectedDoctor = ref<DoctorForm | null>(null);
 const doctorFormLoading = ref(false);
 const doctorFormErrors = ref<Record<string, string[]>>({});
 
+const allProcedures = ref<ProcedureListItem[]>([]);
+const loadingProcedures = ref(false);
+
 const newDoctor = ref<DoctorForm>({
     first_name: '',
     last_name: '',
@@ -97,6 +108,7 @@ const newDoctor = ref<DoctorForm>({
     bio: null,
     price_modifier: 1.0,
     user_id: undefined,
+    procedure_ids: [],
 });
 
 const specializations = ref<string[]>(['Chirurg Plastyczny', 'Medycyna Estetyczna', 'Dermatolog', 'Fleobolog']);
@@ -109,6 +121,19 @@ const authStore = useAuthStore();
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Zarządzanie Lekarzami' }];
 
+async function fetchAllProcedures() {
+    loadingProcedures.value = true;
+    try {
+        const response = await axios.get('/api/v1/admin/procedures', { params: { per_page: 999 } });
+        allProcedures.value = (response.data.data || []).map((p: any) => ({ id: p.id, name: p.name }));
+    } catch (error) {
+        console.error("Błąd podczas pobierania listy wszystkich procedur:", error);
+        showErrorToast('Błąd', 'Nie udało się pobrać listy zabiegów.');
+    } finally {
+        loadingProcedures.value = false;
+    }
+}
+
 const loadDoctors = async () => {
     loading.value = true;
     error.value = null;
@@ -116,10 +141,12 @@ const loadDoctors = async () => {
         const params = new URLSearchParams();
         params.append('page', query.value.page.toString());
         params.append('per_page', query.value.per_page.toString());
+
         if (query.value.search) params.append('search', query.value.search);
         if (query.value.specialization) params.append('specialization', query.value.specialization);
 
         params.append('include', 'user');
+        params.append('include', 'user,procedures');
 
         const response = await axios.get(`/api/v1/admin/doctors?${params.toString()}`);
         doctors.value = (response.data.data || []).map((item: any) => ({
@@ -129,9 +156,9 @@ const loadDoctors = async () => {
         }));
         totalPages.value = response.data.meta?.last_page || 1;
         totalItems.value = response.data.meta?.total || 0;
-    } catch (err: any) {
-        console.error('Błąd podczas pobierania lekarzy:', err);
-        error.value = err.response?.data?.message || 'Wystąpił błąd podczas ładowania danych.';
+    } catch (error) {
+        console.error('Błąd podczas pobierania lekarzy:', error);
+        error.value = error.response?.data?.message || 'Wystąpił błąd podczas ładowania danych.';
     } finally {
         loading.value = false;
     }
@@ -139,7 +166,7 @@ const loadDoctors = async () => {
 
 const loadAvailableUsers = async () => {
     try {
-        const response = await axios.get('/api/v1/admin/users?role=patient'); // Zmieniono na users, bo lekarz to też User
+        const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000'); // Zwiększony limit
         availableUsers.value = response.data.data || [];
     } catch (err) {
         showErrorToast('Błąd', 'Nie udało się pobrać listy użytkowników');
@@ -172,6 +199,7 @@ const showErrorToast = (summary: string, detail: string) =>
 const openAddForm = () => {
     resetDoctorForm();
     loadAvailableUsers();
+    fetchAllProcedures();
     showAddDoctorForm.value = true;
 };
 
@@ -189,9 +217,18 @@ const newBioValue = computed({
     },
 });
 
-const openEditForm = (doctor: Doctor) => {
-    selectedDoctor.value = { ...doctor, user_id: doctor.user?.id || undefined };
-    loadAvailableUsers(); // Może niepotrzebne przy edycji, ale nie zaszkodzi
+const openEditForm = async (doctor: Doctor) => {
+    // Pobierz procedury, jeśli jeszcze nie są załadowane
+    if (allProcedures.value.length === 0) {
+        await fetchAllProcedures();
+    }
+
+    selectedDoctor.value = {
+        ...doctor,
+        user_id: doctor.user?.id || undefined,
+        procedure_ids: doctor.procedure_ids || [] // Użyj procedure_ids z obiektu doctor, jeśli istnieją
+    };
+    loadAvailableUsers();
     showEditDoctorForm.value = true;
 };
 
@@ -203,9 +240,23 @@ const resetDoctorForm = () => {
         bio: null,
         price_modifier: 1.0,
         user_id: undefined,
+        procedure_ids: [],
     };
     doctorFormErrors.value = {};
 };
+
+function toggleProcedure(procedureId: number, form: DoctorForm) {
+    if (!form.procedure_ids) {
+        form.procedure_ids = [];
+    }
+
+    const index = form.procedure_ids.indexOf(procedureId);
+    if (index > -1) {
+        form.procedure_ids.splice(index, 1);
+    } else {
+        form.procedure_ids.push(procedureId);
+    }
+}
 
 const validateDoctorForm = (doctorData: DoctorForm) => {
     const errors: Record<string, string[]> = {};
@@ -385,7 +436,8 @@ watch(query, loadDoctors, { deep: true, immediate: false }); // immediate: false
 
 onMounted(() => {
     loadDoctors();
-    resetDoctorForm(); // Upewnij się, że forma jest czysta na starcie
+    resetDoctorForm();
+    fetchAllProcedures();
 });
 </script>
 
@@ -716,6 +768,25 @@ onMounted(() => {
                             <InputError :message="doctorFormErrors.password_confirmation?.[0]" />
                         </div>
                     </div>
+                    <div class="space-y-1">
+                        <Label class="dark:text-gray-300">Wykonywane Zabiegi</Label>
+                        <div v-if="loadingProcedures" class="text-sm text-gray-500 dark:text-gray-400">Ładowanie listy zabiegów...</div>
+                        <div v-else-if="allProcedures.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Brak zdefiniowanych zabiegów w systemie.</div>
+                        <div v-else class="max-h-48 overflow-y-auto space-y-2 rounded-md border p-3 dark:border-gray-600">
+                            <div v-for="procedure in allProcedures" :key="procedure.id" class="flex items-center">
+                                <div class="flex items-center space-x-2">
+                                    <Checkbox
+                                        :inputId="`proc-new-${procedure.id}`"
+                                        :value="procedure.id"
+                                        v-model="newDoctor.procedure_ids"
+                                        :binary="false"
+                                    />
+                                    <Label :for="`proc-new-${procedure.id}`" class="text-sm font-normal dark:text-gray-300">{{ procedure.name }}</Label>
+                                </div>
+                            </div>
+                        </div>
+                        <InputError :message="doctorFormErrors.procedure_ids?.[0]" />
+                    </div>
                     <div class="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -813,6 +884,25 @@ onMounted(() => {
                         </InputNumber>
                         <p class="text-muted-foreground mt-1 text-xs dark:text-gray-400">Wartość 1.0 oznacza standardową cenę, 1.1 to +10%</p>
                         <InputError :message="doctorFormErrors.price_modifier?.[0]" />
+                    </div>
+                    <div class="space-y-1">
+                        <Label class="dark:text-gray-300">Wykonywane Zabiegi</Label>
+                        <div v-if="loadingProcedures" class="text-sm text-gray-500 dark:text-gray-400">Ładowanie listy zabiegów...</div>
+                        <div v-else-if="allProcedures.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Brak zdefiniowanych zabiegów w systemie.</div>
+                        <div v-else class="max-h-48 overflow-y-auto space-y-2 rounded-md border p-3 dark:border-gray-600">
+                            <div v-for="procedure in allProcedures" :key="procedure.id" class="flex items-center">
+                                <div class="flex items-center space-x-2">
+                                    <Checkbox
+                                        :inputId="`proc-edit-${procedure.id}`"
+                                        :value="procedure.id"
+                                        v-model="selectedDoctor.procedure_ids"
+                                        :binary="false"
+                                    />
+                                    <Label :for="`proc-edit-${procedure.id}`" class="text-sm font-normal dark:text-gray-300">{{ procedure.name }}</Label>
+                                </div>
+                            </div>
+                        </div>
+                        <InputError :message="doctorFormErrors.procedure_ids?.[0]" />
                     </div>
                     <div class="flex justify-end gap-3 pt-4">
                         <Button

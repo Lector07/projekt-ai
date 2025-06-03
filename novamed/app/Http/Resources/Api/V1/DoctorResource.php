@@ -28,6 +28,9 @@ class DoctorResource extends JsonResource
                     'email' => $this->user->email,
                 ];
             }),
+            'procedure_ids' => $this->whenLoaded('procedures', function() {
+                return $this->procedures->pluck('id');
+            }),
             'updated_at' => $this->updated_at,
         ];
     }

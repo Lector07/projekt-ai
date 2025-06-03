@@ -7,31 +7,31 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class AppointmentResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
             'appointment_datetime' => $this->appointment_datetime,
-            'start_time' => $this->start_time,
-            'end_time' => $this->end_time,
+            // Usunięto start_time i end_time, jeśli nie są używane w tym kontekście lub są częścią appointment_datetime
             'status' => $this->status,
-            'notes' => $this->notes,
+            'patient_notes' => $this->patient_notes, // Jeśli masz takie pole w modelu Appointment
+            'admin_notes' => $this->admin_notes,   // Jeśli masz takie pole i pacjent ma je widzieć
+            // 'notes' => $this->notes, // Jeśli 'notes' to jedyne pole notatek, zdecyduj które to są
+
             'patient' => $this->whenLoaded('patient', function() {
                 return [
                     'id' => $this->patient->id,
                     'name' => $this->patient->name,
-                    'email' => $this->patient->email
+                    'email' => $this->patient->email // Możesz usunąć email, jeśli nie jest potrzebny na tej stronie
                 ];
             }),
             'doctor' => $this->whenLoaded('doctor', function() {
                 return [
                     'id' => $this->doctor->id,
-                    'name' => $this->doctor->first_name . ' ' . $this->doctor->last_name,
+                    // Załóżmy, że model Doctor ma first_name i last_name
+                    'first_name' => $this->doctor->first_name,
+                    'last_name' => $this->doctor->last_name,
+                    // 'name' => $this->doctor->first_name . ' ' . $this->doctor->last_name, // Alternatywnie, jeśli frontend oczekuje 'name'
                     'specialization' => $this->doctor->specialization,
                 ];
             }),
@@ -39,11 +39,13 @@ class AppointmentResource extends JsonResource
                 return [
                     'id' => $this->procedure->id,
                     'name' => $this->procedure->name,
-                    'price' => $this->procedure->price
+                    'description' => $this->procedure->description, // <<< DODAJ OPIS
+                    'base_price' => $this->procedure->base_price, // <<< UŻYJ base_price LUB price, ale spójnie
+                    // 'price' => $this->procedure->price,
                 ];
             }),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
 }

@@ -17,6 +17,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::apiResource('/doctors', V1\DoctorController::class)->only(['index', 'show'])->names('doctors.public');
     Route::get('/appointments/check-availability', [V1\PatientAppointmentController::class, 'checkAvailability'])
         ->name('appointments.check');
+    Route::get('/doctors/{doctor}/availability', [V1\DoctorController::class, 'getAvailability'])
+        ->name('doctors.availability');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', function (Request $request) {

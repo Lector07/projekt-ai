@@ -21,7 +21,11 @@ import IndexPageCategories from "@/pages/Admin/ProcedureCategories/IndexPageCate
 import IndexPageAppointments from "@/pages/Admin/Appointments/IndexPageAppointments.vue";
 import DoctorDetailPageAdmin from "@/pages/Admin/Doctors/DoctorDetailPageAdmin.vue";
 import UserDetailPageAdmin from "@/pages/Admin/Users/UserDetailPageAdmin.vue";
-import AppointmentDetailPage from "@/pages/Admin/Appointments/AppointmentDetailPage.vue";
+import AppointmentDetailPageAdmin from "@/pages/Admin/Appointments/AppointmentDetailPageAdmin.vue";
+import PatientAppointmentsPage from "@/pages/Patient/Appointments/PatientAppointmentsPage.vue";
+import PatientAppointmentDetailPage from '@/pages/Patient/Appointments/AppointmentDetailPage.vue';
+import BookAppointment from '@/pages/Patient/Appointments/BookAppointment.vue';
+
 
 const adminRoutes: Array<RouteRecordRaw> = [
     {
@@ -107,7 +111,7 @@ const adminRoutes: Array<RouteRecordRaw> = [
     {
         path: '/admin/appointment/:id',
         name: 'admin-appointment-details',
-        component: AppointmentDetailPage,
+        component: AppointmentDetailPageAdmin,
         meta: {
             title: 'Szczegóły wizyty',
             requiresAuth: true,
@@ -222,6 +226,25 @@ const routes: Array<RouteRecordRaw> = [
         name: 'doctor.detail',
         component: DoctorDetailPage,
         meta: {title: 'Szegóły lekarza', requiresAuth: true}
+    },
+    {
+        path: '/patient/appointments', // Ścieżka URL
+        name: 'patient.appointments',  // Nazwa trasy (może być inna, np. 'my.appointments')
+        component: PatientAppointmentsPage,
+        meta: { title: 'Moje Wizyty', requiresAuth: true /*, requiresPatient: true - jeśli masz taki middleware */ }
+    },
+    {
+        path: '/patient/appointments/:id', // :id to parametr ID wizyty
+        name: 'patient.appointments.show', // Nazwa używana w router-link/push
+        component: PatientAppointmentDetailPage,
+        props: true, // Aby ID było przekazywane jako prop do komponentu
+        meta: { title: 'Szczegóły Wizyty', requiresAuth: true }
+    },
+    {
+        path: '/patient/appointments/book', // Ścieżka URL
+        name: 'book.appointment',
+        component: BookAppointment,
+        meta: {title: 'Rezerwacja Wizyty', requiresAuth: true}
     },
     ...adminRoutes
 ];

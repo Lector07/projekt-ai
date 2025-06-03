@@ -23,8 +23,6 @@ class AdminDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-
-
         $useTimeFilter = $request->has('start_date') || $request->has('end_date');
 
         $startDate = $request->input('start_date')
@@ -34,7 +32,6 @@ class AdminDashboardController extends Controller
         $endDate = $request->input('end_date')
             ? Carbon::parse($request->input('end_date'))->endOfDay()
             : Carbon::now();
-
 
         $patientCount = User::where('role', 'patient')->count();
         $doctorUserCount = User::where('role', 'doctor')->count();
@@ -59,7 +56,12 @@ class AdminDashboardController extends Controller
             ->count();
 
         $cancelledAppointments = clone $appointmentsQuery;
-        $cancelledAppointments = $cancelledAppointments->where('status', 'cancelled')
+        $cancelledAppointments = $cancelledAppointments->where('status', 'cancelled') // Ogólne anulowane
+        ->count();
+
+        // Nowa statystyka: Wizyty anulowane przez pacjenta
+        $cancelledByPatientCount = clone $appointmentsQuery;
+        $cancelledByPatientCount = $cancelledByPatientCount->where('status', 'cancelled_by_patient')
             ->count();
 
         $appointmentsForAnalysis = clone $appointmentsQuery;
@@ -100,7 +102,6 @@ class AdminDashboardController extends Controller
                 }
             }
 
-
             usort($popularProcedures, function ($a, $b) {
                 return $b['count'] <=> $a['count'];
             });
@@ -116,7 +117,8 @@ class AdminDashboardController extends Controller
                 'total' => $totalAppointments,
                 'upcoming' => $upcomingAppointments,
                 'completed' => $completedAppointments,
-                'cancelled' => $cancelledAppointments,
+                'cancelled' => $cancelledAppointments, // Ogólne anulowane
+                'cancelled_by_patient' => $cancelledByPatientCount, // Dodana nowa statystyka
             ],
             'charts' => [
                 'appointmentsPerMonth' => $appointmentsPerMonthArray,
@@ -125,6 +127,5 @@ class AdminDashboardController extends Controller
         ];
 
         return response()->json($stats);
-
     }
 }

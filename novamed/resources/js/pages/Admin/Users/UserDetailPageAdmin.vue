@@ -60,8 +60,37 @@ watch(patient, (newPatient) => {
 }, { deep: true });
 
 
-const formatCreatedAt = (dateString?: string): string => { /* ... bez zmian ... */ };
-const translateRole = (role?: string): string => { /* ... bez zmian ... */ };
+const formatCreatedAt = (dateString?: string): string => {
+    if (!dateString) return 'Brak danych';
+    try {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('pl-PL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            // Jeśli chcesz również czas:
+            // hour: '2-digit',
+            // minute: '2-digit',
+        }).format(date);
+    } catch (e) {
+        console.error('Błąd formatowania daty:', e);
+        return 'Format nieznany';
+    }
+};
+
+const translateRole = (role?: string): string => {
+    if (!role) return 'Nieznana';
+    switch (role.toLowerCase()) {
+        case 'admin':
+            return 'Administrator';
+        case 'doctor':
+            return 'Lekarz';
+        case 'patient':
+            return 'Pacjent';
+        default:
+            return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+};
 
 const getInitials = (name: string | undefined) => {
     if (!name) return '?';

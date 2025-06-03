@@ -24,6 +24,7 @@ interface DashboardStats {
         upcoming: number;
         completed: number;
         cancelled: number;
+        cancelled_by_patient: number; // Dodane pole
     };
     charts?: {
         appointmentsPerMonth: number[];
@@ -49,7 +50,8 @@ const stats = ref<DashboardStats>({
         total: 0,
         upcoming: 0,
         completed: 0,
-        cancelled: 0
+        cancelled: 0,
+        cancelled_by_patient: 0, // Zainicjowane pole
     },
     charts: {
         appointmentsPerMonth: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -155,6 +157,7 @@ onMounted(async () => {
     try {
         loading.value = true;
         const response = await axios.get('/api/v1/admin/dashboard');
+        rawApiResponse.value = response.data; // Dla debugowania
 
         if (response.data && typeof response.data === 'object') {
             stats.value = {
@@ -167,14 +170,13 @@ onMounted(async () => {
                     total: Number(response.data.appointments?.total || 0),
                     upcoming: Number(response.data.appointments?.upcoming || 0),
                     completed: Number(response.data.appointments?.completed || 0),
-                    cancelled: Number(response.data.appointments?.cancelled || 0)
+                    cancelled: Number(response.data.appointments?.cancelled || 0),
+                    cancelled_by_patient: Number(response.data.appointments?.cancelled_by_patient || 0), // Mapowanie nowego pola
                 },
                 charts: {
                     appointmentsPerMonth: Array.isArray(response.data.charts?.appointmentsPerMonth)
                         ? response.data.charts.appointmentsPerMonth.map((v: number) => Number(v) || 0)
                         : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-
-// Poprawka dla mapowania popularnych procedur
                     popularProcedures: Array.isArray(response.data.charts?.popularProcedures)
                         ? response.data.charts.popularProcedures.map((p: {
                             id?: number,
@@ -224,9 +226,9 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <!-- Szkielety ładowania dla kart statystyk wizyt (4 karty) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div v-for="i in 4" :key="i"
+                <!-- Szkielety ładowania dla kart statystyk wizyt (teraz 5 kart) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    <div v-for="i in 5" :key="i"
                          class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
                         <Skeleton class="h-6 w-3/4 mb-2"/>
                         <Skeleton class="h-8 w-1/2"/>
@@ -295,7 +297,8 @@ onMounted(async () => {
                 </div>
 
                 <!-- Karty statystyk wizyt -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Zmieniono siatkę, aby pomieścić 5 kart -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     <div
                         class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
@@ -326,6 +329,14 @@ onMounted(async () => {
                         <div class="p-4">
                             <h3 class="text-lg font-medium mb-1">Anulowane wizyty</h3>
                             <p class="text-2xl font-bold text-red-500">{{ stats.appointments.cancelled }}</p>
+                        </div>
+                    </div>
+                    <!-- Nowa karta dla wizyt anulowanych przez pacjenta -->
+                    <div
+                        class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
+                        <div class="p-4">
+                            <h3 class="text-lg font-medium mb-1">Anulowane przez pacjenta</h3>
+                            <p class="text-2xl font-bold text-orange-500">{{ stats.appointments.cancelled_by_patient }}</p>
                         </div>
                     </div>
                 </div>
@@ -382,5 +393,3 @@ onMounted(async () => {
     height: 100%;
 }
 </style>
-
-

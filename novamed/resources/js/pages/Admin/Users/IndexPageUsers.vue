@@ -63,6 +63,7 @@ interface User {
     created_at: string;
     password?: string;
     password_confirmation?: string;
+    profile_picture_url?: string | null;
 }
 
 // Parametry zapytania
@@ -88,6 +89,14 @@ const showEditUserForm = ref(false);
 const selectedUser = ref<User | null>(null);
 const userFormLoading = ref(false);
 const userErrors = ref<Record<string, string[]>>({});
+
+// Stan dla avatara
+const avatarFile = ref<File | null>(null);
+const avatarPreview = ref<string | null>(null);
+const avatarUploadErrors = ref<Record<string, string[]>>({});
+const avatarUploadLoading = ref(false);
+const selectedUserForAvatar = ref<User | null>(null);
+const showAvatarUploadModal = ref(false);
 
 // Formularz nowego użytkownika
 const newUser = ref<User>({
@@ -131,7 +140,11 @@ const loadUsers = async () => {
 
         const response = await axios.get(`/api/v1/admin/users?${params.toString()}`);
 
-        users.value = response.data.data;
+        // Mapowanie 'avatar' do 'profile_picture_url'
+        users.value = response.data.data.map((user: any) => ({
+            ...user,
+            profile_picture_url: user.avatar || null
+        }));
         totalPages.value = response.data.meta.last_page;
         totalItems.value = response.data.meta.total;
     } catch (err: any) {
@@ -215,6 +228,7 @@ const editUser = (user: User) => {
     selectedUser.value = { ...user };
     showEditUserForm.value = true;
 };
+//TODO: zmienić wygląd na taki jak w doctorsindexpage
 
 // Czyszczenie formularza użytkownika
 const resetUserForm = () => {
@@ -370,6 +384,75 @@ const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('pl-PL').format(date);
 };
 
+// --- Logika zmiany avatara ---
+const openAvatarModal = (user: User) => {
+    selectedUserForAvatar.value = user;
+    avatarFile.value = null;
+    avatarPreview.value = user.profile_picture_url || null;
+    avatarUploadErrors.value = {};
+    showAvatarUploadModal.value = true;
+};
+
+const handleAvatarChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target.files && target.files[0]) {
+        const file = target.files[0];
+        avatarFile.value = file;
+
+        // Walidacja pliku
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            avatarUploadErrors.value = { avatar: ['Nieprawidłowy format pliku. Dozwolone: JPG, PNG, WEBP.'] };
+            avatarFile.value = null;
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) { // 2MB
+            avatarUploadErrors.value = { avatar: ['Plik jest za duży. Maksymalny rozmiar to 2MB.'] };
+            avatarFile.value = null;
+            return;
+        }
+        avatarUploadErrors.value = {};
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            avatarPreview.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const uploadAvatar = async () => {
+    if (!avatarFile.value || !selectedUserForAvatar.value) return;
+
+    avatarUploadLoading.value = true;
+    avatarUploadErrors.value = {};
+    const formData = new FormData();
+    formData.append('avatar', avatarFile.value);
+
+    try {
+        const response = await axios.post(`/api/v1/admin/users/${selectedUserForAvatar.value.id}/avatar`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        showAvatarUploadModal.value = false;
+        showSuccessToast('Sukces', 'Avatar użytkownika został zaktualizowany.');
+
+        // Odśwież dane użytkownika na liście z obejściem cache
+        const userIndex = users.value.findIndex((u) => u.id === selectedUserForAvatar.value!.id);
+        if (userIndex !== -1) {
+            const timestamp = new Date().getTime();
+            users.value[userIndex].profile_picture_url = `${response.data.data.profile_picture_url}?t=${timestamp}`;
+        }
+    } catch (err: any) {
+        if (err.response?.status === 422) {
+            avatarUploadErrors.value = err.response.data.errors;
+        } else {
+            showErrorToast('Błąd', err.response?.data?.message || 'Wystąpił błąd podczas przesyłania avatara.');
+        }
+    } finally {
+        avatarUploadLoading.value = false;
+    }
+};
+
 watch(() => query.value.search, resetPagination);
 watch(() => query.value.role, resetPagination);
 watch(query, loadUsers, {deep: true});
@@ -457,6 +540,7 @@ onMounted(() => {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead class="w-16">ID</TableHead>
+                                    <TableHead class="w-16">Avatar</TableHead>
                                     <TableHead>Imię i Nazwisko</TableHead>
                                     <TableHead>Email</TableHead>
                                     <TableHead>Rola</TableHead>
@@ -469,6 +553,14 @@ onMounted(() => {
                                         <ContextMenuTrigger :asChild="true">
                                             <tr class="contents cursor-context-menu">
                                                 <TableCell>{{ user.id }}</TableCell>
+                                                <TableCell>
+                                                    <img
+                                                        :src="user.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`"
+                                                        alt="Avatar"
+                                                        class="h-10 w-10 cursor-pointer rounded-full object-cover"
+                                                        @click="openAvatarModal(user)"
+                                                    />
+                                                </TableCell>
                                                 <TableCell>{{ user.name }}</TableCell>
                                                 <TableCell>{{ user.email }}</TableCell>
                                                 <TableCell>
@@ -487,6 +579,11 @@ onMounted(() => {
                                             <ContextMenuItem @click="editUser(user)">
                                                 <Icon name="edit" size="16" class="mr-2"/>
                                                 Edytuj
+                                            </ContextMenuItem>
+                                            <ContextMenuSeparator v-if="user.role !== 'admin'" />
+                                            <ContextMenuItem @click="openAvatarModal(user)">
+                                                <Icon name="image" size="14" class="mr-2" />
+                                                Zmień avatar
                                             </ContextMenuItem>
                                             <ContextMenuSeparator v-if="user.role !== 'admin'" />
                                             <ContextMenuItem
@@ -749,6 +846,63 @@ onMounted(() => {
                         >
                             <Icon v-if="userFormLoading" name="loader2" class="animate-spin" size="16" />
                             <span>Aktualizuj</span>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal zmiany avatara użytkownika -->
+        <div v-if="showAvatarUploadModal && selectedUserForAvatar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div class="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-medium dark:text-gray-200">Zmień Avatar Użytkownika</h3>
+                    <Button variant="ghost" class="h-8 w-8 p-0 dark:text-gray-200 dark:hover:bg-gray-700" @click="showAvatarUploadModal = false">
+                        <Icon name="x" size="18" />
+                    </Button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-center">
+                        <img
+                            :src="
+                        avatarPreview ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUserForAvatar.name)}&background=random&color=fff&size=128`
+                    "
+                            alt="Podgląd avatara"
+                            class="h-32 w-32 rounded-full border-2 border-gray-300 object-cover dark:border-gray-600"
+                        />
+                    </div>
+                    <div>
+                        <Label for="avatar-upload" class="dark:text-gray-300">Wybierz nowy avatar</Label>
+                        <Input
+                            id="avatar-upload"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            @change="handleAvatarChange"
+                            class="file:bg-nova-primary/10 file:text-nova-primary hover:file:bg-nova-primary/20 dark:file:bg-nova-accent/20 dark:file:text-nova-accent mt-1 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            :class="{ 'border-red-500': avatarUploadErrors.avatar }"
+                        />
+                        <div v-if="avatarUploadErrors.avatar" class="text-sm text-red-500">
+                            {{ avatarUploadErrors.avatar[0] }}
+                        </div>
+                        <p class="text-muted-foreground mt-1 text-xs dark:text-gray-400">Maks. 2MB. Dozwolone formaty: JPG, PNG, WEBP.</p>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="showAvatarUploadModal = false"
+                            class="dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                        >
+                            Anuluj
+                        </Button>
+                        <Button
+                            @click="uploadAvatar"
+                            :disabled="avatarUploadLoading || !avatarFile"
+                            class="bg-nova-primary hover:bg-nova-accent dark:text-nova-light dark:hover:bg-nova-primary dark:bg-nova-accent flex items-center gap-2"
+                        >
+                            <Icon v-if="avatarUploadLoading" name="loader2" class="animate-spin" size="16" />
+                            <span>Prześlij Avatar</span>
                         </Button>
                     </div>
                 </div>

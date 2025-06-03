@@ -32,7 +32,7 @@ const fetchDoctor = async () => {
         loading.value = true;
         error.value = null;
         const doctorId = route.params.id;
-        const response = await axios.get(`/api/doctors/${doctorId}`);
+        const response = await axios.get(`/api/v1/doctors/${doctorId}`);
 
         console.log('Dane lekarza z API (po zmianie kontrolera):', response.data);
 

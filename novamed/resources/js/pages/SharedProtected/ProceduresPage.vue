@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,22 +11,22 @@ import { PaginationList, PaginationListItem} from 'reka-ui';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Procedure {
-    id: number;
-    name: string;
-    description: string;
-    procedure_category_id?: number;
-    category?: {
-        id: number;
-        name: string;
-        slug: string;
-    };
-    base_price: number;
+id: number;
+name: string;
+description: string;
+procedure_category_id?: number;
+category?: {
+id: number;
+name: string;
+slug: string;
+};
+base_price: number;
 }
 
 interface ProcedureCategory {
-    id: number;
-    name: string;
-    slug: string;
+id: number;
+name: string;
+slug: string;
 }
 
 const procedures = ref<Procedure[]>([]);
@@ -34,125 +34,95 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const categories = ref<ProcedureCategory[]>([]);
 const selectedCategory = ref<number | null>(null);
-const currentPage = ref(1);
-const totalItems = ref(0);
-const itemsPerPage = ref(10);
-const totalPages = ref(1);
+    const currentPage = ref(1);
+    const totalItems = ref(0);
+    const itemsPerPage = ref(10); // Upewnij się, że ta wartość jest zgodna z backendem lub wysyłana jako parametr
+    const totalPages = ref(1);
 
-const breadcrumbs: BreadcrumbItem[] = [
+    const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Zabiegi',
+    title: 'Zabiegi',
     },
-];
+    ];
 
-const fetchProcedures = async (page = 1) => {
+    const fetchProcedures = async (page = 1) => {
     try {
-        loading.value = true;
-        error.value = null;
+    loading.value = true;
+    error.value = null;
 
-        console.log(`Pobieranie zabiegów dla strony ${page}...`);
-
-        const response = await axios.get('/api/procedures', {
-            params: {
-                page: page,
-                procedure_category_id: selectedCategory.value,
-                per_page: itemsPerPage.value
-            }
-        });
-
-        console.log('Odpowiedź API:', response.data);
-
-        if (!response.data.data || !Array.isArray(response.data.data)) {
-            throw new Error('Nieprawidłowa struktura odpowiedzi API');
-        }
-
-        procedures.value = response.data.data;
-        totalItems.value = response.data.total || 0;
-        currentPage.value = page;
-        totalPages.value = Math.ceil(totalItems.value / itemsPerPage.value);
-
-        console.log(`Pobrano ${procedures.value.length} zabiegów dla strony ${currentPage.value}`);
-
-        if (categories.value.length === 0) {
-            fetchCategories();
-        }
-    } catch (err) {
-        console.error('Błąd podczas pobierania zabiegów:', err);
-        error.value = 'Nie udało się pobrać listy zabiegów.';
-        procedures.value = [];
-    } finally {
-        loading.value = false;
+    const response = await axios.get('/api/v1/procedures', {
+    params: {
+    page: page,
+    procedure_category_id: selectedCategory.value,
+    per_page: itemsPerPage.value
     }
-};
+    });
 
-const fetchCategories = async () => {
-    try {
-        const response = await axios.get('/api/procedures/categories');
-        categories.value = response.data;
-    } catch (err) {
-        console.error('Błąd podczas pobierania kategorii:', err);
+    if (!response.data || !response.data.data || !Array.isArray(response.data.data) || !response.data.meta) {
+    throw new Error('Nieprawidłowa struktura odpowiedzi API dla paginowanych danych');
     }
-};
 
-const filterByCategory = () => {
+    procedures.value = response.data.data;
+    totalItems.value = response.data.meta.total || 0;
+    currentPage.value = response.data.meta.current_page || page;
+    totalPages.value = response.data.meta.last_page || Math.ceil(totalItems.value / itemsPerPage.value);
+
+    if (categories.value.length === 0) {
+    fetchCategories();
+    }
+    } catch (err) {
+    console.error('Błąd podczas pobierania zabiegów:', err);
+    error.value = 'Nie udało się pobrać listy zabiegów.';
+    procedures.value = [];
+    totalItems.value = 0;
     currentPage.value = 1;
-    fetchProcedures(1);
-};
+    totalPages.value = 1;
+    } finally {
+    loading.value = false;
+    }
+    };
 
-const goToPage = (page: number) => {
-    if (page === currentPage.value) return;
-    console.log(`Zmiana strony na: ${page}`);
+    const fetchCategories = async () => {
+    try {
+    const response = await axios.get('/api/v1/procedures/categories');
+    // Poprawka: dane kategorii są w response.data.data
+    if (response.data && Array.isArray(response.data.data)) {
+    categories.value = response.data.data;
+    } else {
+    console.error('Nieprawidłowa struktura odpowiedzi API dla kategorii:', response.data);
+    categories.value = [];
+    }
+    } catch (err) {
+    console.error('Błąd podczas pobierania kategorii:', err);
+    }
+    };
+
+    const filterByCategory = () => {
+    currentPage.value = 1; // Resetuj do pierwszej strony przy zmianie filtra
+    fetchProcedures(1);
+    };
+
+    const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages.value || page === currentPage.value) return;
     fetchProcedures(page);
-};
+    };
 
-onMounted(() => {
-    fetchProcedures(1);
-});
+    onMounted(() => {
+    fetchProcedures(currentPage.value); // Pobierz pierwszą stronę lub zapamiętaną
+    });
 
-const getCategoryName = (procedure: Procedure): string => {
+    const getCategoryName = (procedure: Procedure): string => {
     if (procedure.category) {
-        return procedure.category.name;
+    return procedure.category.name;
     }
 
     if (procedure.procedure_category_id) {
-        const category = categories.value.find(c => c.id === procedure.procedure_category_id);
-        return category ? category.name : 'Brak kategorii';
+    const category = categories.value.find(c => c.id === procedure.procedure_category_id);
+    return category ? category.name : 'Brak kategorii';
     }
 
     return 'Brak kategorii';
-};
-
-const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    if (totalPages.value <= maxVisible) {
-        for (let i = 1; i <= totalPages.value; i++) {
-            pages.push(i);
-        }
-    } else {
-        pages.push(1);
-
-        const startPage = Math.max(2, currentPage.value - 1);
-        const endPage = Math.min(totalPages.value - 1, currentPage.value + 1);
-
-        if (startPage > 2) {
-            pages.push('...');
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-
-        if (endPage < totalPages.value - 1) {
-            pages.push('...');
-        }
-
-        pages.push(totalPages.value);
-    }
-
-    return pages;
-};
+    };
 </script>
 
 <template>

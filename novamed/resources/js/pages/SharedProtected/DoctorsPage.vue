@@ -46,40 +46,52 @@ const fetchDoctors = async (page = 1) => {
 
         console.log(`Pobieranie lekarzy dla strony ${page} (per_page: ${itemsPerPage.value})...`);
 
-        const response = await axios.get('/api/doctors', {
+        const response = await axios.get('/api/v1/doctors', {
             params: {
                 page: page,
-                per_page: itemsPerPage.value // Wysyłamy preferowaną liczbę elementów na stronę
+                per_page: itemsPerPage.value
             }
         });
 
         console.log('Odpowiedź API (DoctorsPage.vue):', response.data);
 
-        // Sprawdzamy, czy odpowiedź ma oczekiwaną strukturę (data jako tablica i meta jako obiekt)
-        if (!response.data || !Array.isArray(response.data.data) || !response.data.meta) {
-            console.error('Nieprawidłowa struktura odpowiedzi API:', response.data);
+        // Sprawdzamy, czy odpowiedź ma dane (elastyczne sprawdzanie)
+        if (!response.data) {
+            throw new Error('Brak danych w odpowiedzi API');
+        }
+
+        // Obsługujemy zarówno przypadek gdy API zwraca {data: [...]} jak i gdy zwraca bezpośrednio tablicę
+        if (Array.isArray(response.data)) {
+            // API zwróciło bezpośrednio tablicę
+            doctors.value = response.data;
+            totalItems.value = response.data.length;
+            currentPage.value = 1;
+            totalPages.value = 1;
+        } else if (Array.isArray(response.data.data)) {
+            // API zwróciło obiekt z polem data (tablica)
+            doctors.value = response.data.data;
+
+            // Jeśli istnieją metadane paginacji, używamy ich
+            if (response.data.meta) {
+                totalItems.value = response.data.meta.total;
+                currentPage.value = response.data.meta.current_page;
+                totalPages.value = response.data.meta.last_page;
+            } else {
+                // Brak metadanych - zakładamy wszystko na jednej stronie
+                totalItems.value = response.data.data.length;
+                currentPage.value = 1;
+                totalPages.value = 1;
+            }
+        } else {
             throw new Error('Nieprawidłowa struktura odpowiedzi API');
         }
 
-        doctors.value = response.data.data; // Tablica lekarzy
-
-        // Aktualizacja informacji o paginacji z obiektu 'meta'
-        totalItems.value = response.data.meta.total;
-        currentPage.value = response.data.meta.current_page; // Używamy current_page z odpowiedzi API
-        totalPages.value = response.data.meta.last_page;
-
-        // Opcjonalnie: zaktualizuj itemsPerPage, jeśli serwer zwrócił inną wartość niż żądana
-        // (np. serwer ma maksymalne per_page)
-        // itemsPerPage.value = parseInt(response.data.meta.per_page, 10);
-
-
         console.log(`Pobrano ${doctors.value.length} lekarzy. Strona: ${currentPage.value}/${totalPages.value}. Total: ${totalItems.value}.`);
 
-    } catch (err: any) { // Lepiej typować 'err' jako 'any' lub bardziej szczegółowo, jeśli znasz strukturę błędu
+    } catch (err: any) {
         console.error('Błąd podczas pobierania danych lekarzy:', err);
         error.value = err.message || 'Nie udało się pobrać listy lekarzy';
         doctors.value = [];
-        // Resetowanie paginacji w przypadku błędu
         totalItems.value = 0;
         currentPage.value = 1;
         totalPages.value = 1;

@@ -54,6 +54,11 @@ const mainNavItems: NavItem[] = [
         to: {name: 'doctors'},
         icon: Contact,
     },
+    {
+        title: 'Moje wizyty',
+        to: {name: 'patient.appointments'},
+        icon: Calendar,
+    }
 ];
 
 // Linki administracyjne
@@ -90,6 +95,8 @@ const adminNavItems: NavItem[] = [
     },
 ];
 
+
+
 const footerNavItems: NavItem[] = [
 ];
 </script>
@@ -113,7 +120,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain v-if="!isAdmin && !isDoctor" :items="mainNavItems" label="Panel pacjenta" class="mt-4"/>
+            <NavMain v-if="isPatient" :items="mainNavItems" label="Panel pacjenta" class="mt-4"/>
             <NavMain v-if="isAdmin" :items="adminNavItems" label="Administracja" class="mt-4"/>
         </SidebarContent>
 

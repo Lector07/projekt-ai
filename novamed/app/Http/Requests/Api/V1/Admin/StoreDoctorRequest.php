@@ -3,41 +3,40 @@
 namespace App\Http\Requests\Api\V1\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDoctorRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        return [
+        $rules = [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'specialization' => 'required|string|max:255',
             'bio' => 'nullable|string',
             'price_modifier' => 'nullable|numeric|min:0.5|max:2',
-            'user_id' => 'nullable|exists:users,id',
-            'email' => 'required_without:user_id|email|unique:users,email',
-            'password' => 'required_without:user_id|string|min:8',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'procedure_ids' => 'nullable|array',
+            'procedure_ids.*' => 'integer|exists:procedures,id',
         ];
+
+        if (!$this->input('user_id')) {
+            $rules['email'] = 'required|email|max:255|unique:users,email';
+            $rules['password'] = 'required|string|min:8';
+        } else {
+            // Zamiast zabraniać, ignorujemy te pola gdy mamy user_id
+            $rules['email'] = 'sometimes|nullable|email|max:255';
+            $rules['password'] = 'sometimes|nullable|string|min:8';
+        }
+
+        return $rules;
     }
 
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         return [
@@ -61,13 +60,18 @@ class StoreDoctorRequest extends FormRequest
 
             'user_id.exists' => 'Wybrany użytkownik nie istnieje.',
 
-            'email.required_without' => 'Email jest wymagany, gdy nie wybrano istniejącego użytkownika.',
+            'email.required' => 'Email jest wymagany, gdy tworzysz nowego użytkownika dla lekarza.',
             'email.email' => 'Podany adres email jest nieprawidłowy.',
             'email.unique' => 'Ten adres email jest już zajęty.',
+            'email.prohibited' => 'Nie można podać email, gdy wybrano istniejącego użytkownika.',
 
-            'password.required_without' => 'Hasło jest wymagane, gdy nie wybrano istniejącego użytkownika.',
+            'password.required' => 'Hasło jest wymagane, gdy tworzysz nowego użytkownika dla lekarza.',
             'password.string' => 'Hasło musi być tekstem.',
             'password.min' => 'Hasło musi mieć co najmniej 8 znaków.',
+            'password.prohibited' => 'Nie można podać hasła, gdy wybrano istniejącego użytkownika.',
+
+            'procedure_ids.array' => 'Lista zabiegów musi być tablicą.',
+            'procedure_ids.*.exists' => 'Jeden z wybranych zabiegów nie istnieje.',
         ];
     }
 }
