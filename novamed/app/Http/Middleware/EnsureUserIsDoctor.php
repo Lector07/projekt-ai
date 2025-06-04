@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response; // <<< Zmień import
+use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsDoctor
 {
@@ -13,15 +13,13 @@ class EnsureUserIsDoctor
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     * @return \Symfony\Component\HttpFoundation\Response // <<< Zmień typ zwrotny
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next): Response // <<< Zmień typ zwrotny
+    public function handle(Request $request, Closure $next): Response
     {
         if ($request->user() && $request->user()->isDoctor()) {
-            return $next($request); // Przepuść żądanie dalej
+            return $next($request);
         }
 
-        // Jeśli nie jest lekarzem, zwróć błąd 403
-        return response()->json(['message' => 'Forbidden. Doctor access required.'], 403);
-    }
+        return response()->json(['message' => 'Brak dostępu. Wymagany dostęp lekarza.'], 403);    }
 }

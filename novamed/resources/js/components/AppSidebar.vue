@@ -61,6 +61,19 @@ const mainNavItems: NavItem[] = [
     }
 ];
 
+const doctorNavItems: NavItem[] = [
+    {
+        title: 'Panel lekarza',
+        to: { name: 'doctor.dashboard' },
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Moje wizyty',
+        to: { name: 'doctor.appointments.index' },
+        icon: Calendar,
+    }
+];
+
 // Linki administracyjne
 const adminNavItems: NavItem[] = [
     {
@@ -121,6 +134,7 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain v-if="isPatient" :items="mainNavItems" label="Panel pacjenta" class="mt-4"/>
+            <NavMain v-if="isDoctor" :items="doctorNavItems" label="Panel lekarza" class="mt-4"/>
             <NavMain v-if="isAdmin" :items="adminNavItems" label="Administracja" class="mt-4"/>
         </SidebarContent>
 

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne; // Import HasOne dla Doctor
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
 {
@@ -15,7 +15,6 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
-     * Dodano 'role'.
      */
     protected $fillable = [
         'name',
@@ -51,7 +50,6 @@ class User extends Authenticatable
         return $this->hasOne(Doctor::class);
     }
 
-    // --- Metody Pomocnicze do Sprawdzania Ról ---
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

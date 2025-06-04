@@ -105,18 +105,13 @@ class AdminUserController extends Controller
 
     public function updateAvatar(AdminUpdateUserAvatarRequest $request, User $user): UserResource
     {
-        // Zakładam, że AdminUpdateUserAvatarRequest ma podobne reguły jak dla lekarza lub użytkownika
-        // i że polityka autoryzacji jest odpowiednia (np. admin może 'update' użytkownika)
-        $this->authorize('update', $user); // Upewnij się, że UserPolicy@update to obsłuży poprawnie
+        $this->authorize('update', $user);
 
         if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-            // Usuń stary avatar, jeśli istnieje
             if ($user->profile_picture_path) {
                 Storage::disk('public')->delete($user->profile_picture_path);
             }
 
-            // Zapisz nowy avatar
-            // Używamy katalogu 'avatars/users' dla spójności z UserProfileController
             $path = $request->file('avatar')->store('avatars/users', 'public');
             $user->profile_picture_path = $path;
             $user->save();

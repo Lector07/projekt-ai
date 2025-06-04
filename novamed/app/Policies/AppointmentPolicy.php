@@ -12,6 +12,10 @@ class AppointmentPolicy
     {
         return true;
     }
+    public function viewByDoctor(User $user, Appointment $appointment): bool
+    {
+        return $user->isDoctor() && $user->doctor->id === $appointment->doctor_id;
+    }
 
     public function view(User $user, Appointment $appointment): bool
     {

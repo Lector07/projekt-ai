@@ -42,7 +42,7 @@ async function updatePassword() {
     if (successTimeout) clearTimeout(successTimeout);
 
     try {
-        await axios.put('/api/user/password', form.value);
+        await axios.put('/api/v1/user/password', form.value);
 
         recentlySuccessful.value = true;
         form.value.password = '';
