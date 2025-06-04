@@ -209,7 +209,7 @@ onMounted(() => {
                         <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">Zobacz swój pełny kalendarz wizyt i zarządzaj swoją dostępnością.</p>
                         <Button
                             class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary w-full text-white dark:text-gray-900"
-                            @click="router.push({ name: 'doctor.appointments.index' })"
+                            @click="router.push({ name: 'doctor.schedule.events' })"
                         >
                             Przejdź do Grafiku
                         </Button>

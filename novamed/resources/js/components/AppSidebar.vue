@@ -70,8 +70,13 @@ const doctorNavItems: NavItem[] = [
     {
         title: 'Moje wizyty',
         to: { name: 'doctor.appointments.index' },
+        icon: BookOpen,
+    },
+    {
+        title: 'Grafik',
+        to: { name: 'doctor.schedule.events' },
         icon: Calendar,
-    }
+    },
 ];
 
 // Linki administracyjne

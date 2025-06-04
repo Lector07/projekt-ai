@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api\V1\Doctor;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Doctor\UpdateDoctorAppointmentRequest;
+use App\Http\Resources\Api\V1\AppointmentEventResource;
 use App\Http\Resources\Api\V1\AppointmentResource;
 use App\Models\Appointment;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Carbon;
 
 class DoctorAppointmentController extends Controller
 {
@@ -111,5 +113,33 @@ class DoctorAppointmentController extends Controller
         $appointment->save();
 
         return new AppointmentResource($appointment->fresh()->load(['patient', 'procedure']));
+    }
+
+    public function getScheduleEvents(Request $request): AnonymousResourceCollection
+    {
+        $user = $request->user();
+        $doctor = $user->doctor;
+
+        if (!$doctor) {
+            return AppointmentResource::collection(collect());
+        }
+
+        $request->validate([
+            'start' => 'required|date_format:Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vZ,Y-m-d',
+            'end' => 'required|date_format:Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vZ,Y-m-d|after_or_equal:start',
+        ]);
+
+        $start = Carbon::parse($request->input('start'))->startOfDay();
+        $end = Carbon::parse($request->input('end'))->endOfDay();
+
+        $query = Appointment::where('doctor_id', $doctor->id)
+            ->with(['patient:id,name', 'procedure:id,name,duration_minutes'])
+            ->whereBetween('appointment_datetime', [$start, $end])
+            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled_by_clinic']);
+
+        // Dla kalendarza zazwyczaj chcemy wszystkie pasujące zdarzenia, bez paginacji
+        $appointments = $query->orderBy('appointment_datetime', 'asc')->get();
+
+        return AppointmentEventResource::collection($appointments);
     }
 }

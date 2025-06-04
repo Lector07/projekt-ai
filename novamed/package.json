@@ -23,7 +23,16 @@
         "vue-tsc": "^2.2.4"
     },
     "dependencies": {
+        "@fullcalendar/core": "^6.1.17",
+        "@fullcalendar/daygrid": "^6.1.17",
+        "@fullcalendar/interaction": "^6.1.17",
+        "@fullcalendar/list": "^6.1.17",
+        "@fullcalendar/timegrid": "^6.1.17",
+        "@fullcalendar/vue3": "^6.1.17",
         "@primeuix/themes": "^1.1.1",
+        "@schedule-x/theme-default": "^2.32.0",
+        "@schedule-x/translations": "^2.32.0",
+        "@schedule-x/vue": "^2.30.0",
         "@tailwindcss/vite": "^4.1.4",
         "@tanstack/vue-table": "^8.21.3",
         "@vitejs/plugin-vue": "^5.2.1",

@@ -28,6 +28,7 @@ import BookAppointmentPage from '@/pages/Patient/Appointments/BookAppointment.vu
 import DashboardDoctorPage from "@/pages/Doctor/DashboardDoctor.vue";
 import DoctorAppointmentPage from "@/pages/Doctor/Appointments/DoctorAppointmentsListPage.vue";
 import DoctorAppointmentDetailPage from "@/pages/Doctor/Appointments/DoctorAppointmentDetailPage.vue";
+import DoctorScheduleEventPage from "@/pages/Doctor/Schedule/DoctorSchedulePage.vue";
 
 
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -113,6 +114,12 @@ const doctorRoutes: Array<RouteRecordRaw> = [
         component: DoctorAppointmentDetailPage,
         props: true,
         meta: { title: 'Szczegóły Wizyty', requiresAuth: true, requiresDoctor: true }
+    },
+    {
+        path: '/doctor/schedule/events',
+        name: 'doctor.schedule.events',
+        component: DoctorScheduleEventPage,
+        meta: { title: 'Zarządzanie Grafikiem', requiresAuth: true, requiresDoctor: true }
     },
     // Tutaj możesz dodać inne trasy dla lekarza, np.:
     // { path: '/doctor/appointments', name: 'doctor.appointments.index', component: ..., meta: { requiresAuth: true, requiresDoctor: true } },

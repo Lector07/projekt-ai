@@ -47,6 +47,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
                 Route::get('/appointments', [V1\Doctor\DoctorAppointmentController::class, 'index'])->name('appointments.index');
                 Route::get('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'show'])->name('appointments.show');
                 Route::put('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'update'])->name('appointments.update');
+                Route::get('/schedule/events', [V1\Doctor\DoctorAppointmentController::class, 'getScheduleEvents'])
+                    ->name('schedule.events');
             });
     });
 });

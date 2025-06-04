@@ -18,6 +18,7 @@ class Procedure extends Model
         'base_price',
         'procedure_category_id',
         'recovery_timeline_info',
+        'duration_minutes',
     ];
 
     public function category(): BelongsTo
