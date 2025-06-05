@@ -7,6 +7,7 @@ import router from './router';
 import { createPinia } from 'pinia';
 import './services/axios';
 import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
 
 
 if (localStorage.getItem('appearance') === 'dark' ||
@@ -24,6 +25,7 @@ app.use(pinia);
 app.use(router);
 app.use(PrimeVue);
 app.use(ToastService);
+app.use(ConfirmationService);
 
 
 app.mount('#app');

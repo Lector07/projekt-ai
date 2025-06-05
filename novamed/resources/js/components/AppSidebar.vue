@@ -12,7 +12,20 @@ import {
     SidebarMenuItem
 } from '@/components/ui/sidebar';
 import {type NavItem} from '@/types';
-import {BookOpen, Folder, LayoutGrid, Slice, Contact, LayoutDashboard, ChartArea , Users, Stethoscope, ClipboardList, Calendar} from 'lucide-vue-next';
+import {
+    BookOpen,
+    Folder,
+    LayoutGrid,
+    Slice,
+    Contact,
+    LayoutDashboard,
+    ChartArea,
+    Users,
+    Stethoscope,
+    ClipboardList,
+    Calendar,
+    UserRoundPen
+} from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 import { useAuthStore } from '@/stores/auth';
 import { computed } from 'vue';
@@ -63,7 +76,7 @@ const mainNavItems: NavItem[] = [
 
 const doctorNavItems: NavItem[] = [
     {
-        title: 'Panel lekarza',
+        title: 'Przegląd dnia',
         to: { name: 'doctor.dashboard' },
         icon: LayoutDashboard,
     },
@@ -76,6 +89,11 @@ const doctorNavItems: NavItem[] = [
         title: 'Grafik',
         to: { name: 'doctor.schedule.events' },
         icon: Calendar,
+    },
+    {
+        title: 'Edytuj swój profil',
+        to: {name: 'doctor.profile.show'},
+        icon: UserRoundPen,
     },
 ];
 

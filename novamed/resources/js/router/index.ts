@@ -29,6 +29,7 @@ import DashboardDoctorPage from "@/pages/Doctor/DashboardDoctor.vue";
 import DoctorAppointmentPage from "@/pages/Doctor/Appointments/DoctorAppointmentsListPage.vue";
 import DoctorAppointmentDetailPage from "@/pages/Doctor/Appointments/DoctorAppointmentDetailPage.vue";
 import DoctorScheduleEventPage from "@/pages/Doctor/Schedule/DoctorSchedulePage.vue";
+import ErrorPage from "@/components/ErrorPage.vue";
 
 
 const adminRoutes: Array<RouteRecordRaw> = [
@@ -120,6 +121,12 @@ const doctorRoutes: Array<RouteRecordRaw> = [
         name: 'doctor.schedule.events',
         component: DoctorScheduleEventPage,
         meta: { title: 'Zarządzanie Grafikiem', requiresAuth: true, requiresDoctor: true }
+    },
+    {
+          path: '/doctor/profile',
+            name: 'doctor.profile.show',
+            component: () => import('@/pages/Doctor/Profile/DoctorProfileSettingsPage.vue'),
+            meta: { title: 'Profil Lekarza', requiresAuth: true, requiresDoctor: true }
     },
     // Tutaj możesz dodać inne trasy dla lekarza, np.:
     // { path: '/doctor/appointments', name: 'doctor.appointments.index', component: ..., meta: { requiresAuth: true, requiresDoctor: true } },
@@ -246,6 +253,92 @@ const routes: Array<RouteRecordRaw> = [
         component: BookAppointmentPage, // Użyj poprawnej nazwy komponentu
         meta: {title: 'Rezerwacja Wizyty', requiresAuth: true}
     },
+    {
+        path: '/400',
+        name: 'BadRequest',
+        component: ErrorPage,
+        props: {
+            code: 400,
+            title: 'Nieprawidłowe żądanie',
+            message: 'Serwer nie może przetworzyć tego żądania z powodu błędnej składni.'
+        }
+    },
+    {
+        path: '/401',
+        name: 'Unauthorized',
+        component: ErrorPage,
+        props: {
+            code: 401,
+            title: 'Nieautoryzowany dostęp',
+            message: 'Nie masz uprawnień do wyświetlenia tej strony. Zaloguj się, aby kontynuować.'
+        }
+    },
+    {
+        path: '/403',
+        name: 'Forbidden',
+        component: ErrorPage,
+        props: {
+            code: 403,
+            title: 'Dostęp zabroniony',
+            message: 'Nie masz uprawnień do dostępu do tego zasobu.'
+        }
+    },
+    {
+        path: '/404',
+        name: 'NotFound',
+        component: ErrorPage,
+        props: {
+            code: 404,
+            title: 'Strona nie znaleziona',
+            message: 'Przepraszamy, ale strona której szukasz nie istnieje lub została przeniesiona.'
+        }
+    },
+    {
+        path: '/405',
+        name: 'MethodNotAllowed',
+        component: ErrorPage,
+        props: {
+            code: 405,
+            title: 'Niedozwolona metoda',
+            message: 'Metoda użyta w żądaniu nie jest obsługiwana dla tego zasobu.'
+        }
+    },
+    {
+        path: '/419',
+        name: 'PageExpired',
+        component: ErrorPage,
+        props: {
+            code: 419,
+            title: 'Strona wygasła',
+            message: 'Twoja sesja wygasła. Odśwież stronę i spróbuj ponownie.'
+        }
+    },
+    {
+        path: '/500',
+        name: 'ServerError',
+        component: ErrorPage,
+        props: {
+            code: 500,
+            title: 'Błąd serwera',
+            message: 'Przepraszamy, wystąpił wewnętrzny błąd serwera.'
+        }
+    },
+    {
+        path: '/503',
+        name: 'ServiceUnavailable',
+        component: ErrorPage,
+        props: {
+            code: 503,
+            title: 'Usługa niedostępna',
+            message: 'Przepraszamy, serwis jest obecnie w trybie konserwacji. Spróbuj ponownie później.'
+        }
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/404'
+    },
+
+
     ...adminRoutes,
     ...doctorRoutes // <<< --- DODAJ TRASY LEKARZA DO GŁÓWNEJ TABLICY
 ];

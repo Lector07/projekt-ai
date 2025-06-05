@@ -67,6 +67,7 @@ const statusOptions = [
     { value: 'completed', label: 'Zakończone' },
     {value: 'confirmed', label: 'Potwierdzone'},
     { value: 'cancelled', label: 'Anulowane' },
+    {value: 'canceled_by_clinic', label: 'Anulowane przez klinikę'},
     { value: 'no_show', label: 'Nieobecność' },
 ];
 
@@ -79,17 +80,18 @@ const sortOptions = [
 ];
 
 // Status z kolorami
-const getStatusInfo = (status: string) => {
-    const statusMap = {
-        scheduled: { text: 'Zaplanowana', variant: 'default' },
-        in_progress: { text: 'W trakcie', variant: 'warning' },
-        confirmed: { text: 'Potwierdzona', variant: 'defoult' },
-        completed: { text: 'Zakończona', variant: 'success' },
+const getStatusInfo = (status: string): { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
+    const statusMap: Record<string, { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+        scheduled: { text: 'Zaplanowana', variant: 'secondary' },
+        in_progress: { text: 'W trakcie', variant: 'secondary' },
+        confirmed: { text: 'Potwierdzona', variant: 'default' },
+        completed: { text: 'Zakończona', variant: 'default' },
         cancelled: { text: 'Anulowana', variant: 'destructive' },
+        cancelled_by_clinic: { text: 'Anulowana przez klinikę', variant: 'destructive' },
         no_show: { text: 'Nieobecność', variant: 'destructive' },
     };
 
-    return statusMap[status as keyof typeof statusMap] || { text: 'Nieznany', variant: 'secondary' };
+    return statusMap[status] || { text: 'Nieznany', variant: 'secondary' };
 };
 
 // Formatowanie daty

@@ -18,34 +18,33 @@ class DoctorProfileController extends Controller
     /**
      * Wyświetl profil zalogowanego lekarza.
      */
-    public function show(Request $request): JsonResponse|DoctorResource
+    public function show(Request $request): DoctorResource
     {
-        $doctor = $request->user()?->doctor;
-
-        if (!$doctor) {
-            return response()->json(['message' => 'Profil lekarza nie znaleziony lub nie jesteś lekarzem.'], 404);
-        }
-
-        $this->authorize('view', $doctor);
-
+        $doctor = $request->user()->doctor()->with(['user', 'procedures'])->firstOrFail(); // Pobierz profil Doctor i załaduj procedury
         return new DoctorResource($doctor);
     }
 
     /**
      */
-    public function update(UpdateDoctorProfileRequest $request): JsonResponse|DoctorResource
+    public function update(UpdateDoctorProfileRequest $request): DoctorResource
     {
-        $doctor = $request->user()?->doctor;
-
+        $doctor = $request->user()->doctor;
         if (!$doctor) {
-            return response()->json(['message' => 'Profil lekarza nie znaleziony lub nie jesteś lekarzem.'], 404);
+            return response()->json(['message' => 'Profil lekarza nie znaleziony'], 404); // Chociaż middleware powinno to wyłapać
         }
 
-        $this->authorize('update', $doctor);
+        $validated = $request->validated();
 
-        $doctor->update($request->validated());
+        $doctorDataToUpdate = collect($validated)->except('procedure_ids')->toArray();
+        if (!empty($doctorDataToUpdate)) {
+            $doctor->update($doctorDataToUpdate);
+        }
 
-        return new DoctorResource($doctor->fresh());
+        if ($request->has('procedure_ids')) {
+            $doctor->procedures()->sync($validated['procedure_ids'] ?? []);
+        }
+
+        return new DoctorResource($doctor->fresh()->load('user', 'procedures'));
     }
 
     /**
@@ -73,5 +72,25 @@ class DoctorProfileController extends Controller
         }
 
         return new DoctorResource($doctor->fresh());
+    }
+
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $doctor = $user?->doctor;
+        if (!$doctor) {
+            return response()->json(['message' => 'Profil lekarza nie znaleziony lub nie jesteś lekarzem.'], 404);
+        }
+
+
+        if ($doctor->profile_picture_path) {
+            Storage::disk('public')->delete($doctor->profile_picture_path);
+            $doctor->profile_picture_path = null;
+            $doctor->save();
+
+            return response()->json(['message' => 'Zdjęcie profilowe zostało usunięte.', 'profile_picture_url' => null]);
+        }
+
+        return response()->json(['message' => 'Brak zdjęcia profilowego do usunięcia.'], 404);
     }
 }

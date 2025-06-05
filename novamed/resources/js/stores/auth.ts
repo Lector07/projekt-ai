@@ -15,23 +15,13 @@ const fetchUserData = async (): Promise<User | null> => {
             }
         });
 
-        console.log('auth.ts - Odpowiedź z API w fetchUserData:', response.data);
-
-        // Sprawdzamy, czy odpowiedź to nie HTML (na wypadek błędów przekierowań itp.)
         if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-            console.error('auth.ts - API zwróciło HTML zamiast danych JSON.');
             return null;
         }
 
-        // Laravel Resource dla pojedynczego obiektu domyślnie opakowuje go w klucz 'data'
         if (response.data && response.data.data && typeof response.data.data === 'object') {
-            console.log('auth.ts - Zwracam response.data.data z fetchUserData.');
-            return response.data.data as User; // Zwracamy obiekt użytkownika znajdujący się pod kluczem 'data'
+            return response.data.data as User;
         } else {
-            // Jeśli z jakiegoś powodu struktura jest inna (np. API zwraca bezpośrednio obiekt Usera bez opakowania 'data')
-            // To jest mniej prawdopodobne, jeśli używasz standardowego UserResource dla pojedynczego zasobu.
-            console.warn('auth.ts - Nieoczekiwana struktura danych użytkownika (brak opakowania "data"), próba zwrócenia response.data:', response.data);
-            // Jeśli jesteś pewien, że czasem API może zwrócić "płaski" obiekt użytkownika, możesz to obsłużyć:
             // if (response.data && typeof response.data === 'object' && response.data.id) { // Proste sprawdzenie czy to obiekt Usera
             //     return response.data as User;
             // }

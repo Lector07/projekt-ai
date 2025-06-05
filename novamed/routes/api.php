@@ -28,6 +28,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('user.profile.show');
         Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('user.profile.update');
         Route::post('/user/profile/avatar', [V1\UserProfileController::class, 'updateAvatar'])->name('user.profile.avatar.update');
+        Route::delete('/user/profile/avatar', [V1\UserProfileController::class, 'deleteAvatar'])->name('user.profile.avatar.delete');
         Route::put('/user/password', [V1\UserProfileController::class, 'updatePassword'])->name('user.password.update');
         Route::delete('/user/profile', [V1\UserProfileController::class, 'destroy'])->name('user.profile.destroy');
 
@@ -44,11 +45,13 @@ Route::prefix('v1')->name('v1.')->group(function () {
                 Route::get('/profile', [V1\Doctor\DoctorProfileController::class, 'show'])->name('profile.show');
                 Route::put('/profile', [V1\Doctor\DoctorProfileController::class, 'update'])->name('profile.update');
                 Route::post('/profile/avatar', [V1\Doctor\DoctorProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+                Route::delete('/profile/avatar', [V1\Doctor\DoctorProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
                 Route::get('/appointments', [V1\Doctor\DoctorAppointmentController::class, 'index'])->name('appointments.index');
                 Route::get('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'show'])->name('appointments.show');
                 Route::put('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'update'])->name('appointments.update');
                 Route::get('/schedule/events', [V1\Doctor\DoctorAppointmentController::class, 'getScheduleEvents'])
                     ->name('schedule.events');
+                Route::apiResource('/procedures', Admin\AdminProcedureController::class)->names('procedures');
             });
     });
 });

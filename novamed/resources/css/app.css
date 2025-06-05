@@ -151,6 +151,44 @@
     --p-select-hover-border-color: #d1d5db;
     --p-select-overlay-border-radius: 0.375rem;
     --p-select-option-border-radius: 0.25rem;
+
+
+    --sx-color-primary: theme('colors.blue.500');
+    --sx-color-primary-variant: theme('colors.blue.600');
+    --sx-color-secondary: theme('colors.gray.500');
+    --sx-color-secondary-variant: theme('colors.gray.600');
+    --sx-color-surface: theme('colors.white');
+    --sx-color-surface-variant: theme('colors.gray.100');
+    --sx-color-on-primary: theme('colors.white');
+    --sx-color-on-secondary: theme('colors.white');
+    --sx-color-on-surface: theme('colors.gray.900');
+    --sx-color-on-surface-variant: theme('colors.gray.600');
+    --sx-color-background: theme('colors.gray.50');
+    --sx-color-on-background: theme('colors.gray.900');
+    --sx-color-error: theme('colors.red.500');
+    --sx-color-on-error: theme('colors.white');
+    --sx-border-radius-small: 0.25rem;    /* rounded-sm */
+    --sx-border-radius-medium: 0.375rem; /* rounded-md */
+    --sx-border-radius-large: 0.5rem;    /* rounded-lg */
+    --sx-font-family: inherit; /* Użyj fontu z Tailwind */
+
+    --fc-border-color: #e5e7eb;
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgba(17, 24, 39, 0.02);
+    --fc-today-bg-color: rgba(59, 130, 246, 0.08);
+    --fc-now-indicator-color: #3b82f6;
+    --fc-event-border-color: #3b82f6;
+    --fc-event-bg-color: #3b82f6;
+    --fc-event-text-color: #ffffff;
+    --fc-highlight-color: rgba(59, 130, 246, 0.1);
+    --fc-event-selected-overlay-color: rgba(59, 130, 246, 0.25);
+    --fc-button-text-color: #ffffff;
+    --fc-button-bg-color: #3b82f6;
+    --fc-button-border-color: #3b82f6;
+    --fc-button-hover-bg-color: #2563eb;
+    --fc-button-hover-border-color: #2563eb;
+    --fc-button-active-bg-color: #2563eb;
+    --fc-button-active-border-color: #2563eb;
 }
 
 
@@ -189,6 +227,36 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
   --sidebar:
     hsl(240 5.9% 10%);
+
+    --sx-color-primary: theme('colors.blue.500'); /* Możesz chcieć inny kolor dla dark mode, np. nova-accent */
+    --sx-color-primary-variant: theme('colors.blue.400');
+    --sx-color-secondary: theme('colors.gray.400');
+    --sx-color-secondary-variant: theme('colors.gray.500');
+    --sx-color-surface: theme('colors.gray.800');
+    --sx-color-surface-variant: theme('colors.gray.700');
+    --sx-color-on-primary: theme('colors.white');
+    --sx-color-on-secondary: theme('colors.gray.100');
+    --sx-color-on-surface: theme('colors.gray.100');
+    --sx-color-on-surface-variant: theme('colors.gray.300');
+    --sx-color-background: theme('colors.gray.900');
+    --sx-color-on-background: theme('colors.gray.100');
+    --sx-color-error: theme('colors.red.400');
+
+    --fc-border-color: rgba(255, 255, 255, 0.1);
+    --fc-neutral-bg-color: rgba(255, 255, 255, 0.03);
+    --fc-today-bg-color: rgba(139, 92, 246, 0.15);
+    --fc-now-indicator-color: #8b5cf6;
+    --fc-event-border-color: #8b5cf6;
+    --fc-event-bg-color: #8b5cf6;
+    --fc-highlight-color: rgba(139, 92, 246, 0.15);
+    --fc-event-selected-overlay-color: rgba(139, 92, 246, 0.25);
+    --fc-button-bg-color: #8b5cf6;
+    --fc-button-border-color: #8b5cf6;
+    --fc-button-hover-bg-color: #6d28d9;
+    --fc-button-hover-border-color: #6d28d9;
+    --fc-button-active-bg-color: #6d28d9;
+    --fc-button-active-border-color: #6d28d9;
+    color-scheme: dark;
 }
 
 @layer base {
@@ -212,4 +280,321 @@
   body {
     @apply bg-background text-foreground;
   }
+
+    /* Kontener kalendarza */
+    .fc {
+        font-family: inherit;
+        background-color: transparent;
+    }
+
+    /* Pasek narzędzi */
+    .fc .fc-toolbar {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem !important;
+        padding: 0.5rem 0;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: rgb(31, 41, 55);
+    }
+
+    .dark .fc .fc-toolbar-title {
+        color: rgb(243, 244, 246);
+    }
+
+    /* Przyciski */
+    .fc .fc-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition-property: color, background-color, border-color, box-shadow;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+    }
+
+    .fc .fc-button-primary {
+        background-color: var(--fc-button-bg-color);
+        border-color: var(--fc-button-border-color);
+        color: var(--fc-button-text-color);
+        text-transform: capitalize;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: var(--fc-button-hover-bg-color);
+        border-color: var(--fc-button-hover-border-color);
+    }
+
+    .fc .fc-button-primary:focus {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    }
+
+    .dark .fc .fc-button-primary:focus {
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4);
+    }
+
+    .fc .fc-button-primary:not(:disabled):active,
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: var(--fc-button-active-bg-color);
+        border-color: var(--fc-button-active-border-color);
+    }
+
+    .fc .fc-button-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Nagłówki */
+    .fc th {
+        padding: 0.75rem 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: rgb(75, 85, 99);
+    }
+
+    .dark .fc th {
+        color: rgb(209, 213, 219);
+    }
+
+    /* Komórki i dni */
+    .fc td {
+        border-color: var(--fc-border-color);
+    }
+
+    .fc .fc-day {
+        background-color: transparent;
+        transition: background-color 0.2s;
+    }
+
+    .fc .fc-day:hover {
+        background-color: var(--fc-neutral-bg-color);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: var(--fc-today-bg-color);
+    }
+
+    .fc .fc-timegrid-col.fc-day-today {
+        background-color: var(--fc-today-bg-color);
+    }
+
+    .fc .fc-daygrid-day-number,
+    .fc .fc-col-header-cell-cushion {
+        padding: 0.5rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .fc .fc-daygrid-day-number:hover,
+    .fc .fc-col-header-cell-cushion:hover {
+        color: var(--fc-button-bg-color);
+    }
+
+    /* Wydarzenia */
+    .fc .fc-event {
+        border-radius: 0.25rem;
+        border-width: 0;
+        border-left-width: 3px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        background-color: var(--fc-event-bg-color);
+        border-color: var(--fc-event-border-color);
+    }
+
+    .fc .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .fc .fc-event-title {
+        font-weight: 600;
+    }
+
+    .fc .fc-event-time {
+        font-size: 0.75rem;
+        opacity: 0.9;
+    }
+
+    /* Wskaźnik aktualnego czasu */
+    .fc .fc-timegrid-now-indicator-line {
+        border-color: var(--fc-now-indicator-color);
+        border-width: 2px;
+    }
+
+    .fc .fc-timegrid-now-indicator-arrow {
+        border-color: var(--fc-now-indicator-color);
+        border-width: 5px;
+    }
+
+    /* Widok listy */
+    .fc .fc-list {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .fc .fc-list-day-cushion {
+        background-color: var(--fc-neutral-bg-color);
+    }
+
+    .fc .fc-list-event:hover td {
+        background-color: var(--fc-neutral-bg-color);
+    }
+
+    /* Oś czasu */
+    .fc .fc-timegrid-slot {
+        height: 3rem;
+    }
+
+    .fc .fc-timegrid-axis {
+        color: rgb(107, 114, 128);
+    }
+
+    .dark .fc .fc-timegrid-axis {
+        color: rgb(156, 163, 175);
+    }
+
+    /* Responsywność na małych ekranach */
+    @media (max-width: 768px) {
+        .fc .fc-toolbar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .fc .fc-toolbar-chunk {
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .fc .fc-button {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        .fc .fc-timegrid-slot {
+            height: 2.5rem;
+        }
+    }
+
+}
+
+.p-confirmpopup {
+    background: white;
+    color: #333;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Tryb ciemny */
+.dark .p-confirmpopup {
+    background: #1f2937;
+    color: #f3f4f6;
+    border-color: #374151;
+}
+
+.p-confirmpopup-content {
+    padding: 1rem;
+}
+
+.p-confirmpopup-icon {
+    color: var(--nova-primary, #4f46e5);
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.dark .p-confirmpopup-icon {
+    color: var(--nova-accent, #818cf8);
+}
+
+.p-confirmpopup-message {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #374151;
+}
+
+.dark .p-confirmpopup-message {
+    color: #e5e7eb;
+}
+
+.p-confirmpopup-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+.dark .p-confirmpopup-footer {
+    background: #111827;
+    border-color: #374151;
+}
+
+.p-confirmpopup-accept-button {
+    background: var(--nova-primary, #4f46e5) !important;
+    border-color: var(--nova-primary, #4f46e5) !important;
+    color: white !important;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.p-confirmpopup-accept-button:hover {
+    background: var(--nova-accent, #818cf8) !important;
+    border-color: var(--nova-accent, #818cf8) !important;
+}
+
+.dark .p-confirmpopup-accept-button {
+    background: var(--nova-light, #818cf8) !important;
+    border-color: var(--nova-light, #818cf8) !important;
+}
+
+.dark .p-confirmpopup-accept-button:hover {
+    background: var(--nova-accent, #6366f1) !important;
+    border-color: var(--nova-accent, #6366f1) !important;
+}
+
+.p-confirmpopup-reject-button {
+    background: transparent !important;
+    border-color: #d1d5db !important;
+    color: #6b7280 !important;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.p-confirmpopup-reject-button:hover {
+    background: #f3f4f6 !important;
+    border-color: #9ca3af !important;
+    color: #4b5563 !important;
+}
+
+.dark .p-confirmpopup-reject-button {
+    border-color: #374151 !important;
+    color: #9ca3af !important;
+}
+
+.dark .p-confirmpopup-reject-button:hover {
+    background: #1f2937 !important;
+    border-color: #4b5563 !important;
+    color: #e5e7eb !important;
 }

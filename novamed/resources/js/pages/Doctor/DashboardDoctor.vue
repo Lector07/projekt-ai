@@ -18,8 +18,8 @@ const doctorName = computed(() => authStore.user?.name || 'Lekarzu');
 
 interface AppointmentInfo {
     id: number;
-    time: string; // HH:MM
-    datetime: string; // Pełna data ISO
+    time: string;
+    datetime: string;
     patient_name: string;
     procedure_name: string;
     status: string;
@@ -30,7 +30,7 @@ const tomorrowsAppointments = ref<AppointmentInfo[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Panel Lekarza' }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Przegląd dnia' }];
 
 async function fetchDashboardData() {
     loading.value = true;
@@ -40,8 +40,6 @@ async function fetchDashboardData() {
         if (response.data && response.data.data) {
             todaysAppointments.value = response.data.data.todays_appointments || [];
             tomorrowsAppointments.value = response.data.data.tomorrows_appointments || [];
-            // Możesz odczytać też doctor_name, jeśli backend go zwraca, zamiast z authStore
-            // doctorName.value = response.data.data.doctor_name || 'Lekarzu';
         } else {
             throw new Error('Niekompletne dane z API');
         }
@@ -53,21 +51,19 @@ async function fetchDashboardData() {
     }
 }
 
-const formatTime = (timeStr: string) => timeStr; // Zakładamy, że API zwraca już HH:MM
-
 const getStatusInfo = (
     status: string,
 ): {
     text: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' | 'info';
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
 } => {
     switch (status) {
         case 'scheduled':
-            return { text: 'Zaplanowana', variant: 'warning' }; // Żółty dla zaplanowanej
+            return { text: 'Zaplanowana', variant: 'secondary' };
         case 'confirmed':
-            return { text: 'Potwierdzona', variant: 'success' }; // Zielony dla potwierdzonej
+            return { text: 'Potwierdzona', variant: 'default' };
         case 'completed':
-            return { text: 'Zakończona', variant: 'default' }; // Domyślny (np. niebieski/szary)
+            return { text: 'Zakończona', variant: 'default' };
         case 'cancelled_by_patient':
             return { text: 'Odwołana (Pacjent)', variant: 'destructive' };
         case 'cancelled_by_clinic':
@@ -80,9 +76,9 @@ const getStatusInfo = (
 };
 
 const navigateToAppointmentDetails = (appointmentId: number) => {
-    // Upewnij się, że masz trasę dla szczegółów wizyty lekarza
-    router.push({ name: 'doctor.appointments.show', params: { appointment: appointmentId } });
+    router.push({ name: 'doctor.appointments.show', params: { id: appointmentId } });
 };
+
 
 onMounted(() => {
     fetchDashboardData();
@@ -135,7 +131,10 @@ onMounted(() => {
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <p class="font-semibold text-gray-800 dark:text-gray-100">{{ appt.time }} - {{ appt.patient_name }}</p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ appt.procedure_name }}</p>
+                                        <p
+                                            class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-nova-accent dark:hover:text-blue-400"
+                                            @click.stop="navigateToAppointmentDetails(appt.id)"
+                                        >{{ appt.procedure_name }}</p>
                                     </div>
                                     <Badge :variant="getStatusInfo(appt.status).variant" class="text-xs">
                                         {{ getStatusInfo(appt.status).text }}

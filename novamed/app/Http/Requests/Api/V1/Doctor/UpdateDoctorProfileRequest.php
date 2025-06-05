@@ -30,19 +30,12 @@ class UpdateDoctorProfileRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Lekarz może aktualizować tylko niektóre pola swojego profilu Doctor.
-        // 'first_name' i 'last_name' są zazwyczaj w modelu User i edytowane przez UserProfileController.
-        // 'user_id' jest niezmienne po utworzeniu.
         return [
-            'specialization' => ['sometimes', 'required', 'string', 'max:255'], // 'sometimes' jeśli aktualizacja jest opcjonalna
-            'bio' => ['sometimes', 'nullable', 'string', 'max:2000'],
-            'price_modifier' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9.99'], // Max np. 999%
-            // Możesz dodać tu walidację dla 'profile_picture', gdy będziesz implementować upload
-            // 'profile_picture' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
-            // Walidacja dla ewentualnego grafiku dostępności (bardziej złożona)
-            // 'availability.monday' => ['nullable', 'array'],
-            // 'availability.monday.*' => ['string', 'regex:/^\d{2}:\d{2}-\d{2}:\d{2}$/'], // np. 09:00-17:00
-            // ... analogicznie dla innych dni ...
+            'bio' => 'nullable|string|max:2000',
+            'specialization' => 'sometimes|required|string|max:255', // Jeśli lekarz może zmieniać
+            'procedure_ids' => 'nullable|array',
+            'procedure_ids.*' => 'integer|exists:procedures,id',
+            // Inne pola, które lekarz może edytować
         ];
     }
 

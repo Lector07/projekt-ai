@@ -104,4 +104,26 @@ class UserProfileController extends Controller
 
         return new UserResource($user->fresh());
     }
+
+    /**
+     * Delete the authenticated user's avatar.
+     */
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $this->authorize('update', $user);
+
+        if ($user->profile_picture_path) {
+            Storage::disk('public')->delete($user->profile_picture_path);
+            $user->profile_picture_path = null;
+            $user->save();
+
+            return response()->json([
+                'message' => 'Zdjęcie profilowe zostało usunięte.',
+                'avatar' => null
+            ]);
+        }
+
+        return response()->json(['message' => 'Brak zdjęcia profilowego do usunięcia.'], 404);
+    }
 }
