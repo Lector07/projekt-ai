@@ -15,19 +15,14 @@ class AppointmentFactory extends Factory
 
     public function definition(): array
     {
-        // Znajdź losowego użytkownika z rolą 'patient'
         $patient = User::where('role', 'patient')->inRandomOrder()->first();
 
-        // Znajdź losowego lekarza
         $doctor = Doctor::inRandomOrder()->first();
 
-        // Znajdź losową procedurę
         $procedure = Procedure::inRandomOrder()->first();
 
-        // Ustaw losową datę w zakresie od teraz do +30 dni
         $appointmentDate = Carbon::now()->addDays(rand(1, 30))->format('Y-m-d');
-        // Losowa godzina między 8:00 a 16:00 z krokiem co 30 minut
-        $appointmentHour = rand(8, 16);
+        $appointmentHour = rand(9, 16);
         $appointmentMinute = rand(0, 1) * 30;
         $appointmentTime = sprintf('%02d:%02d:00', $appointmentHour, $appointmentMinute);
         $appointmentDateTime = $appointmentDate . ' ' . $appointmentTime;
@@ -37,7 +32,7 @@ class AppointmentFactory extends Factory
             'doctor_id' => $doctor->id,
             'procedure_id' => $procedure->id,
             'appointment_datetime' => $appointmentDateTime,
-            'status' => $this->faker->randomElement(['scheduled', 'completed', 'cancelled', 'no_show']),
+            'status' => $this->faker->randomElement(['scheduled', 'completed', 'cancelled', 'no_show', 'cancelled_by_clinic']),
             'patient_notes' => fake()->optional(0.3)->sentence(),
             'admin_notes' => fake()->optional(0.2)->sentence(),
         ];

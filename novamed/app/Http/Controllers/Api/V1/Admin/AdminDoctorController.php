@@ -76,9 +76,9 @@ class AdminDoctorController extends Controller
                 $user->name = $validated['first_name'] . ' ' . $validated['last_name'];
                 $user->email = $validated['email'];
                 $user->password = Hash::make($validated['password']);
+                $user->role = 'doctor';
                 $user->save();
 
-                $user->assignRole('doctor');
                 $doctor->user()->associate($user);
             }
 
@@ -144,6 +144,19 @@ class AdminDoctorController extends Controller
 
             $path = $request->file('avatar')->store('avatars/doctors', 'public');
             $doctor->profile_picture_path = $path;
+            $doctor->save();
+        }
+
+        return new DoctorResource($doctor->fresh()->load(['user', 'procedures']));
+    }
+
+    public function deleteAvatar(Doctor $doctor): DoctorResource
+    {
+        $this->authorize('update', $doctor);
+
+        if ($doctor->profile_picture_path) {
+            Storage::disk('public')->delete($doctor->profile_picture_path);
+            $doctor->profile_picture_path = null;
             $doctor->save();
         }
 

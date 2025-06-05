@@ -108,8 +108,10 @@ const statuses = [
     {value: '', label: 'Wszystkie statusy'},
     {value: 'scheduled', label: 'Zarezerwowana'},
     {value: 'completed', label: 'Zakończona'},
+    {value: 'confirmed', label: 'Potwierdzona'},
     {value: 'cancelled', label: 'Anulowana'},
-    {value: 'cancelled_by_patient', label: 'Anulowano przez pacjenta'}, // Dodana opcja
+    {value: 'cancelled_by_patient', label: 'Anulowano przez pacjenta'},
+    {value: 'cancelled_by_clinic', label: 'Anulowano przez klinikę'},
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
@@ -139,8 +141,8 @@ const handleApiResponse = (response: any, entityName: string) => {
 const loadPatients = async () => {
     patientsLoading.value = true;
     try {
-        const response = await axios.get('/api/v1/admin/patients');
-        allPatients.value = handleApiResponse(response, 'pacjentów');
+        const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000');
+        allPatients.value = response.data?.data || [];
         console.log('Załadowano pacjentów:', allPatients.value.length);
     } catch (error) {
         console.error('Błąd podczas pobierania pacjentów:', error);
@@ -166,67 +168,20 @@ const loadDoctors = async () => {
     }
 };
 
-// Funkcje wyszukiwania
-// Funkcje wyszukiwania
-const searchPatients = () => {
-    if (!allPatients.value || allPatients.value.length === 0) {
-        showPatientResults.value = false;
-        return;
-    }
-
-    if (patientSearchQuery.value.length >= 2) {
-        filteredPatients.value = allPatients.value.filter(patient =>
-            patient.name.toLowerCase().includes(patientSearchQuery.value.toLowerCase())
-        );
-        showPatientResults.value = true;
-    } else {
-        showPatientResults.value = false;
-    }
-};
-
-const searchDoctors = () => {
-    if (!allDoctors.value || allDoctors.value.length === 0) {
-        showDoctorResults.value = false;
-        return;
-    }
-
-    if (doctorSearchQuery.value.length >= 2) {
-        filteredDoctors.value = allDoctors.value.filter(doctor =>
-            doctor.name.toLowerCase().includes(doctorSearchQuery.value.toLowerCase())
-        );
-        showDoctorResults.value = true;
-    } else {
-        showDoctorResults.value = false;
-    }
-};
-
-// Funkcje wyboru
-const selectPatient = (patient: Patient) => {
-    selectedAppointment.value.patient = patient;
-    selectedAppointment.value.patient_id = patient.id;
-    patientSearchQuery.value = '';
-    showPatientResults.value = false;
-};
-
-const selectDoctor = (doctor: Doctor) => {
-    selectedAppointment.value.doctor = doctor;
-    selectedAppointment.value.doctor_id = doctor.id;
-    doctorSearchQuery.value = '';
-    showDoctorResults.value = false;
-};
 
 const statusOptions = [
     {value: 'scheduled', label: 'Zarezerwowana'},
     {value: 'completed', label: 'Zakończona'},
     {value: 'cancelled', label: 'Anulowana'},
+    {value: 'confirmed', label: 'Potwierdzona'},
     {value: 'cancelled_by_patient', label: 'Anulowana przez pacjenta'},
+    {value: 'cancelled_by_clinic', label: 'Anulowana przez klinikę'},
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
 const procedures = ref<{ id: number, name: string }[]>([]);
 const proceduresLoading = ref(false);
 
-// Dodaj funkcję ładowania procedur
 const loadProcedures = async () => {
     proceduresLoading.value = true;
     try {
@@ -251,7 +206,6 @@ const selectedDate = ref<DateValue | undefined>(undefined);
 
 const onDateFromChange = (date: DateValue | undefined) => {
     if (date) {
-        // Używaj metod DateValue zamiast Date
         filters.date_from = date.toString();
     } else {
         filters.date_from = '';
@@ -320,18 +274,15 @@ const openEditForm = async (appointment: Appointment) => {
     appointmentFormLoading.value = true;
 
     try {
-        // Pobierz najpierw dane wizyty
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
         selectedAppointment.value = response.data.data;
 
-        // Następnie załaduj dane pomocnicze
         await Promise.all([
             loadProcedures(),
             loadPatients(),
             loadDoctors()
         ]);
 
-        // Po załadowaniu wszystkich danych, ustaw wartości
         selectedAppointment.value.procedure_id = selectedAppointment.value.procedure.id;
         selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
         selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
@@ -350,12 +301,6 @@ const openEditForm = async (appointment: Appointment) => {
     }
 };
 
-const formatDateValue = (dateValue: DateValue | undefined) => {
-    if (!dateValue) return '';
-    // Konwertuj DateValue na format ISO i następnie na obiekt Date
-    const date = new Date(dateValue.toString());
-    return format(date, 'd MMMM yyyy', {locale: pl});
-};
 
 const closeEditForm = () => {
     showEditAppointmentForm.value = false;
@@ -438,8 +383,12 @@ const getStatusLabel = (status: string) => {
             return 'Zakończona';
         case 'cancelled':
             return 'Anulowana';
-        case 'cancelled_by_patient': // Dodana obsługa
+        case 'confirmed':
+            return 'Potwierdzona';
+        case 'cancelled_by_patient':
             return 'Anulowano przez pacjenta';
+        case 'cancelled_by_clinic':
+            return 'Anulowano przez klinikę';
         case 'no_show':
             return 'Nieobecność';
         default:
@@ -455,14 +404,19 @@ const getStatusClass = (status: string) => {
             return 'bg-green-100 text-green-800';
         case 'cancelled':
             return 'bg-red-100 text-red-800';
+        case 'confirmed':
+            return 'bg-purple-100 text-purple-800';
         case 'cancelled_by_patient':
             return 'bg-yellow-100 text-yellow-800';
+        case 'no_show':
+            return 'bg-orange-100 text-orange-800';
+        case 'cancelled_by_clinic':
+            return 'bg-red-200 text-red-800';
         default:
             return 'bg-gray-100 text-gray-800';
     }
 };
 
-// Dodaj do okna nasłuchiwanie kliknięć poza listą podpowiedzi
 onMounted(() => {
     loadAppointments();
 
@@ -720,169 +674,174 @@ const breadcrumbs: BreadcrumbItem[] = [
         </div>
 
         <div v-if="showEditAppointmentForm && selectedAppointment"
-             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
-
-                <div class="flex justify-between items-center mb-4">
+             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md max-h-[90vh] flex flex-col shadow-lg">
+                <!-- Nagłówek formularza -->
+                <div class="flex justify-between items-center p-3 sm:p-4 border-b dark:border-gray-700">
                     <h3 class="text-lg font-medium dark:text-white">Edycja Wizyty</h3>
                     <Button variant="ghost" class="h-8 w-8 p-0 dark:text-white dark:hover:bg-gray-700" @click="closeEditForm">
                         <Icon name="x" size="18"/>
                     </Button>
                 </div>
 
-                <div class="space-y-4">
-                    <div class="space-y-1">
-                        <Label for="edit-patient" class="dark:text-gray-200 text-sm sm:text-base">Pacjent</Label>
-                        <select
-                            id="edit-patient"
-                            v-model="selectedAppointment.patient_id"
-                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.patient_id}"
-                        >
-                            <option value="" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
-                            <option v-for="patient in allPatients || []" :key="patient.id" :value="patient.id">
-                                {{ patient.name }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.patient_id[0] }}
+                <!-- Zawartość z przewijaniem -->
+                <div class="overflow-y-auto p-3 sm:p-4 flex-grow">
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="space-y-1">
+                            <Label for="edit-patient" class="dark:text-gray-200 text-sm">Pacjent</Label>
+                            <select
+                                id="edit-patient"
+                                v-model="selectedAppointment.patient_id"
+                                class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.patient_id}"
+                            >
+                                <option value="" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
+                                <option v-for="patient in allPatients || []" :key="patient.id" :value="patient.id">
+                                    {{ patient.name }}
+                                </option>
+                            </select>
+                            <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">
+                                {{ appointmentErrors.patient_id[0] }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="space-y-1">
-                        <Label for="edit-doctor" class="dark:text-gray-200 text-sm sm:text-base">Lekarz</Label>
-                        <select
-                            id="edit-doctor"
-                            v-model="selectedAppointment.doctor_id"
-                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.doctor_id}"
-                        >
-                            <option value="" disabled>{{ doctorsLoading ? 'Ładowanie lekarzy...' : 'Wybierz lekarza' }}</option>
-                            <option v-for="doctor in allDoctors || []" :key="doctor.id" :value="doctor.id">
-                                {{ doctor.name }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.doctor_id[0] }}
-                        </div>
-                    </div>
 
-                    <!-- Procedura -->
-                    <div class="space-y-1">
-                        <Label for="edit-procedure" class="dark:text-gray-200 text-sm sm:text-base">Procedura</Label>
-                        <select
-                            id="edit-procedure"
-                            v-model="selectedAppointment.procedure_id"
-                            class="w-full rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.procedure_id}"
-                        >
-                            <option value="" disabled>Wybierz procedurę</option>
-                            <option v-for="procedure in procedures || []" :key="procedure.id" :value="procedure.id">
-                                {{ procedure.name }}
-                            </option>
-                        </select>
-                        <div v-if="proceduresLoading" class="text-xs text-amber-500 mt-1">
-                            Ładowanie procedur...
+                        <div class="space-y-1">
+                            <Label for="edit-doctor" class="dark:text-gray-200 text-sm">Lekarz</Label>
+                            <select
+                                id="edit-doctor"
+                                v-model="selectedAppointment.doctor_id"
+                                class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.doctor_id}"
+                            >
+                                <option value="" disabled>{{ doctorsLoading ? 'Ładowanie lekarzy...' : 'Wybierz lekarza' }}</option>
+                                <option v-for="doctor in allDoctors || []" :key="doctor.id" :value="doctor.id">
+                                    {{ doctor.first_name }} {{ doctor.last_name }}
+                                </option>
+                            </select>
+                            <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">
+                                {{ appointmentErrors.doctor_id[0] }}
+                            </div>
                         </div>
-                        <div v-if="!proceduresLoading && procedures && procedures.length === 0" class="text-xs text-amber-500 mt-1">
-                            Brak dostępnych procedur
-                        </div>
-                        <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.procedure_id[0] }}
-                        </div>
-                    </div>
 
-                    <div class="space-y-2">
-                        <Label class="dark:text-gray-200">Data wizyty</Label>
-                        <Popover>
-                            <PopoverTrigger as-child>
-                                <Button
-                                    variant="outline"
-                                    class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                >
-                                    <Icon name="calendar" size="16" class="mr-2"/>
-                                    {{ selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty" }}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
-                                <Calendar
-                                    :model-value="selectedDate"
-                                    @update:model-value="onAppointmentDateChange"
-                                    initial-focus
-                                    mode="single"
-                                    class="dark:bg-gray-800 dark:text-white"
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        <div v-if="appointmentErrors.appointment_datetime" class="text-sm text-red-500">
-                            {{ appointmentErrors.appointment_datetime[0] }}
+                        <div class="space-y-1">
+                            <Label for="edit-procedure" class="dark:text-gray-200 text-sm">Procedura</Label>
+                            <select
+                                id="edit-procedure"
+                                v-model="selectedAppointment.procedure_id"
+                                class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.procedure_id}"
+                            >
+                                <option value="" disabled>Wybierz procedurę</option>
+                                <option v-for="procedure in procedures || []" :key="procedure.id" :value="procedure.id">
+                                    {{ procedure.name }}
+                                </option>
+                            </select>
+                            <div v-if="proceduresLoading" class="text-xs text-amber-500 mt-1">
+                                Ładowanie procedur...
+                            </div>
+                            <div v-if="!proceduresLoading && procedures && procedures.length === 0" class="text-xs text-amber-500 mt-1">
+                                Brak dostępnych procedur
+                            </div>
+                            <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">
+                                {{ appointmentErrors.procedure_id[0] }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <Label class="dark:text-gray-200 text-sm">Data wizyty</Label>
+                            <Popover>
+                                <PopoverTrigger as-child>
+                                    <Button
+                                        variant="outline"
+                                        class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600 text-xs sm:text-sm"
+                                    >
+                                        <Icon name="calendar" size="16" class="mr-2"/>
+                                        {{ selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty" }}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
+                                    <Calendar
+                                        :model-value="selectedDate"
+                                        @update:model-value="onAppointmentDateChange"
+                                        initial-focus
+                                        mode="single"
+                                        class="dark:bg-gray-800 dark:text-white"
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <div v-if="appointmentErrors.appointment_datetime" class="text-xs text-red-500">
+                                {{ appointmentErrors.appointment_datetime[0] }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <Label for="edit-status" class="dark:text-gray-200 text-sm">Status wizyty</Label>
+                            <select
+                                id="edit-status"
+                                v-model="selectedAppointment.status"
+                                class="w-full rounded-md border border-input bg-background px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.status}"
+                            >
+                                <option v-for="status in statusOptions" :key="status.value" :value="status.value">
+                                    {{ status.label }}
+                                </option>
+                            </select>
+                            <div v-if="appointmentErrors.status" class="text-xs text-red-500">
+                                {{ appointmentErrors.status[0] }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <Label for="patient-notes" class="dark:text-gray-200 text-sm">Notatki pacjenta</Label>
+                            <textarea
+                                id="patient-notes"
+                                v-model="selectedAppointment.patient_notes"
+                                class="w-full rounded-md border border-input px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.patient_notes}"
+                                rows="2"
+                                placeholder="Notatki od pacjenta"
+                            ></textarea>
+                            <div v-if="appointmentErrors.patient_notes" class="text-xs text-red-500">
+                                {{ appointmentErrors.patient_notes[0] }}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <Label for="doctor-notes" class="dark:text-gray-200 text-sm">Notatki lekarza</Label>
+                            <textarea
+                                id="doctor-notes"
+                                v-model="selectedAppointment.doctor_notes"
+                                class="w-full rounded-md border border-input px-2 py-1 text-xs sm:text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                                :class="{'border-red-500': appointmentErrors.doctor_notes}"
+                                rows="2"
+                                placeholder="Notatki od lekarza"
+                            ></textarea>
+                            <div v-if="appointmentErrors.doctor_notes" class="text-xs text-red-500">
+                                {{ appointmentErrors.doctor_notes[0] }}
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="space-y-2">
-                        <Label for="edit-status" class="dark:text-gray-200">Status wizyty</Label>
-                        <select
-                            id="edit-status"
-                            v-model="selectedAppointment.status"
-                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.status}"
-                        >
-                            <option v-for="status in statusOptions" :key="status.value" :value="status.value">
-                                {{ status.label }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.status" class="text-sm text-red-500">
-                            {{ appointmentErrors.status[0] }}
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="patient-notes" class="dark:text-gray-200">Notatki pacjenta</Label>
-                        <textarea
-                            id="patient-notes"
-                            v-model="selectedAppointment.patient_notes"
-                            class="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.patient_notes}"
-                            rows="3"
-                            placeholder="Notatki od pacjenta"
-                        ></textarea>
-                        <div v-if="appointmentErrors.patient_notes" class="text-xs text-red-500">
-                            {{ appointmentErrors.patient_notes[0] }}
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="doctor-notes" class="dark:text-gray-200">Notatki lekarza</Label>
-                        <textarea
-                            id="doctor-notes"
-                            v-model="selectedAppointment.doctor_notes"
-                            class="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            :class="{'border-red-500': appointmentErrors.doctor_notes}"
-                            rows="3"
-                            placeholder="Notatki od lekarza"
-                        ></textarea>
-                        <div v-if="appointmentErrors.doctor_notes" class="text-xs text-red-500">
-                            {{ appointmentErrors.doctor_notes[0] }}
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            @click="closeEditForm"
-                            class="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
-                        >
-                            Anuluj
-                        </Button>
-                        <Button
-                            @click="updateAppointment"
-                            :disabled="appointmentFormLoading"
-                            class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
-                        >
-                            <Icon v-if="appointmentFormLoading" name="loader2" class="animate-spin" size="16"/>
-                            <span>Aktualizuj</span>
-                        </Button>
-                    </div>
+                <div class="flex justify-end gap-3 p-3 sm:p-4 border-t dark:border-gray-700">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        @click="closeEditForm"
+                        class="dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+                    >
+                        Anuluj
+                    </Button>
+                    <Button
+                        @click="updateAppointment"
+                        :disabled="appointmentFormLoading"
+                        size="sm"
+                        class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
+                    >
+                        <Icon v-if="appointmentFormLoading" name="loader2" class="animate-spin" size="16"/>
+                        <span>Aktualizuj</span>
+                    </Button>
                 </div>
             </div>
         </div>

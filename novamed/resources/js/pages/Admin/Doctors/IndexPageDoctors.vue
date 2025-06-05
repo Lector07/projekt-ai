@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { useAuthStore } from '@/stores/auth';
 import type { BreadcrumbItem } from '@/types';
 import axios from 'axios';
 import InputNumber from 'primevue/inputnumber';
@@ -17,12 +16,10 @@ import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { PaginationList, PaginationListItem } from 'reka-ui';
 import { computed, h, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import Checkbox from 'primevue/checkbox';// Upewnij się, że useRouter jest zaimportowany
+import Checkbox from 'primevue/checkbox';
 
 import { Separator } from '@/components/ui/separator';
 
-// Komponent do wyświetlania błędów formularza
 const InputError = (props: { message?: string }) => {
     return props.message ? h('p', { class: 'text-xs text-red-500 mt-1' }, props.message) : null;
 };
@@ -43,10 +40,10 @@ interface Doctor {
     } | null;
     created_at: string;
     profile_picture_url?: string;
-    procedure_ids?: number[];// Dodane dla avatara
+    procedure_ids?: number[];
 }
 
-interface ProcedureListItem { // Prosty interfejs dla listy zabiegów
+interface ProcedureListItem {
     id: number;
     name: string;
 }
@@ -57,7 +54,7 @@ interface DoctorForm {
     last_name: string;
     specialization: string;
     bio?: string | null;
-    price_modifier?: number | null;
+    price_modifier?: number;
     user_id?: number | null;
     user?: {
         id: number;
@@ -87,8 +84,8 @@ const itemsPerPage = computed(() => query.value.per_page);
 
 const showAddDoctorForm = ref(false);
 const showEditDoctorForm = ref(false);
-const showAvatarUploadModal = ref(false); // Dla modala zmiany avatara
-const selectedDoctorForAvatar = ref<Doctor | null>(null); // Dla lekarza, którego avatar zmieniamy
+const showAvatarUploadModal = ref(false);
+const selectedDoctorForAvatar = ref<Doctor | null>(null);
 const avatarFile = ref<File | null>(null);
 const avatarPreview = ref<string | null>(null);
 const avatarUploadLoading = ref(false);
@@ -115,9 +112,7 @@ const specializations = ref<string[]>(['Chirurg Plastyczny', 'Medycyna Estetyczn
 
 const availableUsers = ref<Array<{ id: number; name: string; email: string }>>([]);
 
-const router = useRouter(); // useRouter jest już tu zdefiniowany
 const toast = useToast();
-const authStore = useAuthStore();
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Zarządzanie Lekarzami' }];
 
@@ -152,12 +147,11 @@ const loadDoctors = async () => {
         doctors.value = (response.data.data || []).map((item: any) => ({
             ...item,
             created_at: item.created_at || null,
-            profile_picture_url: item.profile_picture_url || null, // Upewnij się, że to pole jest
+            profile_picture_url: item.profile_picture_url || null,
         }));
         totalPages.value = response.data.meta?.last_page || 1;
         totalItems.value = response.data.meta?.total || 0;
     } catch (error) {
-        console.error('Błąd podczas pobierania lekarzy:', error);
         error.value = error.response?.data?.message || 'Wystąpił błąd podczas ładowania danych.';
     } finally {
         loading.value = false;
@@ -166,7 +160,7 @@ const loadDoctors = async () => {
 
 const loadAvailableUsers = async () => {
     try {
-        const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000'); // Zwiększony limit
+        const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000');
         availableUsers.value = response.data.data || [];
     } catch (err) {
         showErrorToast('Błąd', 'Nie udało się pobrać listy użytkowników');
@@ -218,7 +212,6 @@ const newBioValue = computed({
 });
 
 const openEditForm = async (doctor: Doctor) => {
-    // Pobierz procedury, jeśli jeszcze nie są załadowane
     if (allProcedures.value.length === 0) {
         await fetchAllProcedures();
     }
@@ -226,7 +219,7 @@ const openEditForm = async (doctor: Doctor) => {
     selectedDoctor.value = {
         ...doctor,
         user_id: doctor.user?.id || undefined,
-        procedure_ids: doctor.procedure_ids || [] // Użyj procedure_ids z obiektu doctor, jeśli istnieją
+        procedure_ids: doctor.procedure_ids || []
     };
     loadAvailableUsers();
     showEditDoctorForm.value = true;
@@ -245,18 +238,6 @@ const resetDoctorForm = () => {
     doctorFormErrors.value = {};
 };
 
-function toggleProcedure(procedureId: number, form: DoctorForm) {
-    if (!form.procedure_ids) {
-        form.procedure_ids = [];
-    }
-
-    const index = form.procedure_ids.indexOf(procedureId);
-    if (index > -1) {
-        form.procedure_ids.splice(index, 1);
-    } else {
-        form.procedure_ids.push(procedureId);
-    }
-}
 
 const validateDoctorForm = (doctorData: DoctorForm) => {
     const errors: Record<string, string[]> = {};
@@ -264,7 +245,6 @@ const validateDoctorForm = (doctorData: DoctorForm) => {
     if (!doctorData.last_name) errors.last_name = ['Nazwisko jest wymagane'];
     if (!doctorData.specialization) errors.specialization = ['Specjalizacja jest wymagana'];
 
-    // Walidacja email i hasła tylko jeśli nie wybrano istniejącego użytkownika
     if (!doctorData.user_id) {
         if (!doctorData.email) errors.email = ['Email jest wymagany, gdy nie tworzysz nowego użytkownika'];
         if (!doctorData.password) errors.password = ['Hasło jest wymagane, gdy nie tworzysz nowego użytkownika'];
@@ -299,7 +279,7 @@ const updateDoctor = async () => {
     if (!selectedDoctor.value || !validateDoctorForm(selectedDoctor.value)) return;
     doctorFormLoading.value = true;
     try {
-        const { user, ...dataToUpdate } = selectedDoctor.value; // Usuwamy pole 'user' przed wysłaniem
+        const { user, ...dataToUpdate } = selectedDoctor.value;
         await axios.put(`/api/v1/admin/doctors/${selectedDoctor.value.id}`, dataToUpdate);
         showEditDoctorForm.value = false;
         selectedDoctor.value = null;
@@ -323,7 +303,7 @@ const deleteDoctor = async (id: number) => {
     try {
         await axios.delete(`/api/v1/admin/doctors/${id}`);
         showSuccessToast('Sukces', 'Lekarz został usunięty.');
-        loadDoctors(); // Odśwież listę
+        loadDoctors();
     } catch (err: any) {
         showErrorToast('Błąd', err.response?.data?.message || 'Wystąpił błąd podczas usuwania lekarza.');
     }
@@ -347,7 +327,7 @@ const populateFormFromUser = (userId: number) => {
         const nameParts = selectedUser.name.split(' ');
         newDoctor.value.first_name = nameParts[0] || '';
         newDoctor.value.last_name = nameParts.slice(1).join(' ') || '';
-        (newDoctor.value as any).email = selectedUser.email; // Używamy as any, bo email nie jest standardowo w DoctorForm
+        (newDoctor.value as any).email = selectedUser.email;
     }
 };
 
@@ -372,7 +352,6 @@ const handleAvatarChange = (event: Event) => {
         const file = target.files[0];
         avatarFile.value = file;
 
-        // Walidacja pliku (opcjonalnie tutaj, ale główna walidacja po stronie serwera)
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
             avatarUploadErrors.value = { avatar: ['Nieprawidłowy format pliku. Dozwolone: JPG, PNG, WEBP.'] };
@@ -380,7 +359,6 @@ const handleAvatarChange = (event: Event) => {
             return;
         }
         if (file.size > 2 * 1024 * 1024) {
-            // 2MB
             avatarUploadErrors.value = { avatar: ['Plik jest za duży. Maksymalny rozmiar to 2MB.'] };
             avatarFile.value = null;
             return;
@@ -409,7 +387,6 @@ const uploadAvatar = async () => {
         });
         showAvatarUploadModal.value = false;
         showSuccessToast('Sukces', 'Avatar lekarza został zaktualizowany.');
-        // Odśwież dane lekarza na liście
         const doctorIndex = doctors.value.findIndex((d) => d.id === selectedDoctorForAvatar.value!.id);
         if (doctorIndex !== -1) {
             doctors.value[doctorIndex].profile_picture_url = response.data.data.profile_picture_url;
@@ -425,6 +402,26 @@ const uploadAvatar = async () => {
     }
 };
 
+const deleteAvatar = async (doctorId: number) => {
+    if (!confirm('Czy na pewno chcesz usunąć avatar tego lekarza?')) {
+        return;
+    }
+    try {
+        await axios.delete(`/api/v1/admin/doctors/${doctorId}/avatar`);
+        const doctorIndex = doctors.value.findIndex((d) => d.id === doctorId);
+        if (doctorIndex !== -1) {
+            doctors.value[doctorIndex].profile_picture_url = '';
+        }
+        showSuccessToast('Sukces', 'Avatar lekarza został usunięty.');
+
+        if (showAvatarUploadModal.value && selectedDoctorForAvatar.value?.id === doctorId) {
+            showAvatarUploadModal.value = false;
+        }
+    } catch (error: any) {
+        showErrorToast('Błąd', error.response?.data?.message || 'Wystąpił błąd podczas usuwania avatara.');
+    }
+};
+
 watch(
     () => newDoctor.value.user_id,
     (newValue) => {
@@ -432,7 +429,7 @@ watch(
     },
 );
 
-watch(query, loadDoctors, { deep: true, immediate: false }); // immediate: false aby uniknąć podwójnego ładowania na starcie
+watch(query, loadDoctors, { deep: true, immediate: false });
 
 onMounted(() => {
     loadDoctors();
@@ -575,7 +572,11 @@ onMounted(() => {
                                         </ContextMenuItem>
                                         <ContextMenuItem @click="openAvatarModal(doctor)">
                                             <Icon name="image" size="14" class="mr-2" />
-                                            Zmień avatar
+                                            Zmień zdjęcie
+                                        </ContextMenuItem>
+                                        <ContextMenuItem @click="deleteAvatar(doctor.id)" class="text-amber-600">
+                                            <Icon name="trash" size="14" class="mr-2" />
+                                            Usuń zdjęcie
                                         </ContextMenuItem>
                                         <ContextMenuSeparator />
                                         <ContextMenuItem @click="deleteDoctor(doctor.id)" class="text-red-600">
@@ -926,11 +927,10 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal zmiany avatara lekarza -->
         <div v-if="showAvatarUploadModal && selectedDoctorForAvatar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div class="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
                 <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-lg font-medium dark:text-gray-200">Zmień Avatar Lekarza</h3>
+                    <h3 class="text-lg font-medium dark:text-gray-200">Zmień Zdjęcie Lekarza</h3>
                     <Button variant="ghost" class="h-8 w-8 p-0 dark:text-gray-200 dark:hover:bg-gray-700" @click="showAvatarUploadModal = false">
                         <Icon name="x" size="18" />
                     </Button>
@@ -947,7 +947,7 @@ onMounted(() => {
                         />
                     </div>
                     <div>
-                        <Label for="avatar-upload" class="dark:text-gray-300">Wybierz nowy avatar</Label>
+                        <Label for="avatar-upload" class="dark:text-gray-300">Wybierz nowe zdjęcie</Label>
                         <Input
                             id="avatar-upload"
                             type="file"

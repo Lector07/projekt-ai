@@ -89,9 +89,21 @@ onMounted(() => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
             <Card class="border dark:border-gray-700 dark:bg-gray-800">
-                <CardHeader>
-                    <CardTitle class="text-2xl font-bold text-gray-900 md:text-3xl dark:text-gray-100">Witaj, {{ doctorName }}! </CardTitle>
-                    <CardDescription class="text-gray-600 dark:text-gray-400">Oto Twój przegląd dnia.</CardDescription>
+                <CardHeader class="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle class="text-2xl font-bold text-gray-900 md:text-3xl dark:text-gray-100">Witaj, {{ doctorName }}!</CardTitle>
+                        <CardDescription class="text-gray-600 dark:text-gray-400">Oto Twój przegląd dnia.</CardDescription>
+                    </div>
+                    <div v-if="authStore.user?.avatar" class="flex-shrink-0">
+                        <img
+                            :src="authStore.user?.avatar"
+                            alt="Avatar użytkownika"
+                            class="h-16 w-16 rounded-full object-cover border-2 border-nova-accent"
+                        />
+                    </div>
+                    <div v-else class="flex-shrink-0 bg-gray-200 dark:bg-gray-700 h-16 w-16 rounded-full flex items-center justify-center">
+                        <Icon name="user" class="h-8 w-8 text-gray-500 dark:text-gray-400" />
+                    </div>
                 </CardHeader>
             </Card>
 

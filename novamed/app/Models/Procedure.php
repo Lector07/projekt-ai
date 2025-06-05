@@ -21,6 +21,11 @@ class Procedure extends Model
         'duration_minutes',
     ];
 
+    protected $casts = [
+        'base_price' => 'decimal:2',
+        'duration_minutes' => 'integer',
+    ];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(ProcedureCategory::class, 'procedure_category_id');
@@ -28,7 +33,7 @@ class Procedure extends Model
 
     public function appointments(): HasMany
     {
-        return $this->hasMany(Appointment::class);
+        return $this->hasMany(Appointment::class, 'procedure_id');
     }
     public function doctors(): BelongsToMany
     {

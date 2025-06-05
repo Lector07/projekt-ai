@@ -1,14 +1,29 @@
 import router from '@/router';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
+
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        skipAuthRedirect?: boolean;
+    }
+
+    interface AxiosInstance {
+        checkAuth(url: string, options?: object): Promise<any>;
+    }
+}
 
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Accept'] = 'application/json';
 
-const logoutEndpoints = ['/api/v1/auth/logout', '/api/auth/logout', '/logout'];
+const logoutEndpoints = ['/api/v1/auth/logout', '/api/auth/logout', '/logout', '/api/v1/logout'];
+const authCheckEndpoints = ['/api/v1/user', '/api/auth/user', '/api/user'];
 
-const isLogoutUrl = (url) => {
+const isLogoutUrl = (url: string | undefined | null) => {
     return url && logoutEndpoints.some(endpoint => url === endpoint || url.includes(endpoint));
+};
+
+const isAuthCheckUrl = (url: string | undefined | null) => {
+    return url && authCheckEndpoints.some(endpoint => url === endpoint || url.includes(endpoint));
 };
 
 axios.interceptors.response.use(
@@ -18,11 +33,15 @@ axios.interceptors.response.use(
             const status = error.response.status;
             const url = error.config?.url;
 
-            if (status === 401 && url && (url === '/api/v1/user' || url.includes('/api/v1/user'))) {
+            if (status === 401 && isAuthCheckUrl(url)) {
                 return Promise.reject(error);
             }
 
-            if ((status === 401 || status === 405) && isLogoutUrl(url)) {
+            if ((status === 401 || status === 405 || status === 422 || status === 500) && isLogoutUrl(url)) {
+                return Promise.reject(error);
+            }
+
+            if (status === 401 && error.config?.skipAuthRedirect) {
                 return Promise.reject(error);
             }
 
@@ -62,5 +81,9 @@ axios.interceptors.response.use(
         return Promise.reject(error);
     },
 );
+
+axios.checkAuth = (url: string, options = {}) => {
+    return axios.get(url, { ...options, skipAuthRedirect: true });
+};
 
 export default axios;

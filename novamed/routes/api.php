@@ -62,7 +62,8 @@ Route::prefix('v1/admin')
     ->group(function () {
         Route::put('/user/password', [PasswordController::class, 'update'])
             ->middleware('auth:sanctum')
-            ->name('password.update');        Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index'])->name('dashboard');
+            ->name('password.update');
+        Route::get('/dashboard', [Admin\AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/procedures/categories', [Admin\AdminProcedureController::class, 'categories'])
             ->name('procedures.categories');
         Route::apiResource('/users', Admin\AdminUserController::class)->names('users');
@@ -72,4 +73,5 @@ Route::prefix('v1/admin')
         Route::apiResource('/procedures', Admin\AdminProcedureController::class)->names('procedures');
         Route::apiResource('/appointments', Admin\AdminAppointmentController::class)->names('appointments');
         Route::post('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'updateAvatar'])->name('doctors.avatar.update');
+        Route::delete('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'deleteAvatar'])->name('doctors.avatar.delete');
     });

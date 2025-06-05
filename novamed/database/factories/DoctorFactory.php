@@ -2,38 +2,46 @@
 
 namespace Database\Factories;
 
+use App\Models\Doctor; // Dodaj import Doctor
 use App\Models\User;
-use App\Models\Role;
+// use App\Models\Role; // Niepotrzebne, jeśli rola jest stringiem w User
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DoctorFactory extends Factory
 {
+    protected $model = Doctor::class;
+
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+        $userId = User::factory()->create(['role' => 'doctor'])->id;
+
+
         return [
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'specialization' => fake()->randomElement(['Chirurg Plastyczny', 'Medycyna Estetyczna', 'Dermatolog', 'Fleobolog']),
             'bio' => fake()->sentence(rand(10, 20)),
             'profile_picture_path' => null,
             'price_modifier' => fake()->randomElement([1.00, 1.10, 1.20, 0.95]),
-            'user_id' => null, // Domyślnie null
+            'user_id' => $userId,
         ];
     }
 
     /**
-     * Indicate that the doctor should be associated with a new user with the 'doctor' role.
+     * Indicate that the doctor should be associated with a specific user.
      */
-    public function withUser(): self
+    public function forUser(User $user): self
     {
-        return $this->state(function (array $attributes) {
-            // Stwórz usera z rolą 'doctor'
-            $user = User::factory()->create([
-                'role' => 'doctor' // <<< Ustaw rolę bezpośrednio
-            ]);
-            // Nie potrzeba Role::where ani attach
+        return $this->state(function (array $attributes) use ($user) {
+            $nameParts = explode(' ', $user->name, 2);
+            $firstName = $nameParts[0];
+            $lastName = $nameParts[1] ?? '';
 
             return [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
                 'user_id' => $user->id,
             ];
         });

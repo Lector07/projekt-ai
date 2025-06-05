@@ -8,14 +8,12 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'email',
@@ -29,25 +27,25 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    protected $appends = ['profile_picture_url'];
 
-    /**
-     * Relacja do wizyt, gdzie użytkownik jest pacjentem.
-     */
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     public function appointmentsAsPatient(): HasMany
     {
         return $this->hasMany(Appointment::class, 'patient_id');
     }
 
-    /**
-     * Relacja do profilu lekarza (jeśli user_id jest w doctors).
-     */
     public function doctor(): HasOne
     {
-        return $this->hasOne(Doctor::class);
+        return $this->hasOne(Doctor::class, 'user_id', 'id');
     }
 
     public function isAdmin(): bool
@@ -65,8 +63,18 @@ class User extends Authenticatable
         return $this->role === 'doctor';
     }
 
+
     public function hasRole(string $roleSlug): bool
     {
         return $this->role === $roleSlug;
+    }
+
+
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        if ($this->profile_picture_path) {
+            return Storage::disk('public')->url($this->profile_picture_path);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
     }
 }

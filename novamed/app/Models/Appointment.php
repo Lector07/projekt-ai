@@ -31,11 +31,11 @@ class Appointment extends Model
 
     public function doctor(): BelongsTo
     {
-        return $this->belongsTo(Doctor::class);
+        return $this->belongsTo(Doctor::class, 'doctor_id');
     }
 
     public function procedure(): BelongsTo
     {
-        return $this->belongsTo(Procedure::class);
+        return $this->belongsTo(Procedure::class, 'procedure_id');
     }
 }

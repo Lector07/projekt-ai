@@ -314,16 +314,6 @@ const routes: Array<RouteRecordRaw> = [
         }
     },
     {
-        path: '/500',
-        name: 'ServerError',
-        component: ErrorPage,
-        props: {
-            code: 500,
-            title: 'Błąd serwera',
-            message: 'Przepraszamy, wystąpił wewnętrzny błąd serwera.'
-        }
-    },
-    {
         path: '/503',
         name: 'ServiceUnavailable',
         component: ErrorPage,

@@ -22,20 +22,25 @@ class AdminAppointmentController extends Controller
     public function index(Request $request): ResourceCollection
     {
         $query = Appointment::query()
-            ->with(['patient', 'doctor', 'procedure']);
+            ->with(['patient', 'doctor.user', 'procedure']);
 
         if ($request->has('doctor_name') && !empty($request->doctor_name)) {
-            $query->whereHas('doctor', function($q) use ($request) {
-                $q->where('first_name', 'like', '%' . $request->doctor_name . '%')
-                    ->orWhere('last_name', 'like', '%' . $request->doctor_name . '%');
+            $doctorNameTerm = '%' . $request->doctor_name . '%';
+            $query->whereHas('doctor', function($q) use ($doctorNameTerm) {
+                $q->where('first_name', 'ilike', $doctorNameTerm)
+                    ->orWhere('last_name', 'ilike', $doctorNameTerm)
+                    ->orWhereHas('user', function($userDoctorQuery) use ($doctorNameTerm) {
+                        $userDoctorQuery->where('name', 'ilike', $doctorNameTerm)
+                            ->orWhere('email', 'ilike', $doctorNameTerm);
+                    });
             });
         }
 
         if ($request->has('patient_name') && !empty($request->patient_name)) {
-            $query->whereHas('patient', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->patient_name . '%')
-                    ->orWhere('first_name', 'like', '%' . $request->patient_name . '%')
-                    ->orWhere('last_name', 'like', '%' . $request->patient_name . '%');
+            $patientNameTerm = '%' . $request->patient_name . '%';
+            $query->whereHas('patient', function($q) use ($patientNameTerm) {
+                $q->where('name', 'ilike', $patientNameTerm)
+                    ->orWhere('email', 'ilike', $patientNameTerm);
             });
         }
 
@@ -48,7 +53,7 @@ class AdminAppointmentController extends Controller
         }
 
         if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', $request->status);
+            $query->where('status', 'ilike', $request->status);
         }
 
         $query->orderBy('appointment_datetime', 'desc');
@@ -67,9 +72,8 @@ class AdminAppointmentController extends Controller
     public function store(StoreAppointmentRequest $request): AppointmentResource
     {
         $validated = $request->validated();
-
         $appointment = Appointment::create($validated);
-
+        $appointment->load(['patient', 'doctor', 'procedure']);
         return new AppointmentResource($appointment);
     }
 

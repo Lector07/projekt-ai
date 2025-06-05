@@ -2,8 +2,6 @@
 import {computed, onMounted, ref} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import axios from 'axios';
-import {LoaderCircle} from 'lucide-vue-next';
-import Heading from "@/components/Heading.vue";
 import {Button} from '@/components/ui/button';
 import {
     Pagination,
@@ -26,18 +24,17 @@ interface Procedure {
 interface Doctor {
     id: number;
     title?: string;
-    first_name: string;  // zmienione z name
-    last_name: string;   // zmienione z surname
+    first_name: string;
+    last_name: string;
     specialization: string;
-    bio: string;         // zmienione z description
+    bio: string;
+    profile_picture_path: string;
 }
 
 const authStore = useAuthStore();
 
 const isLoggedIn = computed(() => authStore.isLoggedIn);
-const user = computed(() => authStore.user); // User nie jest używany, ale może być w przyszłości
 
-// Dane z bazy z odpowiednim typowaniem
 const procedures = ref<Procedure[]>([]);
 const doctors = ref<Doctor[]>([]);
 const loading = ref(true);
@@ -51,7 +48,6 @@ const getInitials = (firstName: string, lastName: string): string => {
 
 
 const doctorsCurrentPage = ref(1);
-const doctorsLastPage = ref(1);
 const doctorsMeta = ref({
     current_page: 1,
     last_page: 1,
@@ -59,9 +55,7 @@ const doctorsMeta = ref({
     per_page: 6
 });
 
-// Paginacja dla procedur
 const proceduresCurrentPage = ref(1);
-const proceduresLastPage = ref(1);
 const proceduresMeta = ref({
     current_page: 1,
     last_page: 1,
@@ -69,15 +63,12 @@ const proceduresMeta = ref({
     per_page: 9
 });
 
-// Zmodyfikowana funkcja pobierania danych
 const fetchData = async () => {
     loading.value = true;
     error.value = false;
 
     try {
-        // Pobieramy tylko dane dla aktywnej zakładki
         if (activeTab.value === 0) {
-            // Tylko procedury
             const proceduresResponse = await axios.get('/api/v1/procedures', {
                 params: {
                     page: proceduresCurrentPage.value,
@@ -86,13 +77,12 @@ const fetchData = async () => {
             });
             procedures.value = proceduresResponse.data.data;
             proceduresMeta.value = {
-                current_page: proceduresResponse.data.current_page,
-                last_page: proceduresResponse.data.last_page,
-                total: proceduresResponse.data.total,
-                per_page: proceduresResponse.data.per_page
+                current_page: proceduresResponse.data.meta.current_page,
+                last_page: proceduresResponse.data.meta.last_page,
+                total: proceduresResponse.data.meta.total,
+                per_page: proceduresResponse.data.meta.per_page
             };
         } else {
-            // Tylko lekarze
             const doctorsResponse = await axios.get('/api/v1/doctors', {
                 params: {
                     page: doctorsCurrentPage.value,
@@ -101,10 +91,10 @@ const fetchData = async () => {
             });
             doctors.value = doctorsResponse.data.data;
             doctorsMeta.value = {
-                current_page: doctorsResponse.data.current_page,
-                last_page: doctorsResponse.data.last_page,
-                total: doctorsResponse.data.total,
-                per_page: doctorsResponse.data.per_page
+                current_page: doctorsResponse.data.meta.current_page,
+                last_page: doctorsResponse.data.meta.last_page,
+                total: doctorsResponse.data.meta.total,
+                per_page: doctorsResponse.data.meta.per_page
             };
         }
     } catch (e) {
@@ -436,7 +426,7 @@ onMounted(() => {
             <div v-else class="relative">
                 <div class="flex flex-wrap justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
                     <button
-                        v-for="(tab, index) in ['Procedury Medyczne', 'Nasi Specjaliści']"
+                        v-for="(tab, index) in ['Zabieg Medyczne', 'Nasi Specjaliści']"
                         :key="index"
                         @click="changeTab(index)"
                         class="px-6 py-3 text-base font-medium transition-all duration-200 border-b-2 focus:outline-none"

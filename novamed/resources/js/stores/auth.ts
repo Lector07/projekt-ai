@@ -22,18 +22,14 @@ const fetchUserData = async (): Promise<User | null> => {
         if (response.data && response.data.data && typeof response.data.data === 'object') {
             return response.data.data as User;
         } else {
-            // if (response.data && typeof response.data === 'object' && response.data.id) { // Proste sprawdzenie czy to obiekt Usera
-            //     return response.data as User;
-            // }
-            return null; // Lub zwróć null, jeśli struktura jest zawsze oczekiwana z 'data'
+            return null;
         }
-
-    } catch (error) {
-        console.error('auth.ts - Błąd podczas pobierania danych użytkownika:', error);
-        // Możesz chcieć sprawdzić status błędu, np. 401 oznacza brak autoryzacji
-        // if (axios.isAxiosError(error) && error.response?.status === 401) {
-        //     console.log('auth.ts - Użytkownik nie jest zalogowany (401).');
-        // }
+    } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+            console.log('auth.ts - Użytkownik nie jest zalogowany (401).');
+        } else {
+            console.error('auth.ts - Błąd podczas pobierania danych użytkownika:', error);
+        }
         return null;
     }
 };
