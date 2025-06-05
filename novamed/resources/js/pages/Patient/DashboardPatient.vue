@@ -134,18 +134,33 @@ onMounted(() => {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-6 p-4 md:p-6">
-            <!-- Sekcja Powitalna i Dane Profilowe -->
             <Card class="dark:bg-gray-800">
-                <CardHeader>
-                    <CardTitle class="text-2xl font-bold">Witaj, {{ user?.name || 'Pacjencie' }}!</CardTitle>
-                    <CardDescription>Oto podsumowanie Twojej aktywności i szybkie linki.</CardDescription>
+                <CardHeader class="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle class="text-2xl font-bold">Witaj, {{ user?.name || 'Pacjencie' }}!</CardTitle>
+                        <CardDescription>Oto podsumowanie Twojej aktywności i szybkie linki.</CardDescription>
+                    </div>
+                    <div v-if="authStore.user?.avatar" class="flex-shrink-0">
+                        <div class="h-14 w-14 rounded-full bg-nova-primary/20 flex items-center justify-center text-foreground font-semibold shrink-0 border border-nova-primary/30">
+                            <img v-if="user?.avatar || user?.profile_picture_url || user?.profile_picture_path"
+                                 :src="user?.avatar || user?.profile_picture_url || user?.profile_picture_path"
+                                 :alt="user?.name"
+                                 class="h-full w-full object-cover rounded-full" />
+                            <span v-else>{{ getInitials(user?.name) }}</span>
+                        </div>
+                    </div>
+                    <div v-else class="flex-shrink-0 bg-gray-200 dark:bg-gray-700 h-16 w-16 rounded-full flex items-center justify-center">
+                        <Icon name="user" class="h-8 w-8 text-gray-500 dark:text-gray-400" />
+                    </div>
                 </CardHeader>
                 <CardContent class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <p class="text-muted-foreground">Masz szybki dostęp do swoich wizyt i ustawień konta.</p>
-                    <Button @click="router.push({ name: 'settings.profile' })" variant="outline" class="dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
-                        <Icon name="user-cog" class="mr-2 h-4 w-4" />
-                        Mój Profil
-                    </Button>
+                    <div class="flex items-center gap-3">
+                        <Button @click="router.push({ name: 'settings.profile' })" variant="outline" class="dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+                            <Icon name="user-cog" class="mr-2 h-4 w-4" />
+                            Mój Profil
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
             <Separator/>

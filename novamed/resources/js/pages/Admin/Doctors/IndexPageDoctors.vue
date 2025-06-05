@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreadcrumbItem } from '@/types';
 import axios from 'axios';
 import InputNumber from 'primevue/inputnumber';
@@ -928,38 +929,67 @@ onMounted(() => {
         </div>
 
         <div v-if="showAvatarUploadModal && selectedDoctorForAvatar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div class="mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
-                <div class="mb-4 flex items-center justify-between">
-                    <h3 class="text-lg font-medium dark:text-gray-200">Zmień Zdjęcie Lekarza</h3>
+            <Card class="mx-auto w-full max-w-md border dark:border-gray-700 dark:bg-gray-800">
+                <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <div>
+                        <CardTitle class="text-lg font-medium dark:text-gray-200">Zdjęcie Lekarza</CardTitle>
+                        <CardDescription class="dark:text-gray-400">Zdjęcie profilowe widoczne dla pacjentów</CardDescription>
+                    </div>
                     <Button variant="ghost" class="h-8 w-8 p-0 dark:text-gray-200 dark:hover:bg-gray-700" @click="showAvatarUploadModal = false">
                         <Icon name="x" size="18" />
                     </Button>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex justify-center">
-                        <img
-                            :src="
-                                avatarPreview ||
-                                `https://ui-avatars.com/api/?name=${selectedDoctorForAvatar.first_name}+${selectedDoctorForAvatar.last_name}&background=random&color=fff&size=128`
-                            "
-                            alt="Podgląd avatara"
-                            class="h-32 w-32 rounded-full border-2 border-gray-300 object-cover dark:border-gray-600"
-                        />
+                </CardHeader>
+                <CardContent class="flex flex-col items-center gap-4">
+                    <img
+                        :src="
+                avatarPreview ||
+                `https://ui-avatars.com/api/?name=${selectedDoctorForAvatar.first_name}+${selectedDoctorForAvatar.last_name}&background=random&color=fff&size=128`
+            "
+                        alt="Podgląd avatara"
+                        class="h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg dark:border-gray-700"
+                    />
+                    <input
+                        type="file"
+                        ref="avatarInputRef"
+                        @change="handleAvatarChange"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="hidden"
+                        id="doctor-avatar-input"
+                    />
+                    <Button
+                        type="button"
+                        variant="outline"
+                        @click="$refs.avatarInputRef?.click()"
+                        class="w-full dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                        <Icon name="upload-cloud" class="mr-2 h-4 w-4" />
+                        Wybierz nowe zdjęcie
+                    </Button>
+                    <InputError :message="avatarUploadErrors.avatar?.[0]" />
+                    <p class="text-center text-xs text-gray-500 dark:text-gray-400">Maks. 2MB. Dozwolone formaty: JPG, PNG, WEBP.</p>
+                    <div class="w-full space-y-2">
+                        <Button
+                            v-if="avatarFile"
+                            type="button"
+                            @click="uploadAvatar"
+                            :disabled="avatarUploadLoading"
+                            class="w-full bg-green-600 text-white hover:bg-green-700"
+                        >
+                            <Icon v-if="avatarUploadLoading" name="loader2" class="mr-2 h-4 w-4 animate-spin" />
+                            Zapisz nowy avatar
+                        </Button>
+                        <Button
+                            v-if="selectedDoctorForAvatar.profile_picture_url && !avatarFile"
+                            type="button"
+                            @click="deleteAvatar(selectedDoctorForAvatar.id)"
+                            variant="destructive"
+                            class="w-full"
+                        >
+                            <Icon name="trash-2" class="mr-2 h-4 w-4" />
+                            Usuń zdjęcie
+                        </Button>
                     </div>
-                    <div>
-                        <Label for="avatar-upload" class="dark:text-gray-300">Wybierz nowe zdjęcie</Label>
-                        <Input
-                            id="avatar-upload"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            @change="handleAvatarChange"
-                            class="file:bg-nova-primary/10 file:text-nova-primary hover:file:bg-nova-primary/20 dark:file:bg-nova-accent/20 dark:file:text-nova-accent mt-1 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                            :class="{ 'border-red-500': avatarUploadErrors.avatar }"
-                        />
-                        <InputError :message="avatarUploadErrors.avatar?.[0]" />
-                        <p class="text-muted-foreground mt-1 text-xs dark:text-gray-400">Maks. 2MB. Dozwolone formaty: JPG, PNG, WEBP.</p>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-4">
+                    <div class="flex w-full justify-end pt-2">
                         <Button
                             type="button"
                             variant="outline"
@@ -968,17 +998,9 @@ onMounted(() => {
                         >
                             Anuluj
                         </Button>
-                        <Button
-                            @click="uploadAvatar"
-                            :disabled="avatarUploadLoading || !avatarFile"
-                            class="bg-nova-primary hover:bg-nova-accent dark:text-nova-light dark:hover:bg-nova-primary dark:bg-nova-accent flex items-center gap-2"
-                        >
-                            <Icon v-if="avatarUploadLoading" name="loader2" class="animate-spin" size="16" />
-                            <span>Prześlij Avatar</span>
-                        </Button>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     </AppLayout>
 </template>

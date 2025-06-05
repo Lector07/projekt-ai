@@ -97,7 +97,7 @@ onMounted(() => {
                     <div v-if="authStore.user?.avatar" class="flex-shrink-0">
                         <img
                             :src="authStore.user?.avatar"
-                            alt="Avatar użytkownika"
+                            alt="Avatar użytkownika {{ authStore.user?.name }}"
                             class="h-16 w-16 rounded-full object-cover border-2 border-nova-accent"
                         />
                     </div>

@@ -68,6 +68,7 @@ Route::prefix('v1/admin')
             ->name('procedures.categories');
         Route::apiResource('/users', Admin\AdminUserController::class)->names('users');
         Route::post('/users/{user}/avatar', [Admin\AdminUserController::class, 'updateAvatar'])->name('users.avatar.update'); // <<< --- NOWA TRASA
+        Route::delete('/users/{user}/avatar', [AdminUserController::class, 'deleteAvatar'])->name('users.avatar.delete');;
         Route::apiResource('procedure-categories', Admin\AdminProcedureCategoryController::class)->names('procedure-categories');
         Route::apiResource('/doctors', Admin\AdminDoctorController::class)->names('doctors');
         Route::apiResource('/procedures', Admin\AdminProcedureController::class)->names('procedures');

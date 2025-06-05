@@ -26,8 +26,7 @@ interface Doctor {
     last_name?: string;
     full_name?: string;
     specialization: string;
-    // image_url?: string; // Zmień to
-    profile_picture_url?: string; // Na to
+    profile_picture_url?: string;
     bio?: string;
 }
 
@@ -202,7 +201,6 @@ const getDoctorName = (doctor: Doctor): string => {
                                         >
                                             Profil
                                         </Button>
-                                        <Button class="w-auto bg-nova-accent hover:bg-nova-primary dark:bg-nova-primary hover:dark:bg-nova-dark text-nova-light">Umów wizytę</Button>
                                     </div>
                                 </div>
                             </div>

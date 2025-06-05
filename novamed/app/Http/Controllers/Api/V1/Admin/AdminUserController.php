@@ -119,4 +119,20 @@ class AdminUserController extends Controller
 
         return new UserResource($user->fresh());
     }
+
+    /**
+     * Usuwa avatar użytkownika
+     */
+    public function deleteAvatar(User $user): UserResource
+    {
+        $this->authorize('update', $user);
+
+        if ($user->profile_picture_path) {
+            Storage::disk('public')->delete($user->profile_picture_path);
+            $user->profile_picture_path = null;
+            $user->save();
+        }
+
+        return new UserResource($user->fresh());
+    }
 }
