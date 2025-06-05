@@ -14,6 +14,6 @@ class EnsureUserIsAdmin
             return $next($request);
         }
 
-        return response()->json(['message' => 'Forbidden. Administrator access required.'], 403);
+        return response()->json(['message' => 'Wymagany jest dostęp dla administratora.'], 403);
     }
 }

@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    protected $observers = [ // <<<--- DODAJ LUB UZUPEŁNIJ TĘ TABLICĘ
+    protected $observers = [
         Doctor::class => [DoctorObserver::class],
     ];
 }

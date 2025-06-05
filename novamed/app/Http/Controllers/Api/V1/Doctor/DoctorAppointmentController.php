@@ -31,51 +31,41 @@ class DoctorAppointmentController extends Controller
         $query = Appointment::where('doctor_id', $doctor->id)
             ->with(['patient:id,name', 'procedure:id,name']);
 
-        // Filtrowanie po statusie
         if ($request->filled('status') && $request->input('status') !== 'all') {
             $query->where('status', $request->input('status'));
         }
 
-        // Filtrowanie po dacie "od"
         if ($request->filled('date_from')) {
             $query->whereDate('appointment_datetime', '>=', $request->input('date_from'));
         }
 
-        // Filtrowanie po dacie "do"
         if ($request->filled('date_to')) {
             $query->whereDate('appointment_datetime', '<=', $request->input('date_to'));
         }
 
-        // Wyszukiwanie po nazwisku pacjenta
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
             $query->whereHas('patient', function ($q) use ($searchTerm) {
                 $q->where('name', 'like', "%{$searchTerm}%")
-                    ->orWhere('last_name', 'like', "%{$searchTerm}%"); // Jeśli masz osobne first_name, last_name
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%");
             });
         }
 
         // Sortowanie
-        $sortBy = $request->input('sort_by', 'newest'); // Domyślnie 'newest'
+        $sortBy = $request->input('sort_by', 'newest');
         switch ($sortBy) {
             case 'oldest':
                 $query->orderBy('appointment_datetime', 'asc');
                 break;
             case 'patient_asc':
-                // Wymaga JOIN lub bardziej złożonego sortowania po relacji
-                // Dla uproszczenia, można sortować po ID pacjenta lub imieniu, jeśli jest w tabeli appointments
-                // Jeśli patient.name jest ładowane, możesz próbować sortować, ale może być nieefektywne
-                // $query->join('users as patients', 'appointments.patient_id', '=', 'patients.id')
-                //       ->orderBy('patients.name', 'asc')
-                //       ->select('appointments.*'); // Ważne, aby uniknąć konfliktu kolumn
-                // Prostsze, jeśli tylko sortujesz po dacie dla nie "newest"
-                $query->orderBy('appointment_datetime', 'asc'); // Domyślnie, jeśli patient_asc niezaimplementowane
+                $query->join('users as patients', 'appointments.patient_id', '=', 'patients.id')
+                     ->orderBy('patients.name', 'asc')
+                     ->select('appointments.*');
                 break;
             case 'patient_desc':
-                // $query->join('users as patients', 'appointments.patient_id', '=', 'patients.id')
-                //       ->orderBy('patients.name', 'desc')
-                //       ->select('appointments.*');
-                $query->orderBy('appointment_datetime', 'desc'); // Domyślnie
+                $query->join('users as patients', 'appointments.patient_id', '=', 'patients.id')
+                     ->orderBy('patients.name', 'desc')
+                     ->select('appointments.*');
                 break;
             case 'newest':
             default:
@@ -83,7 +73,7 @@ class DoctorAppointmentController extends Controller
                 break;
         }
 
-        $perPage = (int) $request->input('per_page', 10); // Pobierz per_page z requestu
+        $perPage = (int) $request->input('per_page', 10);
         $appointments = $query->paginate($perPage);
 
         return AppointmentResource::collection($appointments);
@@ -137,7 +127,6 @@ class DoctorAppointmentController extends Controller
             ->whereBetween('appointment_datetime', [$start, $end])
             ->whereNotIn('status', ['cancelled_by_patient', 'cancelled_by_clinic']);
 
-        // Dla kalendarza zazwyczaj chcemy wszystkie pasujące zdarzenia, bez paginacji
         $appointments = $query->orderBy('appointment_datetime', 'asc')->get();
 
         return AppointmentEventResource::collection($appointments);

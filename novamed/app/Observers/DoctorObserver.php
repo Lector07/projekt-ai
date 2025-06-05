@@ -8,14 +8,6 @@ use Illuminate\Support\Facades\Log;
 
 class DoctorObserver
 {
-    /**
-     * Handle the Doctor "deleted" event.
-     *
-     * This method will be called AFTER the doctor record has been deleted from the database.
-     *
-     * @param  \App\Models\Doctor  $doctor
-     * @return void
-     */
     public function deleted(Doctor $doctor): void
     {
         if ($doctor->user_id) {

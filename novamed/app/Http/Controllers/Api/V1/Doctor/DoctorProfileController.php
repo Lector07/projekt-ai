@@ -15,12 +15,9 @@ class DoctorProfileController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Wyświetl profil zalogowanego lekarza.
-     */
     public function show(Request $request): DoctorResource
     {
-        $doctor = $request->user()->doctor()->with(['user', 'procedures'])->firstOrFail(); // Pobierz profil Doctor i załaduj procedury
+        $doctor = $request->user()->doctor()->with(['user', 'procedures'])->firstOrFail();
         return new DoctorResource($doctor);
     }
 
@@ -30,7 +27,7 @@ class DoctorProfileController extends Controller
     {
         $doctor = $request->user()->doctor;
         if (!$doctor) {
-            return response()->json(['message' => 'Profil lekarza nie znaleziony'], 404); // Chociaż middleware powinno to wyłapać
+            return response()->json(['message' => 'Profil lekarza nie znaleziony'], 404);
         }
 
         $validated = $request->validated();
@@ -50,7 +47,7 @@ class DoctorProfileController extends Controller
     /**
      * Update the authenticated doctor's avatar.
      */
-    public function updateAvatar(UpdateUserAvatarRequest $request): JsonResponse|DoctorResource // Używamy UpdateUserAvatarRequest dla spójności reguł
+    public function updateAvatar(UpdateUserAvatarRequest $request): JsonResponse|DoctorResource
     {
         $user = $request->user();
         $doctor = $user?->doctor;

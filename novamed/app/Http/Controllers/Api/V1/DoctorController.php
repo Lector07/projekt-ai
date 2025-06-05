@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\V1\DoctorResource; // Upewnij się, że ten import jest obecny
+use App\Http\Resources\Api\V1\DoctorResource;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Procedure;
@@ -11,10 +11,9 @@ use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Carbon;
-use Illuminate\Http\JsonResponse; // Dodaj ten import
+use Illuminate\Http\JsonResponse;
 
 
-// Możesz go potrzebować do filtrowania/sortowania w przyszłości
 
 class DoctorController extends Controller
 {
@@ -40,40 +39,20 @@ class DoctorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        // ... logika ...
-        // $newDoctor = Doctor::create($request->validated());
-        // return (new DoctorResource($newDoctor))->response()->setStatusCode(201);
-    }
 
     /**
      * Display the specified resource.
      */
     public function show(Doctor $doctor): DoctorResource
     {
-        // $doctor->load('user'); // Jeśli potrzebujesz danych użytkownika
+        $doctor->load('user');
         return new DoctorResource($doctor);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Doctor $doctor)
-    {
-        // ... logika ...
-        // $doctor->update($request->validated());
-        // return new DoctorResource($doctor->fresh());
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Doctor $doctor)
-    {
-        // ... logika ...
-        // return response()->noContent();
-    }
     public function getAvailability(Request $request, Doctor $doctor): JsonResponse
     {
         $validated = $request->validate([
@@ -86,11 +65,10 @@ class DoctorController extends Controller
         $endDate = Carbon::parse($validated['end_date'])->endOfDay();
         $procedureId = $validated['procedure_id'] ?? null;
 
-        $procedureDuration = 30; // Domyślny czas trwania w minutach
+        $procedureDuration = 30;
         if ($procedureId) {
             $procedure = Procedure::find($procedureId);
-            // Załóżmy, że model Procedure ma pole 'duration_minutes'
-            // $procedureDuration = $procedure?->duration_minutes ?? 30;
+            $procedureDuration = $procedure?->duration_minutes ?? 30;
         }
 
         $availability = [];
@@ -98,7 +76,7 @@ class DoctorController extends Controller
 
         $existingAppointmentsDateTimes = Appointment::where('doctor_id', $doctor->id)
             ->whereBetween('appointment_datetime', [$startDate, $endDate])
-            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show']) // Tylko aktywne/nadchodzące
+            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
             ->pluck('appointment_datetime')
             ->map(function ($datetime) {
                 return Carbon::parse($datetime);
@@ -130,7 +108,7 @@ class DoctorController extends Controller
                     if ($isSlotAvailable) {
                         $daySlots[] = $slot->format('H:i');
                     }
-                    $slot->addMinutes($procedureDuration); // Przejdź do następnego potencjalnego slotu
+                    $slot->addMinutes($procedureDuration);
                 }
 
                 if (count($daySlots) > 0) {

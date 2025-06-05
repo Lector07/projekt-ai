@@ -7,19 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use App\Models\Appointment;
-use App\Models\User; // Zakładam, że User jest potrzebny do pobrania $request->user()
+use App\Models\User;
 
 class DoctorDashboardController extends Controller
 {
     /**
-     * Pobiera dane potrzebne do wyświetlenia na dashboardzie lekarza.
      *
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request): JsonResponse // Nazwa zmieniona na 'index'
+    public function index(Request $request): JsonResponse
     {
-        /** @var User $user */
         $user = $request->user();
         $doctor = $user->doctor;
 
@@ -61,11 +59,11 @@ class DoctorDashboardController extends Controller
                 'doctor_name' => $doctor->first_name . ' ' . $doctor->last_name,
                 'todays_appointments' => $todaysAppointments->map($mapAppointmentData),
                 'tomorrows_appointments' => $tomorrowsAppointments->map($mapAppointmentData),
-                'stats' => [ // Przykładowe statystyki, które możesz dodać
+                'stats' => [
                     'total_appointments_today' => $todaysAppointments->count(),
                     'pending_confirmation_count' => Appointment::where('doctor_id', $doctor->id)
                         ->where('status', 'scheduled')
-                        ->whereDate('appointment_datetime', '>=', $today) // Wizyty od dzisiaj oczekujące
+                        ->whereDate('appointment_datetime', '>=', $today)
                         ->count(),
                 ]
             ]

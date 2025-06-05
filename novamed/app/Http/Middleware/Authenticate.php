@@ -15,12 +15,10 @@ class Authenticate extends Middleware
      */
     protected function redirectTo(Request $request): ?string
     {
-        // Jeśli żądanie oczekuje JSON, zwróć null, aby Laravel zwrócił odpowiedź 401 Unauthorized.
         if ($request->expectsJson()) {
             return null;
         }
 
-        // W przypadku żądań webowych można zwrócić ścieżkę logowania (jeśli istnieje).
-        return route('login'); // Upewnij się, że trasa 'login' istnieje w pliku routes/web.php.
+        return route('login');
     }
 }

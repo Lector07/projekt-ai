@@ -20,8 +20,6 @@ class AppointmentEventResource extends JsonResource
             'start' => $startDateTime->toIso8601String(),
             'end' => $endDateTime->toIso8601String(),
             'allDay' => false,
-            // 'backgroundColor' => $this->getEventColorByStatus(), // Jeśli masz tę logikę
-            // 'borderColor' => $this->getEventColorByStatus(),
             'extendedProps' => [
                 'appointment_id' => $this->id,
                 'status' => $this->status,

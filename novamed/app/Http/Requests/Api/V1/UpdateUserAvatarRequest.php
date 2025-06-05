@@ -11,9 +11,6 @@ class UpdateUserAvatarRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Użytkownik musi być zalogowany, aby zaktualizować swój awatar.
-        // Dalsza, bardziej szczegółowa autoryzacja (czy to na pewno ten użytkownik)
-        // jest w kontrolerze przez $this->authorize('update', $user).
         return $this->user() ? true : false;
     }
 
@@ -25,7 +22,7 @@ class UpdateUserAvatarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'], // Max 2MB
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }
 
