@@ -13,13 +13,11 @@ class LoginController extends Controller
 {
     public function store(LoginRequest $request): JsonResponse
     {
-        $request->authenticate(); // Waliduje i próbuje zalogować
+        $request->authenticate();
         $request->session()->regenerate();
 
-        // Zwróć dane zalogowanego użytkownika za pomocą UserResource
         return response()->json([
-            'user' => new UserResource(Auth::user()) // Użyj UserResource
+            'user' => new UserResource(Auth::user())
         ]);
-        // Lub zwróć 204: return response()->json(null, 204);
     }
 }

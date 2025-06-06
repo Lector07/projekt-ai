@@ -183,7 +183,6 @@ async function submitAvatar() {
 async function deleteAvatarAction() {
     deletingAvatar.value = true;
     try {
-        // Zmiana z DELETE na POST z parametrem _method
         await axios.post('/api/v1/doctor/profile/avatar', {
             _method: 'DELETE'
         });
@@ -490,7 +489,6 @@ watch(allProcedures, () => {
 </template>
 
 <style>
-/* Stylizacja dla ConfirmPopup */
 .p-confirmpopup {
     background: white !important;
     color: #333 !important;
@@ -501,7 +499,6 @@ watch(allProcedures, () => {
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Tryb ciemny */
 .dark .p-confirmpopup {
     background: #1f2937 !important;
     color: #f3f4f6 !important;

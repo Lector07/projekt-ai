@@ -36,11 +36,11 @@ const fetchDoctor = async () => {
 
         console.log('Dane lekarza z API (po zmianie kontrolera):', response.data);
 
-        if (!response.data || !response.data.data) { // Sprawdź, czy istnieje response.data.data
+        if (!response.data || !response.data.data) {
             throw new Error('Nie znaleziono danych lekarza w odpowiedzi API');
         }
 
-        doctor.value = response.data.data; // <<< --- POPRAWKA TUTAJ
+        doctor.value = response.data.data;
 
     } catch (err) {
         console.error('Błąd podczas pobierania danych lekarza:', err);

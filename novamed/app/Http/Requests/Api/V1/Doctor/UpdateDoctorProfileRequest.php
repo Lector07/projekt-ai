@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Api\V1\Doctor; // Zwróć uwagę na przestrzeń nazw
+namespace App\Http\Requests\Api\V1\Doctor;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\User; // Jeśli np. specjalizacja miałaby być unikalna wśród lekarzy powiązanych z userami
+use App\Models\User;
 
 class UpdateDoctorProfileRequest extends FormRequest
 {

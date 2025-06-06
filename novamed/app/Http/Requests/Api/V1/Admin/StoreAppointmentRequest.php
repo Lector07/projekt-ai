@@ -11,7 +11,7 @@ class StoreAppointmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // Autoryzacja jest już realizowana w kontrolerze przez policy
+        return true;
     }
 
     /**

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem, type User } from '@/types'; // Dodaj User, jeśli nie masz
+import { type BreadcrumbItem, type User } from '@/types';
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
-import { Button } from '@/components/ui/button'; // Załóżmy, że masz ten komponent
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'; // Lub odpowiedniki z PrimeVue
-import Icon from '@/components/Icon.vue'; // Komponent ikon
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import Icon from '@/components/Icon.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { Separator } from '@/components/ui/separator';
@@ -14,19 +14,17 @@ const router = useRouter();
 const authStore = useAuthStore();
 const user = computed<User | null>(() => authStore.user);
 
-// --- Breadcrumbs ---
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Panel Pacjenta', // Zmieniono dla jasności
+        title: 'Panel Pacjenta',
     },
 ];
 
-// --- Dane Wizyt ---
 interface Appointment {
     id: number;
     appointment_datetime: string;
-    doctor: { name: string; specialization: string; }; // Uproszczony model lekarza
-    procedure: { name: string; }; // Uproszczony model zabiegu
+    doctor: { name: string; specialization: string; };
+    procedure: { name: string; };
     status: string;
 }
 const upcomingAppointments = ref<Appointment[]>([]);
@@ -35,20 +33,16 @@ const loadingAppointments = ref(true);
 async function fetchUpcomingAppointments() {
     loadingAppointments.value = true;
     try {
-        // Endpoint API do pobrania nadchodzących wizyt zalogowanego pacjenta
-        // Przykład: /api/v1/patient/appointments?status=scheduled,confirmed&limit=4&sort=upcoming
         const response = await axios.get('/api/v1/patient/appointments', {
             params: {
-                // Możesz dodać parametry do API, np. limit, sortowanie, statusy
-                limit: 4, // np. najbliższa + 3 kolejne
-                upcoming: true, // lub filtr po dacie >= today
-                status: 'scheduled,confirmed' // tylko zaplanowane i potwierdzone
+                limit: 4,
+                upcoming: true,
+                status: 'scheduled,confirmed'
             }
         });
-        upcomingAppointments.value = response.data.data || []; // Załóżmy, że API zwraca { data: [...] }
+        upcomingAppointments.value = response.data.data || [];
     } catch (error) {
         console.error("Błąd podczas pobierania nadchodzących wizyt:", error);
-        // Możesz ustawić jakiś error state
     } finally {
         loadingAppointments.value = false;
     }
@@ -57,7 +51,6 @@ async function fetchUpcomingAppointments() {
 const nearestAppointment = computed(() => upcomingAppointments.value.length > 0 ? upcomingAppointments.value[0] : null);
 const nextAppointments = computed(() => upcomingAppointments.value.length > 1 ? upcomingAppointments.value.slice(1, 4) : []);
 
-// --- Dane Proponowanych Lekarzy ---
 interface Doctor {
     id: number;
     first_name: string;
@@ -71,7 +64,6 @@ const loadingDoctors = ref(true);
 async function fetchSuggestedDoctors() {
     loadingDoctors.value = true;
     try {
-        // Endpoint API do pobrania np. 3 losowych/popularnych lekarzy
         const response = await axios.get('/api/v1/doctors', { params: { limit: 3, popular: true } });
         suggestedDoctors.value = response.data.data || [];
     } catch (error) {
@@ -81,7 +73,6 @@ async function fetchSuggestedDoctors() {
     }
 }
 
-// --- Dane Popularnych Zabiegów ---
 interface Procedure {
     id: number;
     name: string;
@@ -94,7 +85,6 @@ const loadingProcedures = ref(true);
 async function fetchPopularProcedures() {
     loadingProcedures.value = true;
     try {
-        // Endpoint API do pobrania np. 3 popularnych zabiegów
         const response = await axios.get('/api/v1/procedures', { params: { limit: 6, popular: true } });
         popularProcedures.value = response.data.data || [];
     } catch (error) {
@@ -104,7 +94,6 @@ async function fetchPopularProcedures() {
     }
 }
 
-// --- Formatowanie Daty ---
 const formatDateTime = (dateTimeString: string) => {
     if (!dateTimeString) return '';
     const date = new Date(dateTimeString);
@@ -180,11 +169,8 @@ onMounted(() => {
                 </CardContent>
             </Card>
 
-            <!-- Główna siatka dashboardu -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Lewa kolumna (Nadchodzące wizyty i Szybkie Akcje) -->
                 <div class="lg:col-span-2 space-y-2">
-                    <!-- Nadchodzące Wizyty -->
                     <Card class="dark:bg-gray-800">
                         <CardHeader>
                             <CardTitle>Nadchodzące Wizyty</CardTitle>
@@ -268,10 +254,7 @@ onMounted(() => {
                     </Card>
                 </div>
 
-                <!-- Prawa kolumna (Proponowani lekarze i zabiegi) -->
                 <div class="space-y-6">
-                    <!-- Proponowani Lekarze -->
-                    <!-- Popularne Zabiegi -->
                     <Card class="dark:bg-gray-800">
                         <CardHeader>
                             <CardTitle>Popularne Zabiegi</CardTitle>

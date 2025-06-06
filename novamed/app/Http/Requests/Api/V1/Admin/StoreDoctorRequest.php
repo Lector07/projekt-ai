@@ -29,7 +29,6 @@ class StoreDoctorRequest extends FormRequest
             $rules['email'] = 'required|email|max:255|unique:users,email';
             $rules['password'] = 'required|string|min:8';
         } else {
-            // Zamiast zabraniać, ignorujemy te pola gdy mamy user_id
             $rules['email'] = 'sometimes|nullable|email|max:255';
             $rules['password'] = 'sometimes|nullable|string|min:8';
         }

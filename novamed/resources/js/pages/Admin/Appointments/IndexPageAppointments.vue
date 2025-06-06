@@ -115,12 +115,9 @@ const statuses = [
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
-const patientSearchQuery = ref('');
-const doctorSearchQuery = ref('');
 const allPatients = ref<Patient[]>([]);
 const allDoctors = ref<Doctor[]>([]);
-const filteredPatients = ref<Patient[]>([]);
-const filteredDoctors = ref<Doctor[]>([]);
+
 const showPatientResults = ref(false);
 const showDoctorResults = ref(false);
 const patientsLoading = ref(false);
@@ -268,7 +265,6 @@ const deleteAppointment = async (id: number) => {
     }
 };
 
-// Zmodyfikuj funkcję openEditForm
 const openEditForm = async (appointment: Appointment) => {
     appointmentErrors.value = {};
     appointmentFormLoading.value = true;

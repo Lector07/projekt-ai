@@ -27,17 +27,7 @@ import {
     PaginationNext
 } from '@/components/ui/pagination';
 import {PaginationList, PaginationListItem} from 'reka-ui';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import {
@@ -50,11 +40,8 @@ import {
 
 import {
     ScrollArea,
-    ScrollBar
 } from "@/components/ui/scroll-area";
-import {TooltipContent} from "@/components/ui/tooltip";
 
-// Interfejs dla danych użytkownika
 interface User {
     id: number;
     name: string;
@@ -67,7 +54,6 @@ interface User {
     profile_picture_url?: string | null;
 }
 
-// Parametry zapytania
 const query = ref({
     page: 1,
     per_page: 12,
@@ -75,7 +61,6 @@ const query = ref({
     role: ''
 });
 
-// Zmienne reaktywne
 const users = ref<User[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -84,14 +69,12 @@ const totalItems = ref(0);
 const currentPage = computed(() => query.value.page);
 const itemsPerPage = computed(() => query.value.per_page);
 
-// Stan dla popoverów
 const showAddUserForm = ref(false);
 const showEditUserForm = ref(false);
 const selectedUser = ref<User | null>(null);
 const userFormLoading = ref(false);
 const userErrors = ref<Record<string, string[]>>({});
 
-// Stan dla avatara
 const avatarFile = ref<File | null>(null);
 const avatarPreview = ref<string | null>(null);
 const avatarUploadErrors = ref<Record<string, string[]>>({});
@@ -99,7 +82,6 @@ const avatarUploadLoading = ref(false);
 const selectedUserForAvatar = ref<User | null>(null);
 const showAvatarUploadModal = ref(false);
 
-// Formularz nowego użytkownika
 const newUser = ref<User>({
     id: 0,
     name: '',
@@ -110,10 +92,8 @@ const newUser = ref<User>({
     created_at: ''
 });
 
-const router = useRouter();
 const toast = useToast();
 
-// Okruszki dla nawigacji
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Zarządzanie Użytkownikami',
@@ -121,7 +101,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ];
 
-// Funkcja do ładowania użytkowników
 const loadUsers = async () => {
     loading.value = true;
     error.value = null;
@@ -141,7 +120,6 @@ const loadUsers = async () => {
 
         const response = await axios.get(`/api/v1/admin/users?${params.toString()}`);
 
-        // Mapowanie 'avatar' do 'profile_picture_url'
         users.value = response.data.data.map((user: any) => ({
             ...user,
             profile_picture_url: user.avatar || null
@@ -156,17 +134,14 @@ const loadUsers = async () => {
     }
 };
 
-// Resetowanie strony przy zmianie filtrów
 const resetPagination = () => {
     query.value.page = 1;
 };
 
-// Funkcja do nawigacji między stronami
 const goToPage = (page: number) => {
     query.value.page = page;
 };
 
-// Konfiguracja niestandardowych ikon dla toastów
 const toastIcons = {
     successIcon: 'pi pi-check-circle',
     infoIcon: 'pi pi-info-circle',
@@ -175,7 +150,6 @@ const toastIcons = {
     closeIcon: 'pi pi-times'
 };
 
-// Funkcje do wyświetlania toastów z dodatkowymi opcjami
 const showSuccessToast = (summary: string, detail: string) => {
     toast.add({
         severity: 'success',
@@ -187,27 +161,6 @@ const showSuccessToast = (summary: string, detail: string) => {
     });
 };
 
-const showInfoToast = (summary: string, detail: string) => {
-    toast.add({
-        severity: 'info',
-        summary,
-        detail,
-        life: 3000,
-        styleClass: 'custom-toast-info',
-        contentStyleClass: 'custom-toast-content'
-    });
-};
-
-const showWarnToast = (summary: string, detail: string) => {
-    toast.add({
-        severity: 'warn',
-        summary,
-        detail,
-        life: 3000,
-        styleClass: 'custom-toast-warn',
-        contentStyleClass: 'custom-toast-content'
-    });
-};
 
 const showErrorToast = (summary: string, detail: string) => {
     toast.add({
@@ -220,7 +173,6 @@ const showErrorToast = (summary: string, detail: string) => {
     });
 };
 
-// Funkcja otwierająca formularz edycji
 const editUser = (user: User) => {
     if (user.role === 'admin') {
         showErrorToast('Błąd', 'Nie można edytować administratora systemu');
@@ -229,9 +181,7 @@ const editUser = (user: User) => {
     selectedUser.value = { ...user };
     showEditUserForm.value = true;
 };
-//TODO: zmienić wygląd na taki jak w doctorsindexpage
 
-// Czyszczenie formularza użytkownika
 const resetUserForm = () => {
     newUser.value = {
         id: 0,
@@ -245,7 +195,6 @@ const resetUserForm = () => {
     userErrors.value = {};
 };
 
-// Walidacja formularza
 const validateUserForm = (user: User) => {
     const errors: Record<string, string[]> = {};
 
@@ -255,7 +204,6 @@ const validateUserForm = (user: User) => {
         errors.email = ['Podaj prawidłowy adres email'];
     }
 
-    // Walidacja hasła tylko dla nowego użytkownika lub gdy hasło jest zmieniane
     if (!user.id) {
         if (!user.password) errors.password = ['Hasło jest wymagane'];
         else if (user.password.length < 8) {
@@ -279,7 +227,6 @@ const validateUserForm = (user: User) => {
     return Object.keys(errors).length === 0;
 };
 
-// Dodawanie nowego użytkownika
 const addUser = async () => {
     if (!validateUserForm(newUser.value)) return;
 
@@ -302,13 +249,11 @@ const addUser = async () => {
     }
 };
 
-// Aktualizacja użytkownika
 const updateUser = async () => {
     if (!selectedUser.value || !validateUserForm(selectedUser.value)) return;
 
     userFormLoading.value = true;
 
-    // Przygotuj dane do wysłania - usuń puste hasło
     const userData = { ...selectedUser.value };
     if (!userData.password) {
         delete userData.password;
@@ -342,7 +287,6 @@ const updateUser = async () => {
     }
 };
 
-// Funkcja do usuwania użytkownika
 const deleteUser = async (id: number) => {
     const user = users.value.find(u => u.id === id);
     if (!user) return;
@@ -385,7 +329,6 @@ const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('pl-PL').format(date);
 };
 
-// --- Logika zmiany avatara ---
 const openAvatarModal = (user: User) => {
     selectedUserForAvatar.value = user;
     avatarFile.value = null;
@@ -400,14 +343,13 @@ const handleAvatarChange = (event: Event) => {
         const file = target.files[0];
         avatarFile.value = file;
 
-        // Walidacja pliku
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
             avatarUploadErrors.value = { avatar: ['Nieprawidłowy format pliku. Dozwolone: JPG, PNG, WEBP.'] };
             avatarFile.value = null;
             return;
         }
-        if (file.size > 2 * 1024 * 1024) { // 2MB
+        if (file.size > 2 * 1024 * 1024) {
             avatarUploadErrors.value = { avatar: ['Plik jest za duży. Maksymalny rozmiar to 2MB.'] };
             avatarFile.value = null;
             return;
@@ -437,7 +379,6 @@ const uploadAvatar = async () => {
         showAvatarUploadModal.value = false;
         showSuccessToast('Sukces', 'Avatar użytkownika został zaktualizowany.');
 
-        // Odśwież dane użytkownika na liście z obejściem cache
         const userIndex = users.value.findIndex((u) => u.id === selectedUserForAvatar.value!.id);
         if (userIndex !== -1) {
             const timestamp = new Date().getTime();
@@ -768,7 +709,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal do edycji użytkownika - przeniesiony poza Popover -->
         <div v-if="showEditUserForm && selectedUser" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-lg">
                 <div class="flex justify-between items-center mb-4">
@@ -779,7 +719,6 @@ onMounted(() => {
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Imię i nazwisko -->
                     <div class="space-y-2">
                         <Label for="edit-name">Imię i nazwisko</Label>
                         <Input
@@ -793,7 +732,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Email -->
                     <div class="space-y-2">
                         <Label for="edit-email">Email</Label>
                         <Input
@@ -808,7 +746,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Hasło (opcjonalne przy edycji) -->
                     <div class="space-y-2">
                         <Label for="edit-password">Nowe hasło (opcjonalne)</Label>
                         <Input
@@ -823,7 +760,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Potwierdzenie hasła -->
                     <div class="space-y-2">
                         <Label for="edit-password-confirmation">Potwierdzenie hasła</Label>
                         <Input
@@ -838,7 +774,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Wybór roli -->
                     <div class="space-y-2">
                         <Label for="edit-role">Rola użytkownika</Label>
                         <select
@@ -856,7 +791,6 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Przyciski -->
                     <div class="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -878,7 +812,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal zmiany avatara użytkownika -->
         <div v-if="showAvatarUploadModal && selectedUserForAvatar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <Card class="mx-auto w-full max-w-md border dark:border-gray-700 dark:bg-gray-800">
                 <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">

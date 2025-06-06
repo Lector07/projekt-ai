@@ -5,20 +5,16 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/auth/AuthSplitRsideLogoLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
-import {  onMounted } from 'vue';
 import { useToast } from "primevue/usetoast";
 import Toast from "primevue/toast";
 
 
 const toast = useToast();
-const router = useRouter();
-const authStore = useAuthStore();
 
 const form = ref({
     name: '',

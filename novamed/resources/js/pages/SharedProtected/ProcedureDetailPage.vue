@@ -9,8 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Stepper, StepperDescription, StepperItem, StepperSeparator, StepperTitle } from '@/components/ui/stepper';
-import { Circle, Dot, CalendarPlus, AlertCircle, FileQuestion } from 'lucide-vue-next'; // Zaimportuj AlertCircle i FileQuestion, jeśli Icon.vue ich nie obsługuje
-import Icon from '@/components/Icon.vue'; // Jeśli używasz generycznego komponentu Icon
+import { Circle, Dot, CalendarPlus, AlertCircle, FileQuestion } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
 interface Doctor {
     id: number;
@@ -39,7 +39,7 @@ interface Procedure {
     category?: ProcedureCategory;
     base_price: number;
     recovery_info?: string;
-    recovery_timeline_info?: string | TimelineStep[] | any[]; // Dodano any[] dla elastyczności, jeśli item ma inne pola
+    recovery_timeline_info?: string | TimelineStep[] | any[];
     doctors?: Doctor[];
 }
 
@@ -74,8 +74,8 @@ const timelineSteps = computed((): TimelineStep[] => {
     if (typeof procedure.value.recovery_timeline_info === 'string') {
         try {
             const parsed = JSON.parse(procedure.value.recovery_timeline_info);
-            if (Array.isArray(parsed)) { // Upewnij się, że wynik parsowania to tablica
-                return parsed.map((item: any, index: number) => ({ // Użyj any dla item, jeśli struktura jest niepewna
+            if (Array.isArray(parsed)) {
+                return parsed.map((item: any, index: number) => ({
                     step: item.step || index + 1,
                     title: item.title || `Etap ${index + 1}`,
                     description: item.description || ''
@@ -94,7 +94,7 @@ const timelineSteps = computed((): TimelineStep[] => {
             });
         }
     } else if (Array.isArray(procedure.value.recovery_timeline_info)) {
-        return procedure.value.recovery_timeline_info.map((item: any, index: number) => ({ // Użyj any dla item
+        return procedure.value.recovery_timeline_info.map((item: any, index: number) => ({
             step: item.step || index + 1,
             title: item.title || `Etap ${index + 1}`,
             description: item.description || ''
@@ -111,7 +111,6 @@ const fetchProcedure = async () => {
         if (response.data && response.data.data && typeof response.data.data === 'object') {
             procedure.value = response.data.data;
         } else if (response.data && typeof response.data === 'object' && !response.data.data) {
-            // Jeśli API zwraca obiekt procedury bezpośrednio (bez opakowania 'data')
             procedure.value = response.data as Procedure;
         }
         else {

@@ -23,7 +23,7 @@ interface Procedure {
     name: string;
     base_price: number;
     description?: string;
-    category_id: number; // Dodane pole
+    category_id: number;
 }
 
 interface Doctor {
@@ -198,7 +198,7 @@ watch([selectedDoctorId, combinedDateTime], () => {
     if (selectedDoctorId.value && combinedDateTime.value) {
         checkAppointmentAvailability();
     } else {
-        availabilityStatus.value = { available: true, message: null }; // Resetuj, jeśli dane są niekompletne
+        availabilityStatus.value = { available: true, message: null };
     }
 });
 

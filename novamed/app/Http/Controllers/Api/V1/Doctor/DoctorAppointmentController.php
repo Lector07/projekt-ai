@@ -51,7 +51,6 @@ class DoctorAppointmentController extends Controller
             });
         }
 
-        // Sortowanie
         $sortBy = $request->input('sort_by', 'newest');
         switch ($sortBy) {
             case 'oldest':

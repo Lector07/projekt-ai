@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import { useToast } from 'primevue/usetoast';
-import { Skeleton } from '@/components/ui/skeleton'; // Dodano import Skeleton
-import { Separator } from '@/components/ui/separator'; // Dodano import Separator
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
 interface PatientInfo { id: number; name: string; email?:string; }
-interface ProcedureInfo { id: number; name: string; base_price: number; description?: string;} // Dodano description
+interface ProcedureInfo { id: number; name: string; base_price: number; description?: string;}
 interface AppointmentFullDetail {
     id: number;
     appointment_datetime: string;
@@ -24,10 +24,10 @@ interface AppointmentFullDetail {
     patient_notes?: string | null;
     doctor_notes?: string | null;
     patient: PatientInfo;
-    doctor: { id: number; first_name: string; last_name: string; specialization: string; }; // Dodano specialization
+    doctor: { id: number; first_name: string; last_name: string; specialization: string; };
     procedure: ProcedureInfo;
     created_at: string;
-    updated_at?: string; // Dodano updated_at
+    updated_at?: string;
 }
 
 const props = defineProps<{ id: string }>();

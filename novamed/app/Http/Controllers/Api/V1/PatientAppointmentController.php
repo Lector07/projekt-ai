@@ -39,7 +39,6 @@ class PatientAppointmentController extends Controller
                 ->whereIn('status', ['scheduled', 'confirmed']);
         }
 
-        // Sortowanie
         $query->orderBy('appointment_datetime', $request->boolean('upcoming') ? 'asc' : 'desc');
 
 

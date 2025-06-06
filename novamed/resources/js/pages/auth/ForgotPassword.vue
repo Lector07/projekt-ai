@@ -24,7 +24,6 @@ async function submit() {
     errors.value = {};
 
     try {
-        // Pobierz CSRF token
         await axios.get('/sanctum/csrf-cookie');
 
         const response = await axios.post('/api/v1/forgot-password', form.value, {

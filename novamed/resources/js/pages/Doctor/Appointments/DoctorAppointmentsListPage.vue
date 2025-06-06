@@ -9,10 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {Pagination, PaginationContent, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import {Pagination } from '@/components/ui/pagination';
 import axios from 'axios';
 
 const router = useRouter();
@@ -36,9 +35,8 @@ interface Appointment {
     };
 }
 
-// Filtry
 const filters = ref({
-    status: 'all', // Zmiana z '' na 'all'
+    status: 'all',
     searchQuery: '',
     dateFrom: '',
     dateTo: '',
@@ -60,7 +58,6 @@ const BreadcrumbItems = computed(() => [
     { title: 'Moje wizyty', href: '/doctor/appointments' },
 ]);
 
-// Opcje statusów
 const statusOptions = [
     { value: 'all', label: 'Wszystkie statusy' },
     { value: 'scheduled', label: 'Zaplanowane' },
@@ -71,7 +68,6 @@ const statusOptions = [
     { value: 'no_show', label: 'Nieobecność' },
 ];
 
-// Opcje sortowania
 const sortOptions = [
     { value: 'newest', label: 'Najnowsze' },
     { value: 'oldest', label: 'Najstarsze' },
@@ -79,7 +75,6 @@ const sortOptions = [
     { value: 'patient_desc', label: 'Pacjent (Z-A)' },
 ];
 
-// Status z kolorami
 const getStatusInfo = (status: string): { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
     const statusMap: Record<string, { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
         scheduled: { text: 'Zaplanowana', variant: 'secondary' },
@@ -94,7 +89,6 @@ const getStatusInfo = (status: string): { text: string; variant: 'default' | 'se
     return statusMap[status] || { text: 'Nieznany', variant: 'secondary' };
 };
 
-// Formatowanie daty
 const formatDate = (dateString: string) => {
     try {
         return format(new Date(dateString), 'dd MMMM yyyy', { locale: pl });
@@ -103,7 +97,6 @@ const formatDate = (dateString: string) => {
     }
 };
 
-// Formatowanie godziny
 const formatTime = (dateString: string) => {
     try {
         return format(new Date(dateString), 'HH:mm');
@@ -112,7 +105,6 @@ const formatTime = (dateString: string) => {
     }
 };
 
-// Pobieranie danych
 const fetchAppointments = async (page: number = 1) => {
     loading.value = true;
     error.value = '';
@@ -140,25 +132,20 @@ const fetchAppointments = async (page: number = 1) => {
     }
 };
 
-// Zmiana strony
 const onPageChange = (page: number) => {
     currentPage.value = page;
     fetchAppointments(page);
 };
 
-// Zastosowanie filtrów
 const applyFilters = () => {
     currentPage.value = 1;
     fetchAppointments(1);
 };
 
-// Resetowanie filtrów
-// Przejście do szczegółów wizyty
 const navigateToAppointmentDetails = (id: number) => {
     router.push({ name: 'doctor.appointments.show', params: { id } });
 };
 
-// Pobranie danych przy montowaniu komponentu
 onMounted(() => {
     fetchAppointments();
 });

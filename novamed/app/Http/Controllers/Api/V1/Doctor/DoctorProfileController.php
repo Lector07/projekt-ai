@@ -21,8 +21,7 @@ class DoctorProfileController extends Controller
         return new DoctorResource($doctor);
     }
 
-    /**
-     */
+
     public function update(UpdateDoctorProfileRequest $request): DoctorResource
     {
         $doctor = $request->user()->doctor;
@@ -44,9 +43,6 @@ class DoctorProfileController extends Controller
         return new DoctorResource($doctor->fresh()->load('user', 'procedures'));
     }
 
-    /**
-     * Update the authenticated doctor's avatar.
-     */
     public function updateAvatar(UpdateUserAvatarRequest $request): JsonResponse|DoctorResource
     {
         $user = $request->user();

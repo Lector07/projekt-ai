@@ -246,7 +246,6 @@ onMounted(() => {
                                 {{ formErrors.name[0] }}
                             </p>
                         </div>
-                        <!-- Nowe pole tekstowe dla opisu -->
                         <div>
                             <Label for="slug" class="mb-2">Opis kategorii</Label>
                             <textarea

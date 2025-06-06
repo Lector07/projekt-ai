@@ -54,29 +54,23 @@ const fetchDoctors = async (page = 1) => {
 
         console.log('Odpowiedź API (DoctorsPage.vue):', response.data);
 
-        // Sprawdzamy, czy odpowiedź ma dane (elastyczne sprawdzanie)
         if (!response.data) {
             throw new Error('Brak danych w odpowiedzi API');
         }
 
-        // Obsługujemy zarówno przypadek gdy API zwraca {data: [...]} jak i gdy zwraca bezpośrednio tablicę
         if (Array.isArray(response.data)) {
-            // API zwróciło bezpośrednio tablicę
             doctors.value = response.data;
             totalItems.value = response.data.length;
             currentPage.value = 1;
             totalPages.value = 1;
         } else if (Array.isArray(response.data.data)) {
-            // API zwróciło obiekt z polem data (tablica)
             doctors.value = response.data.data;
 
-            // Jeśli istnieją metadane paginacji, używamy ich
             if (response.data.meta) {
                 totalItems.value = response.data.meta.total;
                 currentPage.value = response.data.meta.current_page;
                 totalPages.value = response.data.meta.last_page;
             } else {
-                // Brak metadanych - zakładamy wszystko na jednej stronie
                 totalItems.value = response.data.data.length;
                 currentPage.value = 1;
                 totalPages.value = 1;

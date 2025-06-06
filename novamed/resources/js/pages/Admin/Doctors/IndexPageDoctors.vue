@@ -636,7 +636,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal dodawania lekarza -->
         <div v-if="showAddDoctorForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div class="mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
                 <div class="mb-4 flex items-center justify-between">
@@ -811,7 +810,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal edycji lekarza -->
         <div v-if="showEditDoctorForm && selectedDoctor" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div class="mx-auto max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
                 <div class="mb-4 flex items-center justify-between">
@@ -1029,17 +1027,17 @@ tr:last-child td:last-child {
 }
 
 :deep(thead th) {
-    background-color: #f9fafb; /* Jasnoszary dla nagłówka */
-    color: #374151; /* Ciemnoszary tekst */
+    background-color: #f9fafb;
+    color: #374151;
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    font-size: 0.875rem; /* Tailwind 'text-sm' */
+    font-size: 0.875rem;
 }
 
 .dark :deep(thead th) {
-    background-color: #1f2937; /* Ciemniejszy szary dla dark mode */
-    color: #d1d5db; /* Jaśniejszy tekst dla dark mode */
+    background-color: #1f2937;
+    color: #d1d5db;
 }
 
 :deep(tbody td) {

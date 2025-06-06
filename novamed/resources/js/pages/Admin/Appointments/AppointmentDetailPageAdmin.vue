@@ -33,7 +33,7 @@ interface Procedure {
     name: string;
     description?: string;
     base_price?: string;
-    price?: string; // Assuming price might also be a field
+    price?: string;
 }
 
 interface Appointment {
@@ -41,15 +41,15 @@ interface Appointment {
     appointment_datetime: string;
     status: string;
     patient_notes: string | null;
-    doctor_notes: string | null; // Assuming doctor_notes instead of admin_notes based on form
+    doctor_notes: string | null;
     patient: Patient | null;
     doctor: Doctor | null;
     procedure: Procedure | null;
     created_at: string;
     updated_at: string;
-    patient_id: number; // For edit form
-    doctor_id: number | null; // For edit form
-    procedure_id: number; // For edit form
+    patient_id: number;
+    doctor_id: number | null;
+    procedure_id: number;
 }
 
 

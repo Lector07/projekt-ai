@@ -12,7 +12,6 @@ import {Label} from "@/components/ui/label";
 import {useAuthStore} from '@/stores/auth';
 import {Separator} from "@/components/ui/separator";
 
-// Interfejs dla danych dashboardu
 interface DashboardStats {
     users: {
         patientCount: number;
@@ -24,7 +23,7 @@ interface DashboardStats {
         upcoming: number;
         completed: number;
         cancelled: number;
-        cancelled_by_patient: number; // Dodane pole
+        cancelled_by_patient: number;
     };
     charts?: {
         appointmentsPerMonth: number[];
@@ -36,7 +35,6 @@ interface DashboardStats {
     };
 }
 
-// Zmienne reaktywne
 const loading = ref(true);
 const error = ref<string | null>(null);
 const dataLoaded = ref(false);
@@ -51,7 +49,7 @@ const stats = ref<DashboardStats>({
         upcoming: 0,
         completed: 0,
         cancelled: 0,
-        cancelled_by_patient: 0, // Zainicjowane pole
+        cancelled_by_patient: 0,
     },
     charts: {
         appointmentsPerMonth: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -59,34 +57,27 @@ const stats = ref<DashboardStats>({
     }
 });
 
-// Dla debugowania
 const rawApiResponse = ref<any>(null);
 
-const authStore = useAuthStore();
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Statystyki'
     },
 ];
 
-// Funkcja do odświeżania strony (zamiast window.location.reload())
 const refreshPage = () => {
     const loc = window?.location as any;
     if (loc) loc.reload();
 };
 
-// Obserwacja zmian w danych statystyk
 watch(stats, (newValue) => {
-    console.log("Stats zostały zaktualizowane:", newValue);
     dataLoaded.value = true;
 }, {deep: true});
 
-// Dane dla wykresu wizyt
 const appointmentsChartData = computed(() => {
     const monthData = stats.value.charts?.appointmentsPerMonth ||
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    // Upewniamy się, że mamy tablicę
     const dataArray = Array.isArray(monthData) ?
         monthData.map(v => Number(v) || 0) :
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -118,7 +109,6 @@ const appointmentsChartOptions = ref({
     }
 });
 
-// Dane dla wykresu procedur
 const proceduresChartData = computed(() => {
     const procedures = stats.value.charts?.popularProcedures || [];
 
@@ -157,7 +147,7 @@ onMounted(async () => {
     try {
         loading.value = true;
         const response = await axios.get('/api/v1/admin/dashboard');
-        rawApiResponse.value = response.data; // Dla debugowania
+        rawApiResponse.value = response.data;
 
         if (response.data && typeof response.data === 'object') {
             stats.value = {
@@ -171,7 +161,7 @@ onMounted(async () => {
                     upcoming: Number(response.data.appointments?.upcoming || 0),
                     completed: Number(response.data.appointments?.completed || 0),
                     cancelled: Number(response.data.appointments?.cancelled || 0),
-                    cancelled_by_patient: Number(response.data.appointments?.cancelled_by_patient || 0), // Mapowanie nowego pola
+                    cancelled_by_patient: Number(response.data.appointments?.cancelled_by_patient || 0),
                 },
                 charts: {
                     appointmentsPerMonth: Array.isArray(response.data.charts?.appointmentsPerMonth)
@@ -217,7 +207,6 @@ onMounted(async () => {
             </div>
 
             <div v-if="loading" class="flex flex-col h-full w-full gap-8">
-                <!-- Szkielety ładowania dla kart statystyk użytkowników (3 karty) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div v-for="i in 3" :key="i"
                          class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
@@ -226,7 +215,6 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <!-- Szkielety ładowania dla kart statystyk wizyt (teraz 5 kart) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     <div v-for="i in 5" :key="i"
                          class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md p-4 bg-white dark:bg-gray-800 transition-all duration-200">
@@ -235,7 +223,6 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <!-- Szkielety dla wykresów -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div
                         class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-md bg-white dark:bg-gray-800">
@@ -296,8 +283,6 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <!-- Karty statystyk wizyt -->
-                <!-- Zmieniono siatkę, aby pomieścić 5 kart -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     <div
                         class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
@@ -331,7 +316,6 @@ onMounted(async () => {
                             <p class="text-2xl font-bold text-red-500">{{ stats.appointments.cancelled }}</p>
                         </div>
                     </div>
-                    <!-- Nowa karta dla wizyt anulowanych przez pacjenta -->
                     <div
                         class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900">
                         <div class="p-4">
@@ -341,9 +325,7 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <!-- Wykresy -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <!-- Wykres wizyt miesięcznie -->
                     <div
                         class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-900">
                         <div class="p-4">
@@ -355,7 +337,6 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <!-- Wykres popularnych procedur -->
                     <div
                         class="border border-gray-200 dark:border-gray-700 shadow-md rounded-xl overflow-hidden bg-white dark:bg-gray-900">
                         <div class="p-4">
@@ -373,7 +354,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Dostosowanie komponentów PrimeVue */
 :deep(.p-component) {
     font-family: inherit;
 }

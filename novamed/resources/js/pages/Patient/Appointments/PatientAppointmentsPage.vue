@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
-import { Badge } from '@/components/ui/badge'; // Załóżmy, że masz komponent Badge
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,19 +43,15 @@ const error = ref<string | null>(null);
 
 const query = ref({
     page: 1,
-    per_page: 8, // Ile wizyt na stronę
-    // Możesz dodać filtry, np. status, zakres dat
-    // status: '',
-    // date_from: '',
-    // date_to: '',
+    per_page: 8,
+
 });
 
 const totalPages = ref(0);
 const totalItems = ref(0);
-const currentPage = computed(() => query.value.page);
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Panel Pacjenta', href: '/dashboard' }, // Lub odpowiedni link do dashboardu pacjenta
+    { title: 'Panel Pacjenta', href: '/dashboard' },
     { title: 'Moje Wizyty' },
 ];
 
@@ -66,9 +62,6 @@ const fetchAppointments = async () => {
         const params = new URLSearchParams();
         params.append('page', query.value.page.toString());
         params.append('per_page', query.value.per_page.toString());
-        // Dodaj inne parametry filtrowania, jeśli są
-        // if (query.value.status) params.append('status', query.value.status);
-
         const response = await axios.get('/api/v1/patient/appointments', { params });
 
         appointments.value = response.data.data || [];
@@ -92,7 +85,7 @@ const fetchAppointments = async () => {
 const goToPage = (page: number) => {
     if (page < 1 || page > totalPages.value || page === query.value.page) return;
     query.value.page = page;
-    fetchAppointments(); // Ponowne załadowanie danych dla nowej strony
+    fetchAppointments();
 };
 
 const formatDateTime = (dateTimeString: string): string => {
@@ -117,7 +110,7 @@ const getStatusInfo = (
         case 'scheduled':
             return { text: 'Zaplanowana', variant: 'outline' };
         case 'confirmed':
-            return { text: 'Potwierdzona', variant: 'default' }; // 'default' dla primary
+            return { text: 'Potwierdzona', variant: 'default' };
         case 'completed':
             return { text: 'Zakończona', variant: 'success' };
         case 'cancelled_by_patient':
@@ -131,17 +124,13 @@ const getStatusInfo = (
     }
 };
 
-// Funkcja do odwoływania wizyty (przykład)
 const cancelAppointment = async (appointmentId: number) => {
     if (!confirm('Czy na pewno chcesz odwołać tę wizytę?')) return;
     try {
-        // Załóżmy, że PatientAppointmentController@destroy zmienia status lub miękko usuwa
         await axios.delete(`/api/v1/patient/appointments/${appointmentId}`);
-        // Możesz dodać toast o sukcesie
-        fetchAppointments(); // Odśwież listę
+        fetchAppointments();
     } catch (err: any) {
         console.error('Błąd podczas odwoływania wizyty:', err);
-        // Możesz dodać toast o błędzie
         alert(err.response?.data?.message || 'Nie udało się odwołać wizyty.');
     }
 };
@@ -150,7 +139,6 @@ const canCancel = (appointment_datetime: string, status: Appointment['status']):
     if (status !== 'scheduled' && status !== 'confirmed') return false;
     const appointmentDate = new Date(appointment_datetime);
     const now = new Date();
-    // Przykład: można odwołać do 24h przed wizytą
     return appointmentDate.getTime() > now.getTime() + 24 * 60 * 60 * 1000;
 };
 
@@ -175,8 +163,6 @@ onMounted(() => {
                     Umów nową wizytę
                 </Button>
             </div>
-
-            <!-- TODO: Dodać filtry (np. po statusie, dacie) -->
 
             <div class="overflow-hidden rounded-lg border bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                 <div v-if="loading" class="space-y-4 p-6">
@@ -320,8 +306,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Dodaj tutaj style scoped, jeśli są potrzebne, np. dla Badge, jeśli nie jest globalnie stylowany */
-/* Przykład dla Badge, jeśli nie masz globalnych stylów wariantów */
-/* .badge-success { @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300; } */
-/* .badge-warning { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300; } */
+
 </style>

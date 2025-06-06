@@ -86,19 +86,15 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <h1 class="text-3xl font-bold">Profil Lekarza</h1>
             </div>
 
-            <!-- Ładowanie -->
             <div v-if="loading">
                 <Skeleton class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border" />
             </div>
 
-            <!-- Błąd -->
             <div v-else-if="error" class="p-4 text-center text-red-500">
                 {{ error }}
             </div>
 
-            <!-- Dane lekarza -->
             <div v-else-if="doctor" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Lewa kolumna ze zdjęciem -->
                 <div class="lg:col-span-1 ">
                     <div class="rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
                         <img

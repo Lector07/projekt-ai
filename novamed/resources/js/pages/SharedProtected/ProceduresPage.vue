@@ -1,32 +1,32 @@
 <script lang="ts" setup>
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Pagination, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { Pagination, PaginationEllipsis, PaginationFirst, PaginationPrevious, PaginationLast, PaginationNext } from '@/components/ui/pagination';
-import { PaginationList, PaginationListItem} from 'reka-ui';
 import { Skeleton } from '@/components/ui/skeleton';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import axios from 'axios';
+import { PaginationList, PaginationListItem } from 'reka-ui';
+import { onMounted, ref } from 'vue';
 
 interface Procedure {
-id: number;
-name: string;
-description: string;
-procedure_category_id?: number;
-category?: {
-id: number;
-name: string;
-slug: string;
-};
-base_price: number;
+    id: number;
+    name: string;
+    description: string;
+    procedure_category_id?: number;
+    category?: {
+        id: number;
+        name: string;
+        slug: string;
+    };
+    base_price: number;
 }
 
 interface ProcedureCategory {
-id: number;
-name: string;
-slug: string;
+    id: number;
+    name: string;
+    slug: string;
 }
 
 const procedures = ref<Procedure[]>([]);
@@ -34,106 +34,101 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const categories = ref<ProcedureCategory[]>([]);
 const selectedCategory = ref<number | null>(null);
-    const currentPage = ref(1);
-    const totalItems = ref(0);
-    const itemsPerPage = ref(10); // Upewnij się, że ta wartość jest zgodna z backendem lub wysyłana jako parametr
-    const totalPages = ref(1);
+const currentPage = ref(1);
+const totalItems = ref(0);
+const itemsPerPage = ref(10);
+const totalPages = ref(1);
 
-    const breadcrumbs: BreadcrumbItem[] = [
+const breadcrumbs: BreadcrumbItem[] = [
     {
-    title: 'Zabiegi',
+        title: 'Zabiegi',
     },
-    ];
+];
 
-    const fetchProcedures = async (page = 1) => {
+const fetchProcedures = async (page = 1) => {
     try {
-    loading.value = true;
-    error.value = null;
+        loading.value = true;
+        error.value = null;
 
-    const response = await axios.get('/api/v1/procedures', {
-    params: {
-    page: page,
-    procedure_category_id: selectedCategory.value,
-    per_page: itemsPerPage.value
-    }
-    });
+        const response = await axios.get('/api/v1/procedures', {
+            params: {
+                page: page,
+                procedure_category_id: selectedCategory.value,
+                per_page: itemsPerPage.value,
+            },
+        });
 
-    if (!response.data || !response.data.data || !Array.isArray(response.data.data) || !response.data.meta) {
-    throw new Error('Nieprawidłowa struktura odpowiedzi API dla paginowanych danych');
-    }
+        if (!response.data || !response.data.data || !Array.isArray(response.data.data) || !response.data.meta) {
+            throw new Error('Nieprawidłowa struktura odpowiedzi API dla paginowanych danych');
+        }
 
-    procedures.value = response.data.data;
-    totalItems.value = response.data.meta.total || 0;
-    currentPage.value = response.data.meta.current_page || page;
-    totalPages.value = response.data.meta.last_page || Math.ceil(totalItems.value / itemsPerPage.value);
+        procedures.value = response.data.data;
+        totalItems.value = response.data.meta.total || 0;
+        currentPage.value = response.data.meta.current_page || page;
+        totalPages.value = response.data.meta.last_page || Math.ceil(totalItems.value / itemsPerPage.value);
 
-    if (categories.value.length === 0) {
-    fetchCategories();
-    }
+        if (categories.value.length === 0) {
+            fetchCategories();
+        }
     } catch (err) {
-    console.error('Błąd podczas pobierania zabiegów:', err);
-    error.value = 'Nie udało się pobrać listy zabiegów.';
-    procedures.value = [];
-    totalItems.value = 0;
-    currentPage.value = 1;
-    totalPages.value = 1;
+        console.error('Błąd podczas pobierania zabiegów:', err);
+        error.value = 'Nie udało się pobrać listy zabiegów.';
+        procedures.value = [];
+        totalItems.value = 0;
+        currentPage.value = 1;
+        totalPages.value = 1;
     } finally {
-    loading.value = false;
+        loading.value = false;
     }
-    };
+};
 
-    const fetchCategories = async () => {
+const fetchCategories = async () => {
     try {
-    const response = await axios.get('/api/v1/procedures/categories');
-    // Poprawka: dane kategorii są w response.data.data
-    if (response.data && Array.isArray(response.data.data)) {
-    categories.value = response.data.data;
-    } else {
-    console.error('Nieprawidłowa struktura odpowiedzi API dla kategorii:', response.data);
-    categories.value = [];
-    }
+        const response = await axios.get('/api/v1/procedures/categories');
+        if (response.data && Array.isArray(response.data.data)) {
+            categories.value = response.data.data;
+        } else {
+            console.error('Nieprawidłowa struktura odpowiedzi API dla kategorii:', response.data);
+            categories.value = [];
+        }
     } catch (err) {
-    console.error('Błąd podczas pobierania kategorii:', err);
+        console.error('Błąd podczas pobierania kategorii:', err);
     }
-    };
+};
 
-    const filterByCategory = () => {
-    currentPage.value = 1; // Resetuj do pierwszej strony przy zmianie filtra
+const filterByCategory = () => {
+    currentPage.value = 1;
     fetchProcedures(1);
-    };
+};
 
-    const goToPage = (page: number) => {
+const goToPage = (page: number) => {
     if (page < 1 || page > totalPages.value || page === currentPage.value) return;
     fetchProcedures(page);
-    };
+};
 
-    onMounted(() => {
-    fetchProcedures(currentPage.value); // Pobierz pierwszą stronę lub zapamiętaną
-    });
+onMounted(() => {
+    fetchProcedures(currentPage.value);
+});
 
-    const getCategoryName = (procedure: Procedure): string => {
+const getCategoryName = (procedure: Procedure): string => {
     if (procedure.category) {
-    return procedure.category.name;
+        return procedure.category.name;
     }
 
     if (procedure.procedure_category_id) {
-    const category = categories.value.find(c => c.id === procedure.procedure_category_id);
-    return category ? category.name : 'Brak kategorii';
+        const category = categories.value.find((c) => c.id === procedure.procedure_category_id);
+        return category ? category.name : 'Brak kategorii';
     }
 
     return 'Brak kategorii';
-    };
+};
 </script>
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
             <div class="flex gap-2">
-                <select
-                    v-model="selectedCategory"
-                    class="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    @change="filterByCategory"
-                >
+                <select v-model="selectedCategory" class="border-input bg-background rounded-md border px-3 py-2 text-sm" @change="filterByCategory">
                     <option :value="null">Wszystkie kategorie</option>
                     <option v-for="category in categories" :key="category.id" :value="category.id">
                         {{ category.name }}
@@ -142,19 +137,19 @@ const selectedCategory = ref<number | null>(null);
             </div>
 
             <div v-if="loading">
-                <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
+                <ScrollArea class="border-sidebar-border/70 dark:border-sidebar-border h-[70vh] rounded-md border">
                     <div class="p-4">
-                        <Skeleton class="h-6 w-72 mb-4" />
+                        <Skeleton class="mb-4 h-6 w-72" />
 
                         <div v-for="i in 5" :key="i" class="mb-4">
-                            <div class="rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                            <div class="border-sidebar-border/70 dark:border-sidebar-border rounded-lg border p-4">
                                 <div class="mb-2 flex items-center justify-between">
                                     <Skeleton class="h-6 w-48" />
                                     <Skeleton class="h-6 w-24 rounded-full" />
                                 </div>
 
-                                <Skeleton class="h-4 w-full mb-2" />
-                                <Skeleton class="h-4 w-3/4 mb-4" />
+                                <Skeleton class="mb-2 h-4 w-full" />
+                                <Skeleton class="mb-4 h-4 w-3/4" />
 
                                 <div class="flex items-center justify-between">
                                     <Skeleton class="h-6 w-20" />
@@ -172,20 +167,16 @@ const selectedCategory = ref<number | null>(null);
             </div>
 
             <div v-else>
-                <ScrollArea class="h-[70vh] rounded-md border border-sidebar-border/70 dark:border-sidebar-border">
+                <ScrollArea class="border-sidebar-border/70 dark:border-sidebar-border h-[70vh] rounded-md border">
                     <div class="p-4">
-                        <h4 class="mb-4 text-lg font-medium leading-none">
-                            Lista dostępnych zabiegów
-                        </h4>
-                        <div v-if="procedures.length === 0" class="py-4 text-center text-gray-500">
-                            Brak zabiegów do wyświetlenia.
-                        </div>
+                        <h4 class="mb-4 text-lg leading-none font-medium">Lista dostępnych zabiegów</h4>
+                        <div v-if="procedures.length === 0" class="py-4 text-center text-gray-500">Brak zabiegów do wyświetlenia.</div>
 
                         <div v-else v-for="procedure in procedures" :key="procedure.id" class="mb-4">
-                            <div class="rounded-lg border border-sidebar-border/70 p-4 dark:border-sidebar-border">
+                            <div class="border-sidebar-border/70 dark:border-sidebar-border rounded-lg border p-4">
                                 <div class="mb-2 flex items-center justify-between">
                                     <h3 class="text-xl font-medium">{{ procedure.name }}</h3>
-                                    <span class="rounded-full bg-nova-accent dark:bg-nova-primary text-nova-light px-3 py-1 text-sm font-medium">
+                                    <span class="bg-nova-accent dark:bg-nova-primary text-nova-light rounded-full px-3 py-1 text-sm font-medium">
                                         {{ getCategoryName(procedure) }}
                                     </span>
                                 </div>
@@ -193,11 +184,9 @@ const selectedCategory = ref<number | null>(null);
                                 <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ procedure.description }}</p>
 
                                 <div class="flex items-center justify-between">
-                                    <div class="font-extrabold text-nova-darkest dark:text-nova-light">{{ procedure.base_price }} zł</div>
+                                    <div class="text-nova-darkest dark:text-nova-light font-extrabold">{{ procedure.base_price }} zł</div>
                                     <Button as-child class="bg-nova-primary dark:bg-nova-accent dark:text-nova-light hover:bg-nova-accent">
-                                        <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }">
-                                            Szczegóły
-                                        </router-link>
+                                        <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }"> Szczegóły </router-link>
                                     </Button>
                                 </div>
                             </div>
@@ -223,7 +212,7 @@ const selectedCategory = ref<number | null>(null);
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
                                     <Button
-                                        class="w-9 h-9 p-0"
+                                        class="h-9 w-9 p-0"
                                         :variant="item.value === currentPage ? 'default' : 'outline'"
                                         @click="goToPage(item.value)"
                                     >

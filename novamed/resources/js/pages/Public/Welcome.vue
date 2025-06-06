@@ -105,11 +105,9 @@ const fetchData = async () => {
     }
 };
 
-// Funkcje do obsługi zmiany zakładek
 const changeTab = (index: number) => {
     if (activeTab.value !== index) {
         activeTab.value = index;
-        // Pobierz dane dla nowej zakładki tylko jeśli jeszcze nie były pobrane
         if ((index === 0 && procedures.value.length === 0) ||
             (index === 1 && doctors.value.length === 0)) {
             fetchData();
@@ -117,9 +115,8 @@ const changeTab = (index: number) => {
     }
 };
 
-// Funkcje do obsługi zmiany stron z zabezpieczeniem przed wielokrotnym kliknięciem
 const changeDoctorsPage = (page: number) => {
-    if (loading.value) return; // Zapobiega wielokrotnym żądaniom
+    if (loading.value) return;
     if (doctorsCurrentPage.value !== page) {
         doctorsCurrentPage.value = page;
         fetchData();
@@ -127,7 +124,7 @@ const changeDoctorsPage = (page: number) => {
 };
 
 const changeProceduresPage = (page: number) => {
-    if (loading.value) return; // Zapobiega wielokrotnym żądaniom
+    if (loading.value) return;
     if (proceduresCurrentPage.value !== page) {
         proceduresCurrentPage.value = page;
         fetchData();
@@ -441,9 +438,7 @@ onMounted(() => {
                     </button>
                 </div>
 
-                <!-- Zakładka procedur -->
                 <div v-show="activeTab === 0" class="transition-opacity duration-300">
-                    <!-- Skeleton loader dla procedur -->
                     <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div v-for="i in 9" :key="i"
                              class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
@@ -528,26 +523,19 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Zakładka specjalistów -->
                 <div v-show="activeTab === 1" class="transition-opacity duration-300">
-                    <!-- Skeleton loader dla specjalistów -->
                     <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div v-for="i in 6" :key="i"
                              class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
-                            <!-- Gradient header -->
                             <Skeleton class="h-32 w-full"/>
                             <div class="relative p-5">
-                                <!-- Avatar/inicjały -->
                                 <div class="absolute -top-10 left-5">
                                     <Skeleton class="w-16 h-16 rounded-full"/>
                                 </div>
                                 <div class="ml-20">
-                                    <!-- Imię i nazwisko lekarza -->
                                     <Skeleton class="h-6 w-40 mb-2"/>
-                                    <!-- Specjalizacja -->
                                     <Skeleton class="h-4 w-24"/>
                                 </div>
-                                <!-- Bio/opis -->
                                 <div class="mt-4">
                                     <Skeleton class="h-4 w-full mb-2"/>
                                     <Skeleton class="h-4 w-3/4 mb-2"/>

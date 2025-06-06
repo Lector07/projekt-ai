@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem, type User as UserType } from '@/types'; // Zmień nazwę User na UserType, aby uniknąć konfliktu
+import { type BreadcrumbItem, type User as UserType } from '@/types';
 import { ref, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
@@ -8,25 +8,22 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import Card from 'primevue/card';
-import Icon from '@/components/Icon.vue'; // Zaimportuj komponent ikon
+import Icon from '@/components/Icon.vue';
 import { useToast } from 'primevue/usetoast';
-import InputError from '@/components/InputError.vue'; // Jeśli potrzebujesz dla błędów avatara
+import InputError from '@/components/InputError.vue';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-// Zmień nazwę interfejsu, aby uniknąć konfliktu z importowanym typem User z @/types
 interface PatientData extends UserType {
-    // Możesz tu dodać specyficzne pola, jeśli UserType jest zbyt ogólny
-    // profile_picture_url jest już w UserType (jako avatar lub profile_picture_url)
+
 }
 
 const patient = ref<PatientData | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-// --- Logika dla Avatara Pacjenta ---
 const avatarFile = ref<File | null>(null);
 const avatarPreview = ref<string | null>(null);
 const avatarInput = ref<HTMLInputElement | null>(null);
@@ -42,8 +39,7 @@ const fetchPatient = async () => {
         const patientId = route.params.id;
         const response = await axios.get(`/api/v1/admin/users/${patientId}`);
         patient.value = response.data.data;
-        // Ustawienie początkowego podglądu avatara
-        avatarPreview.value = patient.value?.avatar || patient.value?.profile_picture_url || null; // Użyj spójnej nazwy
+        avatarPreview.value = patient.value?.avatar || patient.value?.profile_picture_url || null;
     } catch (err) {
         console.error('Błąd podczas pobierania danych pacjenta:', err);
         error.value = 'Nie udało się pobrać danych pacjenta';
@@ -52,10 +48,9 @@ const fetchPatient = async () => {
     }
 };
 
-// Obserwuj zmiany w pacjencie, aby zaktualizować podgląd, jeśli dane są ładowane asynchronicznie
 watch(patient, (newPatient) => {
     if (newPatient) {
-        avatarPreview.value = newPatient.avatar || newPatient.profile_picture_url || null; // Użyj spójnej nazwy
+        avatarPreview.value = newPatient.avatar || newPatient.profile_picture_url || null;
     }
 }, { deep: true });
 
@@ -68,9 +63,6 @@ const formatCreatedAt = (dateString?: string): string => {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
-            // Jeśli chcesz również czas:
-            // hour: '2-digit',
-            // minute: '2-digit',
         }).format(date);
     } catch (e) {
         console.error('Błąd formatowania daty:', e);
@@ -114,7 +106,7 @@ function handleAvatarChange(event: Event) {
             if (avatarInput.value) avatarInput.value.value = '';
             return;
         }
-        if (file.size > 2 * 1024 * 1024) { // 2MB
+        if (file.size > 2 * 1024 * 1024) {
             avatarErrors.value = { avatar: ['Plik jest za duży. Maksymalny rozmiar to 2MB.'] };
             avatarFile.value = null;
             if (avatarInput.value) avatarInput.value.value = '';
@@ -129,7 +121,7 @@ function handleAvatarChange(event: Event) {
         reader.readAsDataURL(file);
     } else {
         avatarFile.value = null;
-        avatarPreview.value = patient.value?.avatar || patient.value?.profile_picture_url || null; // Użyj spójnej nazwy
+        avatarPreview.value = patient.value?.avatar || patient.value?.profile_picture_url || null;
     }
 }
 
@@ -151,12 +143,10 @@ async function uploadAvatar() {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
-        // Zaktualizuj dane pacjenta w ref, w tym nowy URL avatara
         if (patient.value && response.data.data) {
-            // Użyj spójnej nazwy pola dla avatara
             const newAvatarUrl = response.data.data.avatar || response.data.data.profile_picture_url;
             patient.value = { ...patient.value, avatar: newAvatarUrl, profile_picture_url: newAvatarUrl };
-            avatarPreview.value = newAvatarUrl; // Bezpośrednia aktualizacja podglądu
+            avatarPreview.value = newAvatarUrl;
         }
 
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Avatar pacjenta został zaktualizowany.', life: 3000 });
@@ -186,7 +176,7 @@ onMounted(() => {
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
     {
-        title: 'Zarządzanie Użytkownikami', // Lub inna odpowiednia nazwa, np. 'Pacjenci'
+        title: 'Zarządzanie Użytkownikami',
         href: '/admin/users',
     },
     {
@@ -212,7 +202,6 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
             </div>
 
             <div v-else-if="patient" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Lewa kolumna ze zdjęciem i opcją zmiany -->
                 <div class="lg:col-span-1">
                     <Card class="border border-gray-200 dark:border-gray-700 shadow-md p-4">
                         <template #content>
@@ -269,7 +258,6 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => [
                     </Card>
                 </div>
 
-                <!-- Prawa kolumna z danymi -->
                 <div class="lg:col-span-2">
                     <Card class="border border-gray-200 dark:border-gray-700 shadow-md" style="--p-card-border-radius: 0.75rem;">
                         <template #title>

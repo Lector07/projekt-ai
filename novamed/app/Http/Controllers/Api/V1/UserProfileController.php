@@ -22,18 +22,14 @@ class UserProfileController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show(Request $request): UserResource
     {
         $this->authorize('view', $request->user());
         return new UserResource($request->user());
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(ProfileUpdateRequest $request): UserResource
     {
         $user = $request->user();
@@ -50,9 +46,7 @@ class UserProfileController extends Controller
         return new UserResource($user->fresh());
     }
 
-    /**
-     * Update the authenticated user's password.
-     */
+
     public function updatePassword(UpdatePasswordRequest $request): JsonResponse
     {
         $this->authorize('update', $request->user());
@@ -66,9 +60,7 @@ class UserProfileController extends Controller
         return response()->json(['message' => 'Hasło zostało pomyślnie zaktualizowane.'], 200);
     }
 
-    /**
-     * Delete the authenticated user's account.
-     */
+
     public function destroy(Request $request): JsonResponse
     {
         $this->authorize('delete', $request->user());
@@ -105,9 +97,7 @@ class UserProfileController extends Controller
         return new UserResource($user->fresh());
     }
 
-    /**
-     * Delete the authenticated user's avatar.
-     */
+
     public function deleteAvatar(Request $request): JsonResponse
     {
         $user = $request->user();

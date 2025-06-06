@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'; // Usunięto onMounted
-import { useRouter } from 'vue-router'; // Usunięto useRoute
+import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
-import type { BreadcrumbItem } from '@/types'; // Upewnij się, że types.d.ts jest modułem (ma export)
+import type { BreadcrumbItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from 'primevue/usetoast'; // Załóżmy, że używasz PrimeVue Toast
+import { useToast } from 'primevue/usetoast';
 import {CircleAlert} from 'lucide-vue-next';
 
-// Interfejsy takie same lub podobne jak w PatientAppointmentsPage.vue
 interface DoctorInfo {
     id: number;
     first_name: string;
@@ -43,7 +42,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
-const toast = useToast(); // Inicjalizacja toast
+const toast = useToast();
 
 const appointment = ref<AppointmentDetail | null>(null);
 const loading = ref(true);
@@ -79,7 +78,6 @@ const formatDateTime = (dateTimeString?: string): string => {
     });
 };
 
-// Poprawiona funkcja getStatusInfo, aby zwracała kompatybilne warianty
 const getStatusInfo = (statusValue?: AppointmentDetail['status']): { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | undefined } => {
     if (!statusValue) {
         console.warn('getStatusInfo otrzymało pusty status');
@@ -88,10 +86,10 @@ const getStatusInfo = (statusValue?: AppointmentDetail['status']): { text: strin
     switch (statusValue) {
         case 'scheduled': return { text: 'Zaplanowana', variant: 'outline' };
         case 'confirmed': return { text: 'Potwierdzona', variant: 'default' };
-        case 'completed': return { text: 'Zakończona', variant: 'default' }; // Zmieniono z 'success' na 'default'
+        case 'completed': return { text: 'Zakończona', variant: 'default' };
         case 'cancelled_by_patient': return { text: 'Odwołana (Ty)', variant: 'destructive' };
         case 'cancelled_by_clinic': return { text: 'Odwołana (Klinika)', variant: 'destructive' };
-        case 'no_show': return { text: 'Nieobecność', variant: 'outline' }; // Zmieniono z 'warning' na 'outline'
+        case 'no_show': return { text: 'Nieobecność', variant: 'outline' };
         default:
             console.warn(`Nieznany status wizyty w getStatusInfo: ${statusValue}`);
             return { text: String(statusValue), variant: 'secondary' };
@@ -123,9 +121,6 @@ watch(() => props.id, (newId) => {
     }
 }, { immediate: true });
 
-// onMounted(() => {
-//     fetchAppointmentDetail(props.id); // Wywoływane przez watch immediate:true
-// });
 </script>
 
 <template>
