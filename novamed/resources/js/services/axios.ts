@@ -1,9 +1,10 @@
 import router from '@/router';
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 declare module 'axios' {
     interface AxiosRequestConfig {
         skipAuthRedirect?: boolean;
+        skipErrorRedirect?: boolean;
     }
 
     interface AxiosInstance {
@@ -17,6 +18,10 @@ axios.defaults.headers.common['Accept'] = 'application/json';
 
 const logoutEndpoints = ['/api/v1/auth/logout', '/api/auth/logout', '/logout', '/api/v1/logout'];
 const authCheckEndpoints = ['/api/v1/user', '/api/auth/user', '/api/user'];
+const skipRedirectEndpoints = [
+    '/api/v1/appointments/check-availability',
+    '/api/v1/doctors/availability'
+];
 
 const isLogoutUrl = (url: string | undefined | null) => {
     return url && logoutEndpoints.some(endpoint => url === endpoint || url.includes(endpoint));
@@ -26,12 +31,20 @@ const isAuthCheckUrl = (url: string | undefined | null) => {
     return url && authCheckEndpoints.some(endpoint => url === endpoint || url.includes(endpoint));
 };
 
+const shouldSkipRedirect = (url: string | undefined | null) => {
+    return url && skipRedirectEndpoints.some(endpoint => url.includes(endpoint));
+};
+
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response) {
             const status = error.response.status;
             const url = error.config?.url;
+
+            if (shouldSkipRedirect(url) || error.config?.skipErrorRedirect) {
+                return Promise.reject(error);
+            }
 
             if (status === 401 && isAuthCheckUrl(url)) {
                 return Promise.reject(error);

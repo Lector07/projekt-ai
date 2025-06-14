@@ -91,12 +91,14 @@ const goToPage = (page: number) => {
 const formatDateTime = (dateTimeString: string): string => {
     if (!dateTimeString) return 'Brak danych';
     const date = new Date(dateTimeString);
+
     return date.toLocaleString('pl-PL', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'UTC'
     });
 };
 

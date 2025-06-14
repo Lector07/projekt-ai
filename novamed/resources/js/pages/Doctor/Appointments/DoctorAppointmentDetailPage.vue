@@ -70,11 +70,11 @@ const formatDateTime = (dateStr?: string): string => {
     } catch (e) { return 'Niepr. data'; }
 };
 
-const getStatusInfo = (statusVal?: string): { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' | 'info' } => {
+const getStatusInfo = (statusVal?: string): { text: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
     if (!statusVal) return { text: 'Nieokreślony', variant: 'secondary' };
     switch (statusVal) {
-        case 'scheduled': return { text: 'Zaplanowana', variant: 'warning' };
-        case 'confirmed': return { text: 'Potwierdzona', variant: 'success' };
+        case 'scheduled': return { text: 'Zaplanowana', variant: 'outline' };   // zmiana z 'warning'
+        case 'confirmed': return { text: 'Potwierdzona', variant: 'secondary' }; // zmiana z 'info'
         case 'completed': return { text: 'Zakończona', variant: 'default' };
         case 'cancelled_by_patient': return { text: 'Odwołana (Pacjent)', variant: 'destructive' };
         case 'cancelled_by_clinic': return { text: 'Odwołana (Klinika)', variant: 'destructive' };

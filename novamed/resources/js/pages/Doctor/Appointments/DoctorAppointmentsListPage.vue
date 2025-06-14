@@ -65,6 +65,7 @@ const statusOptions = [
     {value: 'confirmed', label: 'Potwierdzone'},
     { value: 'cancelled', label: 'Anulowane' },
     {value: 'canceled_by_clinic', label: 'Anulowane przez klinikę'},
+    { value: 'cancelled_by_patient', label: 'Anulowane przez pacjenta' },
     { value: 'no_show', label: 'Nieobecność' },
 ];
 
@@ -83,6 +84,7 @@ const getStatusInfo = (status: string): { text: string; variant: 'default' | 'se
         completed: { text: 'Zakończona', variant: 'default' },
         cancelled: { text: 'Anulowana', variant: 'destructive' },
         cancelled_by_clinic: { text: 'Anulowana przez klinikę', variant: 'destructive' },
+        cancelled_by_patient: { text: 'Anulowana przez pacjenta', variant: 'destructive' },
         no_show: { text: 'Nieobecność', variant: 'destructive' },
     };
 

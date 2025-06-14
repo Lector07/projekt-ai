@@ -5,72 +5,62 @@ namespace Database\Factories;
 use App\Models\ProcedureCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Procedure>
- */
 class ProcedureFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        // Tablice z prawdziwymi zabiegami z chirurgii plastycznej
         $procedures = [
             // Twarz
-            ['name' => 'Plastyka powiek górnych', 'price' => [2500, 5000], 'category' => 'Twarz',
+            ['name' => 'Plastyka powiek górnych', 'price' => [2500, 5000], 'category' => 'Twarz', 'duration_minutes' => 90,
                 'description' => 'Zabieg usunięcia nadmiaru skóry i tkanki tłuszczowej z górnych powiek, poprawiający wygląd oczu i pole widzenia.'],
-            ['name' => 'Plastyka powiek dolnych', 'price' => [2800, 5500], 'category' => 'Twarz',
+            ['name' => 'Plastyka powiek dolnych', 'price' => [2800, 5500], 'category' => 'Twarz', 'duration_minutes' => 90,
                 'description' => 'Procedura minimalizująca worki pod oczami i nadmiar skóry pod dolnymi powiekami.'],
-            ['name' => 'Lifting twarzy', 'price' => [15000, 25000], 'category' => 'Twarz',
+            ['name' => 'Lifting twarzy', 'price' => [15000, 25000], 'category' => 'Twarz', 'duration_minutes' => 180,
                 'description' => 'Kompleksowy zabieg odmładzający środkową i dolną część twarzy, usuwający głębokie zmarszczki i opadającą skórę.'],
-            ['name' => 'Lifting czoła', 'price' => [8000, 15000], 'category' => 'Twarz',
+            ['name' => 'Lifting czoła', 'price' => [8000, 15000], 'category' => 'Twarz', 'duration_minutes' => 120,
                 'description' => 'Zabieg unoszący opadające brwi i redukujący zmarszczki na czole dla bardziej wypoczętego wyglądu.'],
-            ['name' => 'Plastyka nosa', 'price' => [7000, 17000], 'category' => 'Twarz',
+            ['name' => 'Plastyka nosa', 'price' => [7000, 17000], 'category' => 'Twarz', 'duration_minutes' => 150,
                 'description' => 'Korekcja kształtu, wielkości lub proporcji nosa, poprawa funkcji oddychania.'],
-            ['name' => 'Liposukcja podbródka', 'price' => [4000, 8000], 'category' => 'Twarz',
+            ['name' => 'Liposukcja podbródka', 'price' => [4000, 8000], 'category' => 'Twarz', 'duration_minutes' => 60,
                 'description' => 'Zabieg usuwający nadmiar tkanki tłuszczowej spod podbródka, modelujący linię żuchwy.'],
 
             // Piersi
-            ['name' => 'Powiększanie piersi implantami', 'price' => [12000, 22000], 'category' => 'Piersi',
+            ['name' => 'Powiększanie piersi implantami', 'price' => [12000, 22000], 'category' => 'Piersi', 'duration_minutes' => 150,
                 'description' => 'Zabieg zwiększający rozmiar piersi przy użyciu implantów silikonowych lub wypełnionych solą fizjologiczną.'],
-            ['name' => 'Redukcja piersi', 'price' => [14000, 20000], 'category' => 'Piersi',
+            ['name' => 'Redukcja piersi', 'price' => [14000, 20000], 'category' => 'Piersi', 'duration_minutes' => 180,
                 'description' => 'Procedura zmniejszająca wielkość piersi poprzez usunięcie nadmiaru tkanki i skóry, poprawiająca proporcje ciała.'],
-            ['name' => 'Lifting piersi', 'price' => [10000, 18000], 'category' => 'Piersi',
+            ['name' => 'Lifting piersi', 'price' => [10000, 18000], 'category' => 'Piersi', 'duration_minutes' => 150,
                 'description' => 'Zabieg unoszący opadające piersi i przywracający młodzieńczy wygląd bez zmiany rozmiaru.'],
-            ['name' => 'Rekonstrukcja piersi', 'price' => [15000, 30000], 'category' => 'Piersi',
+            ['name' => 'Rekonstrukcja piersi', 'price' => [15000, 30000], 'category' => 'Piersi', 'duration_minutes' => 180,
                 'description' => 'Odtworzenie piersi po mastektomii lub innych urazach przy użyciu implantów lub tkanek własnych pacjentki.'],
 
             // Ciało
-            ['name' => 'Liposukcja brzucha', 'price' => [6000, 12000], 'category' => 'Ciało',
+            ['name' => 'Liposukcja brzucha', 'price' => [6000, 12000], 'category' => 'Ciało', 'duration_minutes' => 120,
                 'description' => 'Usunięcie nagromadzonej tkanki tłuszczowej z obszaru brzucha dla uzyskania smuklejszej sylwetki.'],
-            ['name' => 'Abdominoplastyka', 'price' => [12000, 20000], 'category' => 'Ciało',
+            ['name' => 'Abdominoplastyka', 'price' => [12000, 20000], 'category' => 'Ciało', 'duration_minutes' => 180,
                 'description' => 'Plastyka brzucha polegająca na usunięciu nadmiaru skóry i tkanki tłuszczowej oraz napięciu mięśni.'],
-            ['name' => 'Liposukcja ud', 'price' => [6000, 14000], 'category' => 'Ciało',
+            ['name' => 'Liposukcja ud', 'price' => [6000, 14000], 'category' => 'Ciało', 'duration_minutes' => 120,
                 'description' => 'Procedura modelująca obrys ud poprzez odsysanie nadmiaru tłuszczu z problematycznych obszarów.'],
-            ['name' => 'Liposukcja ramion', 'price' => [5000, 10000], 'category' => 'Ciało',
+            ['name' => 'Liposukcja ramion', 'price' => [5000, 10000], 'category' => 'Ciało', 'duration_minutes' => 90,
                 'description' => 'Zabieg usuwający nadmiar tkanki tłuszczowej z ramion, poprawiający ich kontur.'],
-            ['name' => 'Plastyka pośladków', 'price' => [10000, 18000], 'category' => 'Ciało',
+            ['name' => 'Plastyka pośladków', 'price' => [10000, 18000], 'category' => 'Ciało', 'duration_minutes' => 150,
                 'description' => 'Modelowanie pośladków poprzez lifting, powiększenie implantami lub przeszczep tłuszczu.'],
 
             // Zabiegi małoinwazyjne
-            ['name' => 'Botoks', 'price' => [800, 2500], 'category' => 'Zabiegi małoinwazyjne',
+            ['name' => 'Botoks', 'price' => [800, 2500], 'category' => 'Zabiegi małoinwazyjne', 'duration_minutes' => 30,
                 'description' => 'Iniekcje toksyny botulinowej redukujące zmarszczki mimiczne czoła i okolic oczu.'],
-            ['name' => 'Wypełniacze kwasu hialuronowego', 'price' => [1000, 3500], 'category' => 'Zabiegi małoinwazyjne',
+            ['name' => 'Wypełniacze kwasu hialuronowego', 'price' => [1000, 3500], 'category' => 'Zabiegi małoinwazyjne', 'duration_minutes' => 30,
                 'description' => 'Zastrzyki wypełniające zmarszczki, bruzdy i modelujące rysy twarzy.'],
-            ['name' => 'Mezoterapia', 'price' => [500, 1500], 'category' => 'Zabiegi małoinwazyjne',
+            ['name' => 'Mezoterapia', 'price' => [500, 1500], 'category' => 'Zabiegi małoinwazyjne', 'duration_minutes' => 60,
                 'description' => 'Seria zastrzyków z substancji odżywczych poprawiających kondycję i nawilżenie skóry.'],
-            ['name' => 'Peelingi chemiczne', 'price' => [400, 1200], 'category' => 'Zabiegi małoinwazyjne',
+            ['name' => 'Peelingi chemiczne', 'price' => [400, 1200], 'category' => 'Zabiegi małoinwazyjne', 'duration_minutes' => 60,
                 'description' => 'Kontrolowane złuszczanie zewnętrznych warstw skóry w celu poprawy jej tekstury i kolorytu.'],
-            ['name' => 'Terapia laserowa', 'price' => [600, 3000], 'category' => 'Zabiegi małoinwazyjne',
+            ['name' => 'Terapia laserowa', 'price' => [600, 3000], 'category' => 'Zabiegi małoinwazyjne', 'duration_minutes' => 60,
                 'description' => 'Zabiegi wykorzystujące precyzyjne wiązki światła do poprawy szerokiej gamy problemów skórnych.'],
         ];
 
         $selectedProcedure = fake()->randomElement($procedures);
 
-        // Wyszukaj lub stwórz kategorię pasującą do zabiegu
         $category = ProcedureCategory::firstOrCreate(
             ['name' => $selectedProcedure['category']],
             ['slug' => \Illuminate\Support\Str::slug($selectedProcedure['category'])]
@@ -82,15 +72,10 @@ class ProcedureFactory extends Factory
             'base_price' => fake()->randomFloat(2, $selectedProcedure['price'][0], $selectedProcedure['price'][1]),
             'procedure_category_id' => $category->id,
             'recovery_timeline_info' => $this->generateRecoveryTimeline($selectedProcedure['category']),
+            'duration_minutes' => $selectedProcedure['duration_minutes'],
         ];
     }
 
-    /**
-     * Generuje realistyczne informacje o okresie rekonwalescencji.
-     *
-     * @param string $category
-     * @return string
-     */
     private function generateRecoveryTimeline(string $category): string
     {
         $timelines = [

@@ -13,6 +13,11 @@ import {
 } from '@/components/ui/pagination';
 import {PaginationList, PaginationListItem} from 'reka-ui';
 import {Skeleton} from '@/components/ui/skeleton';
+import Card from 'primevue/card';
+import { useRouter } from 'vue-router';
+
+
+const router = useRouter();
 
 interface Procedure {
     id: number;
@@ -46,6 +51,12 @@ const getInitials = (firstName: string, lastName: string): string => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
 };
 
+const getDoctorName = (doctor: Doctor): string => {
+    if (doctor.first_name && doctor.last_name) {
+        return `${doctor.title || ''} ${doctor.first_name} ${doctor.last_name}`.trim();
+    }
+    return 'Brak danych';
+};
 
 const doctorsCurrentPage = ref(1);
 const doctorsMeta = ref({
@@ -524,22 +535,20 @@ onMounted(() => {
                 </div>
 
                 <div v-show="activeTab === 1" class="transition-opacity duration-300">
-                    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="i in 6" :key="i"
-                             class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
-                            <Skeleton class="h-32 w-full"/>
-                            <div class="relative p-5">
-                                <div class="absolute -top-10 left-5">
-                                    <Skeleton class="w-16 h-16 rounded-full"/>
+                    <div v-if="loading" class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
+                        <div v-for="i in 6" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm w-full h-auto flex flex-col">
+                            <div class="flex h-full">
+                                <div class="w-1/3" style="min-height: 250px;">
+                                    <Skeleton class="w-full h-full" />
                                 </div>
-                                <div class="ml-20">
-                                    <Skeleton class="h-6 w-40 mb-2"/>
-                                    <Skeleton class="h-4 w-24"/>
-                                </div>
-                                <div class="mt-4">
-                                    <Skeleton class="h-4 w-full mb-2"/>
-                                    <Skeleton class="h-4 w-3/4 mb-2"/>
-                                    <Skeleton class="h-4 w-5/6"/>
+
+                                <div class="w-2/3 flex flex-col p-4 h-full">
+                                    <div class="flex-grow">
+                                        <Skeleton class="h-6 w-3/4 mb-2" />
+                                        <Skeleton class="h-4 w-1/2 mb-4" />
+                                        <Skeleton class="h-16 w-full mb-2" />
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -550,29 +559,38 @@ onMounted(() => {
                         <div class="text-gray-500 dark:text-gray-400">Brak dostępnych specjalistów</div>
                     </div>
 
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div
+                    <div v-else class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
+                        <Card
                             v-for="doctor in doctors"
                             :key="doctor.id"
-                            class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-neutral-700"
+                            style="--p-card-border-radius: 0.75rem; overflow: hidden;"
+                            class="mx-auto border border-gray-200 dark:border-gray-700 shadow-sm w-full h-auto flex flex-col"
                         >
-                            <div class="h-32 bg-gradient-to-r from-nova-primary/20 to-nova-accent/20"></div>
-                            <div class="relative p-5">
-                                <div class="absolute -top-10 left-5">
-                                    <div
-                                        class="w-16 h-16 rounded-full bg-nova-primary/20 flex items-center justify-center text-nova-primary text-xl font-bold">
-                                        {{ getInitials(doctor.first_name, doctor.last_name) }}
+                            <template #content>
+                                <div class="flex h-full">
+                                    <div class="w-1/3" style="min-height: 250px;">
+                                        <img
+                                            :src="doctor.profile_picture_url || doctor.profile_picture_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
+                                            :alt="`Dr. ${getDoctorName(doctor)}`"
+                                            class="w-full h-full object-cover object-center"
+                                        />
+                                    </div>
+
+                                    <div class="w-2/3 flex flex-col p-4 h-full">
+                                        <div class="flex-grow">
+                                            <h3 class="text-xl font-semibold mb-2">{{ getDoctorName(doctor) }}</h3>
+                                            <div class="dark:text-gray-300 mb-4">
+                                                {{ doctor.specialization || 'Brak określonej specjalizacji' }}
+                                            </div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400" v-if="doctor.bio">
+                                                {{ doctor.bio.substring(0, 100) }}{{ doctor.bio.length > 100 ? '...' : '' }}
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
-                                <div class="ml-20">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {{ doctor.title || 'Dr' }} {{ doctor.first_name }} {{ doctor.last_name }}
-                                    </h3>
-                                    <span class="text-nova-primary">{{ doctor.specialization }}</span>
-                                </div>
-                                <p class="mt-4 text-gray-600 dark:text-gray-300 line-clamp-3">{{ doctor.bio }}</p>
-                            </div>
-                        </div>
+                            </template>
+                        </Card>
                     </div>
 
                     <div v-if="!loading && doctors.length > 0 && doctorsMeta && doctorsMeta.last_page > 1"

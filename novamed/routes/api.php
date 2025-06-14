@@ -18,6 +18,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
         ->name('appointments.check');
     Route::get('/doctors/{doctor}/availability', [V1\DoctorController::class, 'getAvailability'])
         ->name('doctors.availability');
+    Route::get('/doctors/{doctor}/booked-appointments', [App\Http\Controllers\Api\V1\DoctorController::class, 'getBookedAppointments'])->name('doctors.booked-appointments');
+
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', function (Request $request) {

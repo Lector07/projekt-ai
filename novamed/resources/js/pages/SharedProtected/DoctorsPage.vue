@@ -220,7 +220,8 @@ const getDoctorName = (doctor: Doctor): string => {
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
                                     <Button
                                         class="w-9 h-9 p-0"
-                                        :variant="item.value === currentPage ? 'default' : 'outline'"
+                                        :class="item.value === currentPage ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:bg-gray-700 dark:text-white dark:border-gray-600'"
+                                        variant="outline"
                                         @click="goToPage(item.value)"
                                     >
                                         {{ item.value }}

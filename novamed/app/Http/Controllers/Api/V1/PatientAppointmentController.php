@@ -107,30 +107,58 @@ class PatientAppointmentController extends Controller
      */
     public function checkAvailability(Request $request): JsonResponse
     {
-        $validatedData = $request->validate([
-            'doctor_id' => 'required|exists:doctors,id',
-            'appointment_datetime' => 'required|date|after_or_equal:now',
-        ]);
+        try {
+            $validated = $request->validate([
+                'doctor_id' => 'required|exists:doctors,id',
+                'appointment_datetime' => 'required|date',
+                'procedure_id' => 'required|exists:procedures,id'
+            ]);
 
-        $requestedDateTime = Carbon::parse($validatedData['appointment_datetime']);
-        $twoHoursBefore = $requestedDateTime->copy()->subHours(2);
-        $twoHoursAfter = $requestedDateTime->copy()->addHours(2);
+            $doctorId = $validated['doctor_id'];
+            $appointmentDatetime = Carbon::parse($validated['appointment_datetime']);
+            $procedureId = $validated['procedure_id'];
 
-        $conflictExists = Appointment::where('doctor_id', $validatedData['doctor_id'])
-            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled'])
-            ->where('appointment_datetime', '>', $twoHoursBefore)
-            ->where('appointment_datetime', '<', $twoHoursAfter)
-            ->exists();
+            // Pobierz czas trwania procedury
+            $procedure = \App\Models\Procedure::find($procedureId);
+            $procedureDuration = $procedure ? $procedure->duration_minutes : 30;
 
-        if ($conflictExists) {
+            // Oblicz czas zakończenia nowej wizyty
+            $appointmentEnd = $appointmentDatetime->copy()->addMinutes($procedureDuration);
+
+            // Pobierz wszystkie aktywne wizyty dla tego lekarza
+            $activeAppointments = Appointment::where('doctor_id', $doctorId)
+                ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
+                ->with('procedure') // Dołącz relację procedure
+                ->get();
+
+            // Sprawdź nakładanie się terminów w PHP
+            foreach ($activeAppointments as $existingAppointment) {
+                $existingStart = Carbon::parse($existingAppointment->appointment_datetime);
+
+                // Poprawka tutaj - pobierz czas trwania procedury bezpośrednio z relacji
+                $existingDuration = $existingAppointment->procedure ?
+                    $existingAppointment->procedure->duration_minutes : 30;
+
+                $existingEnd = $existingStart->copy()->addMinutes($existingDuration);
+
+                // Sprawdź czy terminy nakładają się
+                if (($appointmentDatetime < $existingEnd) && ($appointmentEnd > $existingStart)) {
+                    return response()->json([
+                        'available' => false,
+                        'message' => 'Wybrany termin koliduje z inną wizytą.'
+                    ], 409);
+                }
+            }
+
             return response()->json([
-                'available' => false,
-                'message' => 'Wybrany termin jest zbyt blisko innej wizyty tego lekarza. Proszę wybrać termin z co najmniej 2-godzinnym odstępem.'
-            ], 409);
+                'available' => true
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Błąd sprawdzania dostępności: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Wystąpił błąd podczas sprawdzania dostępności',
+                'available' => false
+            ], 500);
         }
-
-        return response()->json([
-            'available' => true,
-        ]);
     }
 }

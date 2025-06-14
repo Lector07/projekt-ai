@@ -54,6 +54,36 @@ class DoctorController extends Controller
      * Update the specified resource in storage.
      */
 
+    public function getBookedAppointments(Request $request, Doctor $doctor): JsonResponse
+    {
+        $validated = $request->validate([
+            'start_date' => 'sometimes|date_format:Y-m-d',
+            'end_date' => 'sometimes|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
+
+        $startDate = Carbon::parse($validated['start_date'] ?? Carbon::now()->startOfMonth())->startOfDay();
+        $endDate = Carbon::parse($validated['end_date'] ?? Carbon::now()->endOfMonth())->endOfDay();
+
+        $bookedAppointments = Appointment::where('doctor_id', $doctor->id)
+            ->whereBetween('appointment_datetime', [$startDate, $endDate])
+            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
+            ->with('procedure:id,duration_minutes')
+            ->get(['id', 'appointment_datetime', 'procedure_id']);
+
+        $formattedBooked = $bookedAppointments->map(function ($appointment) {
+            $dt = Carbon::parse($appointment->appointment_datetime);
+            return [
+                'date' => $dt->format('Y-m-d'),
+                'time' => $dt->format('H:i'),
+                // Dodajemy czas zakończenia, jeśli jest potrzebny do precyzyjnego sprawdzania konfliktów
+                'end_time' => $dt->copy()->addMinutes($appointment->procedure->duration_minutes ?? 30)->format('H:i'),
+                'procedure_duration' => $appointment->procedure->duration_minutes ?? 30,
+            ];
+        });
+
+        return response()->json(['data' => $formattedBooked]);
+    }
+
     public function getAvailability(Request $request, Doctor $doctor): JsonResponse
     {
         $validated = $request->validate([
@@ -72,54 +102,87 @@ class DoctorController extends Controller
             $procedureDuration = $procedure?->duration_minutes ?? 30;
         }
 
+        $maxConsecutiveWorkMinutes = 180;
+
         $availability = [];
         $period = CarbonPeriod::create($startDate, $endDate);
 
-        $existingAppointmentsDateTimes = Appointment::where('doctor_id', $doctor->id)
+        $existingAppointments = Appointment::where('doctor_id', $doctor->id)
             ->whereBetween('appointment_datetime', [$startDate, $endDate])
             ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
-            ->pluck('appointment_datetime')
-            ->map(function ($datetime) {
-                return Carbon::parse($datetime);
-            })
-            ->all();
+            ->with('procedure:id,duration_minutes')
+            ->get();
 
         foreach ($period as $date) {
             if ($date->isWeekday()) {
-                $daySlots = [];
-                $slot = $date->copy()->setTime(9, 0, 0);
-                $endOfDayWork = $date->copy()->setTime(16, 30, 0);
+                $workStartTime = '09:00';
+                $workEndTime = '17:00';
 
-                while ($slot->copy()->addMinutes($procedureDuration)->lte($endOfDayWork)) {
-                    $isSlotAvailable = true;
+                $dayStart = Carbon::parse($date->format('Y-m-d') . ' ' . $workStartTime);
+                $dayEnd = Carbon::parse($date->format('Y-m-d') . ' ' . $workEndTime);
 
-                    foreach ($existingAppointmentsDateTimes as $existingApptTime) {
-                        $potentialSlotEnd = $slot->copy()->addMinutes($procedureDuration);
+                $busySegments = $existingAppointments
+                    ->filter(function($appt) use ($date) {
+                        return Carbon::parse($appt->appointment_datetime)->isSameDay($date);
+                    })
+                    ->map(function($appt) {
+                        $start = Carbon::parse($appt->appointment_datetime);
+                        $appointmentDuration = $appt->procedure->duration_minutes ?? 30;
+                        return [
+                            'start' => $start,
+                            'end' => $start->copy()->addMinutes($appointmentDuration)
+                        ];
+                    })
+                    ->sortBy('start')
+                    ->values();
 
-                        $bufferStartBeforeExisting = $existingApptTime->copy()->subHours(2);
-                        $existingApptEndTime = $existingApptTime->copy()->addMinutes($procedureDuration);
-                        $bufferEndAfterExisting = $existingApptEndTime->copy()->addHours(2);
+                // Generuj standardowe 30-minutowe sloty (9:00, 9:30, 10:00, ...)
+                $availableSlots = [];
+                $currentSlot = $dayStart->copy();
 
-                        if ($potentialSlotEnd->gt($bufferStartBeforeExisting) && $slot->lt($bufferEndAfterExisting)) {
-                            $isSlotAvailable = false;
-                            break;
-                        }
+                while ($currentSlot->copy()->addMinutes($procedureDuration)->lte($dayEnd)) {
+                    // Upewnij się, że slot ma minuty 00 lub 30
+                    $minutes = (int)$currentSlot->format('i');
+                    if ($minutes !== 0 && $minutes !== 30) {
+                        // Zaokrąglij do następnego 30-minutowego interwału
+                        $currentSlot->setTime(
+                            $currentSlot->hour + ($minutes > 30 ? 1 : 0),
+                            $minutes > 30 ? 0 : 30
+                        );
+                        continue;
                     }
 
-                    if ($isSlotAvailable) {
-                        $daySlots[] = $slot->format('H:i');
+                    // Sprawdź, czy slot nie koliduje z istniejącymi rezerwacjami
+                    if (!$this->isOverlapping($currentSlot, $procedureDuration, $busySegments)) {
+                        $availableSlots[] = $currentSlot->format('H:i');
                     }
-                    $slot->addMinutes($procedureDuration);
+
+                    // Przejdź do następnego slotu (dokładnie +30 minut)
+                    $currentSlot->addMinutes(30);
                 }
 
-                if (count($daySlots) > 0) {
+                if (count($availableSlots) > 0) {
                     $availability[] = [
                         'date' => $date->format('Y-m-d'),
-                        'times' => $daySlots,
+                        'times' => $availableSlots,
                     ];
                 }
             }
         }
+
         return response()->json(['data' => $availability]);
+    }
+
+    private function isOverlapping(Carbon $start, int $duration, $busySegments): bool
+    {
+        $end = $start->copy()->addMinutes($duration);
+
+        foreach ($busySegments as $segment) {
+            if ($start->lt($segment['end']) && $end->gt($segment['start'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

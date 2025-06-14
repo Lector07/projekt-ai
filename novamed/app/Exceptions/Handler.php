@@ -33,7 +33,6 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            // Tutaj możesz dodać kod do raportowania błędów
         });
     }
 
@@ -47,12 +46,10 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
-        // Sprawdzenie czy żądanie oczekuje JSON
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->handleApiException($request, $e);
         }
 
-        // Obsługa konkretnych typów wyjątków
         if ($e instanceof NotFoundHttpException) {
             return response()->view('errors.404', [], 404);
         }
@@ -100,7 +97,6 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Konwersja wyjątku uwierzytelniania na odpowiedź.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Illuminate\Auth\AuthenticationException  $exception

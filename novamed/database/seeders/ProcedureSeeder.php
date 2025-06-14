@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 
 class ProcedureSeeder extends Seeder
 {
+
     /**
      * Run the database seeds.
      */
@@ -33,7 +34,7 @@ class ProcedureSeeder extends Seeder
                         'base_price' => fake()->randomFloat(2, $procedure['price'][0], $procedure['price'][1]),
                         'procedure_category_id' => $category->id,
                         'recovery_timeline_info' => $this->generateRecoveryTimeline($category->name),
-                    ]
+                        'duration_minutes' => fake()->randomElement([30, 60, 90, 120, 150, 180]),                    ]
                 );
             }
         }

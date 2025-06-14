@@ -32,6 +32,17 @@ const error = ref<string | null>(null);
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Przegląd dnia' }];
 
+function formatAppointmentTime(datetime: string): string {
+    if (!datetime) return '';
+
+    const date = new Date(datetime);
+    return date.toLocaleTimeString('pl-PL', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Europe/Warsaw'
+    });
+}
+
 async function fetchDashboardData() {
     loading.value = true;
     error.value = null;
@@ -142,8 +153,9 @@ onMounted(() => {
                             >
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="font-semibold text-gray-800 dark:text-gray-100">{{ appt.time }} - {{ appt.patient_name }}</p>
-                                        <p
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">
+                                            {{ formatAppointmentTime(appt.datetime) }} - {{ appt.patient_name }}
+                                        </p>                                        <p
                                             class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-nova-accent dark:hover:text-blue-400"
                                             @click.stop="navigateToAppointmentDetails(appt.id)"
                                         >{{ appt.procedure_name }}</p>
@@ -193,7 +205,9 @@ onMounted(() => {
                             >
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="font-semibold text-gray-800 dark:text-gray-100">{{ appt.time }} - {{ appt.patient_name }}</p>
+                                        <p class="font-semibold text-gray-800 dark:text-gray-100">
+                                            {{ formatAppointmentTime(appt.datetime) }} - {{ appt.patient_name }}
+                                        </p>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">{{ appt.procedure_name }}</p>
                                     </div>
                                     <Badge :variant="getStatusInfo(appt.status).variant" class="text-xs">
