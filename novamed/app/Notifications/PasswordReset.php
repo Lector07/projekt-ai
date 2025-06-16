@@ -22,10 +22,7 @@ class PasswordReset extends Notification
 
     public function toMail($notifiable)
     {
-        $url = url(route('password.reset', [
-            'token' => $this->token,
-            'email' => $notifiable->getEmailForPasswordReset(),
-        ], false));
+        $url = url('/reset-password/' . $this->token . '?email=' . $notifiable->getEmailForPasswordReset());
 
         return (new MailMessage)
             ->subject('Zresetuj swoje hasło')

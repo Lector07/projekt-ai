@@ -35,9 +35,12 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::get('/doctors/{doctor}/availability', [V1\DoctorController::class, 'getAvailability'])
         ->name('doctors.availability');
     Route::get('/doctors/{doctor}/booked-appointments', [App\Http\Controllers\Api\V1\DoctorController::class, 'getBookedAppointments'])->name('doctors.booked-appointments');
+
     Route::post('/reset-password', [V1\Auth\NewPasswordController::class, 'store'])
         ->name('password.reset');
-    Route::post('/forgot-password-link', [ForgotPasswordLinkController::class, 'store']);
+    Route::post('/forgot-password', [ForgotPasswordLinkController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.email');
 
     Route::get('/email/verify/{id}/{hash}', [App\Http\Controllers\Api\V1\Auth\VerifyEmailController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])
@@ -46,6 +49,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::post('/email/verification-notification', [App\Http\Controllers\Api\V1\Auth\VerifyEmailController::class, 'resend'])
         ->middleware(['throttle:6,1'])
         ->name('verification.send');
+
 
 
     Route::middleware('auth:sanctum')->group(function () {

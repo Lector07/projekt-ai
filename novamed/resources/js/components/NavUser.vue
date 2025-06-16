@@ -4,15 +4,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { ChevronsUpDown } from 'lucide-vue-next';
 import UserMenuContent from './UserMenuContent.vue';
-import { useAuthStore } from '@/stores/auth'; // Importuj store
+import { useAuthStore } from '@/stores/auth';
 import { computed } from 'vue';
 
 const authStore = useAuthStore();
-const user = computed(() => authStore.user); // Pobierz użytkownika ze store'a
+const user = computed(() => authStore.user);
 const { isMobile, state } = useSidebar();
 
-console.log('Auth Store User:', authStore.user);
-console.log('Is Logged In:', authStore.isLoggedIn);
 </script>
 
 <template>

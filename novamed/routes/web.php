@@ -25,10 +25,12 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         ->middleware('guest')
         ->name('reset-password');
 
+
     Route::post('/forgot-password', [Auth\ForgotPasswordLinkController::class, 'store'])
         ->middleware('guest')
         ->name('forgot-password');
 });
+
 
 Route::get('/{any?}', function () {
     return view('app');
