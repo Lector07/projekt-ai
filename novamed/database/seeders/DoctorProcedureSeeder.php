@@ -31,7 +31,7 @@ class DoctorProcedureSeeder extends Seeder
 
         foreach ($doctors as $doctor) {
             $randomCategoriesCount = rand(1, min(3, $categories->count()));
-            if ($randomCategoriesCount === 0) continue; // Na wypadek gdyby $categories->count() było 0
+            if ($randomCategoriesCount === 0) continue;
 
             $randomCategories = $categories->random($randomCategoriesCount);
             if (!($randomCategories instanceof \Illuminate\Database\Eloquent\Collection)) {

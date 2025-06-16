@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
 import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 
-const router = useRouter();
 const isLoading = ref(false);
 const status = ref('');
 const errors = ref<{ [key: string]: string[] }>({});

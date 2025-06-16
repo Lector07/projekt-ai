@@ -2,12 +2,28 @@
 
 use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Admin;
+use App\Http\Controllers\Api\V1\Auth\ForgotPasswordLinkController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\AdminProcedureCategoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+
+Route::get('/email/verify', function () {
+    return redirect('/settings/profile?verified=1');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/settings/profile?verified=1');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('message', 'Link weryfikacyjny wysłany!');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::prefix('v1')->name('v1.')->group(function () {
 
@@ -19,6 +35,17 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::get('/doctors/{doctor}/availability', [V1\DoctorController::class, 'getAvailability'])
         ->name('doctors.availability');
     Route::get('/doctors/{doctor}/booked-appointments', [App\Http\Controllers\Api\V1\DoctorController::class, 'getBookedAppointments'])->name('doctors.booked-appointments');
+    Route::post('/reset-password', [V1\Auth\NewPasswordController::class, 'store'])
+        ->name('password.reset');
+    Route::post('/forgot-password-link', [ForgotPasswordLinkController::class, 'store']);
+
+    Route::get('/email/verify/{id}/{hash}', [App\Http\Controllers\Api\V1\Auth\VerifyEmailController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('/email/verification-notification', [App\Http\Controllers\Api\V1\Auth\VerifyEmailController::class, 'resend'])
+        ->middleware(['throttle:6,1'])
+        ->name('verification.send');
 
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -26,6 +53,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
             \Illuminate\Support\Facades\Log::info('GET /api/v1/user route hit with UserResource. User ID: ' . $request->user()->id . ', Role: ' . $request->user()->role . ', Path: ' . $request->user()->profile_picture_path);
             return new \App\Http\Resources\Api\V1\UserResource($request->user());
         })->name('user.show');
+
 
         Route::get('/user/profile', [V1\UserProfileController::class, 'show'])->name('user.profile.show');
         Route::put('/user/profile', [V1\UserProfileController::class, 'update'])->name('user.profile.update');

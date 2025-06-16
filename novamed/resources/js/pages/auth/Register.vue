@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';

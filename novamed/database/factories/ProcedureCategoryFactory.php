@@ -10,22 +10,11 @@ use Illuminate\Support\Str;
  */
 class ProcedureCategoryFactory extends Factory
 {
-    /**
-     * Określ nazwę tabeli modelu (jeśli jest niestandardowa).
-     * W modelu zdefiniowaliśmy protected $table, więc to jest opcjonalne.
-     */
-    // protected $model = \App\Models\ProcedureCategory::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $name = fake()->unique()->randomElement(['Zabiegi na twarz', 'Modelowanie sylwetki', 'Medycyna estetyczna', 'Chirurgia piersi', 'Zabiegi laserowe']);
 
-        // Tworzenie opisów dla poszczególnych kategorii
         $descriptions = [
             'Zabiegi na twarz' => 'Kompleksowe zabiegi odmładzające i regenerujące skórę twarzy. Oferujemy profesjonalne liftingi, peelingi oraz zabiegi rozświetlające, które poprawiają wygląd i kondycję skóry.',
             'Modelowanie sylwetki' => 'Nieinwazyjne i skuteczne metody modelowania sylwetki. Zabiegi redukujące tkankę tłuszczową, ujędrniające i poprawiające kształt ciała.',

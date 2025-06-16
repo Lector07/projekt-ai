@@ -22,9 +22,8 @@ class AppointmentSeeder extends Seeder
             return;
         }
 
-        // Utwórz wizyty z datami rozłożonymi na cały rok
         for ($month = 1; $month <= 12; $month++) {
-            $appointmentsInMonth = rand(3, 8); // Losowa liczba wizyt w miesiącu
+            $appointmentsInMonth = rand(3, 8);
 
             for ($i = 0; $i < $appointmentsInMonth; $i++) {
                 $date = Carbon::create(2025, $month, rand(1, 28));

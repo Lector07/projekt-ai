@@ -14,10 +14,8 @@ import {
 import {PaginationList, PaginationListItem} from 'reka-ui';
 import {Skeleton} from '@/components/ui/skeleton';
 import Card from 'primevue/card';
-import { useRouter } from 'vue-router';
 
 
-const router = useRouter();
 
 interface Procedure {
     id: number;
@@ -47,9 +45,6 @@ const error = ref(false);
 
 
 const activeTab = ref(0);
-const getInitials = (firstName: string, lastName: string): string => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
-};
 
 const getDoctorName = (doctor: Doctor): string => {
     if (doctor.first_name && doctor.last_name) {
@@ -148,7 +143,7 @@ onMounted(() => {
 
 <template>
     <div
-        class="flex mt-14 min-h-screen flex-col items-center bg-nova-light p-6 text-[#1b1b18] lg:justify-center lg:p-8">
+        class="flex min-h-screen flex-col items-center bg-nova-light dark:bg-[#161615] p-6 text-[#1b1b18] lg:justify-center lg:p-8">
         <div
             class="duration-750 starting:opacity-0 flex w-full items-center justify-center opacity-100 transition-opacity lg:grow">
             <main

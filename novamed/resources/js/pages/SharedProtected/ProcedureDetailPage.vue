@@ -44,7 +44,7 @@ interface Procedure {
 }
 
 const route = useRoute();
-const router = useRouter(); // Zdefiniuj router
+const router = useRouter();
 const procedureId = route.params.id;
 const procedure = ref<Procedure | null>(null);
 const loading = ref(true);

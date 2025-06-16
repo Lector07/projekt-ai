@@ -12,7 +12,6 @@ import { LoaderCircle } from 'lucide-vue-next';
 const router = useRouter();
 const route = useRoute();
 
-// Stan formularza
 const form = ref({
     token: '',
     email: '',
@@ -65,7 +64,7 @@ async function submit() {
 </script>
 
 <template>
-    <AuthLayout title="Reset password" description="Please enter your new password below">
+    <AuthLayout title="Resetowanie hasła" description="Ustaw swoje nowe hasło.">
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
@@ -84,7 +83,7 @@ async function submit() {
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password">Hasło</Label>
                     <Input
                         id="password"
                         type="password"
@@ -93,14 +92,14 @@ async function submit() {
                         v-model="form.password"
                         class="mt-1 block w-full"
                         autofocus
-                        placeholder="Password"
+                        placeholder="Podaj nowe hasło"
                         required
                     />
                     <InputError :message="errors.password ? errors.password[0] : ''" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation"> Confirm Password </Label>
+                    <Label for="password_confirmation"> Potwierdź hasło </Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -108,15 +107,15 @@ async function submit() {
                         autocomplete="new-password"
                         v-model="form.password_confirmation"
                         class="mt-1 block w-full"
-                        placeholder="Confirm password"
+                        placeholder="Potwierdź nowe hasło"
                         required
                     />
                     <InputError :message="errors.password_confirmation ? errors.password_confirmation[0] : ''" />
                 </div>
 
-                <Button type="submit" class="mt-4 w-full" :disabled="isLoading">
+                <Button type="submit" class="mt-4 w-full bg-nova-primary hover:bg-nova-accent" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />
-                    {{ isLoading ? 'Resetting...' : 'Reset password' }}
+                    {{ isLoading ? 'Resetowanie...' : 'Zapisz nowe hasło' }}
                 </Button>
             </div>
         </form>

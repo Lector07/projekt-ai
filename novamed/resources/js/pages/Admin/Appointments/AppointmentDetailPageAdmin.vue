@@ -268,7 +268,7 @@ const updateAppointment = async () => {
 const loadPatients = async () => {
     patientsLoading.value = true;
     try {
-        const response = await axios.get('/api/v1/admin/patients'); // lub /api/v1/admin/users jeśli to ten sam endpoint
+        const response = await axios.get('/api/v1/admin/patients');
         allPatients.value = response.data.data || [];
     } catch (error) {
         console.error('Błąd podczas pobierania pacjentów:', error);

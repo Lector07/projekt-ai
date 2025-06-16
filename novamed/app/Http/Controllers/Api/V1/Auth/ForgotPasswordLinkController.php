@@ -26,7 +26,7 @@ class ForgotPasswordLinkController extends Controller
         ]);
 
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return env('FRONTEND_URL', 'http://localhost:5173') .
+            return env('FRONTEND_URL', 'http://127.0.0.1:8000') .
                 '/reset-password/' . $token .
                 '?email=' . urlencode($user->getEmailForPasswordReset());
         });

@@ -53,7 +53,6 @@ class UpdateDoctorAppointmentRequest extends FormRequest
                 Rule::in($allowedStatuses),
             ],
             'doctor_notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
-            //TODO: Przekładanie wizyt ale to na 5
         ];
     }
 

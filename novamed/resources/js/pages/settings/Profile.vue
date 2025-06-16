@@ -61,6 +61,33 @@ const avatarRecentlySuccessful = ref(false);
 let avatarSuccessTimeout: number | null = null;
 const deletingAvatar = ref(false);
 
+// Dodaj te zmienne po istniejących zmiennych stanu
+const resendingVerification = ref(false);
+const verificationSent = ref(false);
+const status = ref<string | null>(null);
+
+// Dodaj tę funkcję przed końcem skryptu
+async function resendVerificationEmail() {
+    if (resendingVerification.value) return;
+
+    resendingVerification.value = true;
+
+    try {
+        await axios.post('/api/v1/email/verification-notification');
+        status.value = 'verification-link-sent';
+        verificationSent.value = true;
+
+        setTimeout(() => {
+            status.value = null;
+            verificationSent.value = false;
+        }, 5000);
+    } catch (error) {
+        console.error('Błąd podczas wysyłania linku weryfikacyjnego:', error);
+    } finally {
+        resendingVerification.value = false;
+    }
+}
+
 watch(user, (newUser) => {
     if (newUser) {
         form.value.name = newUser.name || '';
@@ -330,6 +357,26 @@ const getInitials = (name: string | undefined) => {
                                    placeholder="Podaj adres email"/>
                             <InputError :message="profileErrors.email ? profileErrors.email[0] : ''"/>
                         </div>
+
+                        <div v-if="user && !user.email_verified_at" class="mt-2 mb-4">
+                            <p class="text-sm text-muted-foreground">
+                                Twój adres email nie został jeszcze zweryfikowany.
+                                <Button
+                                    type="button"
+                                    variant="link"
+                                    class="p-0 h-auto text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500"
+                                    @click="resendVerificationEmail"
+                                    :disabled="resendingVerification"
+                                >
+                                    {{ resendingVerification ? 'Wysyłanie...' : 'Kliknij tutaj, aby ponownie wysłać link weryfikacyjny.' }}
+                                </Button>
+                            </p>
+
+                            <div v-if="status === 'verification-link-sent'" class="mt-2 text-sm font-medium text-green-600">
+                                Nowy link weryfikacyjny został wysłany na Twój adres email.
+                            </div>
+                        </div>
+
 
                         <div class="flex items-center gap-4">
                             <Button :disabled="profileProcessing"

@@ -14,18 +14,13 @@ class ProcedureSeeder extends Seeder
      */
     public function run(): void
     {
-        // Pobierz wszystkie istniejące kategorie
         $categories = ProcedureCategory::all();
 
-        // Dla każdej kategorii dodaj 3 zabiegi
         foreach ($categories as $category) {
-            // Pobierz zabiegi dla tej kategorii
             $procedures = $this->getProceduresForCategory($category->name);
 
-            // Ogranicz do 3 zabiegów
             $selectedProcedures = array_slice($procedures, 0, 3);
 
-            // Utwórz każdy zabieg
             foreach ($selectedProcedures as $procedure) {
                 Procedure::firstOrCreate(
                     ['name' => $procedure['name']],

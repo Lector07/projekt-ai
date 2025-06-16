@@ -1,15 +1,13 @@
-// novamed/resources/js/router/index.ts
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 import {useAuthStore} from '@/stores/auth';
 import HomePage from '../pages/Public/Welcome.vue';
 import LoginPage from '../pages/auth/Login.vue';
 import RegisterPage from '../pages/auth/Register.vue';
-import DashboardPatientPage from '../pages/Patient/DashboardPatient.vue'; // Używane jako domyślny dashboard
+import DashboardPatientPage from '../pages/Patient/DashboardPatient.vue';
 import ProfileSettingsPage from '../pages/settings/Profile.vue';
 import ResetPasswordPage from '../pages/auth/ResetPassword.vue';
 import ForgotPasswordPage from '../pages/auth/ForgotPassword.vue';
 import ProceduresPage from '../pages/SharedProtected/ProceduresPage.vue';
-import {storeToRefs} from 'pinia';
 import DoctorsPage from "@/pages/SharedProtected/DoctorsPage.vue";
 import ProcedureDetailPage from "@/pages/SharedProtected/ProcedureDetailPage.vue";
 import DoctorDetailPage from "@/pages/SharedProtected/DoctorDetailPage.vue";
@@ -73,7 +71,7 @@ const adminRoutes: Array<RouteRecordRaw> = [
         path: '/admin/doctors/:id',
         name: 'admin-doctor-details',
         component: DoctorDetailPageAdmin,
-        props: true, // Dodaj props: true, aby ID było przekazywane jako prop
+        props: true,
         meta: { title: 'Szczegóły lekarza', requiresAuth: true, requiresAdmin: true }
     },
     {
@@ -95,23 +93,23 @@ const adminRoutes: Array<RouteRecordRaw> = [
 const doctorRoutes: Array<RouteRecordRaw> = [
     {
         path: '/doctor/dashboard',
-        name: 'doctor.dashboard', // Użyj tej nazwy w beforeEnter dla /dashboard
-        component: DashboardDoctorPage, // Użyj poprawnej nazwy komponentu
+        name: 'doctor.dashboard',
+        component: DashboardDoctorPage,
         meta: {
             title: 'Panel Lekarza',
             requiresAuth: true,
-            requiresDoctor: true, // Meta field dla ochrony trasy
+            requiresDoctor: true,
         }
     },
     {
         path: '/doctor/appointments',
-        name: 'doctor.appointments.index', // Nazwa, do której linkuje dashboard lekarza
+        name: 'doctor.appointments.index',
         component: DoctorAppointmentPage,
         meta: { title: 'Moje Wizyty - Panel Lekarza', requiresAuth: true, requiresDoctor: true }
     },
     {
-        path: '/doctor/appointments/:id', // :id to parametr ID wizyty
-        name: 'doctor.appointments.show', // Nazwa używana np. w DoctorAppointmentsListPage.vue
+        path: '/doctor/appointments/:id',
+        name: 'doctor.appointments.show',
         component: DoctorAppointmentDetailPage,
         props: true,
         meta: { title: 'Szczegóły Wizyty', requiresAuth: true, requiresDoctor: true }
@@ -128,10 +126,7 @@ const doctorRoutes: Array<RouteRecordRaw> = [
             component: () => import('@/pages/Doctor/Profile/DoctorProfileSettingsPage.vue'),
             meta: { title: 'Profil Lekarza', requiresAuth: true, requiresDoctor: true }
     },
-    // Tutaj możesz dodać inne trasy dla lekarza, np.:
-    // { path: '/doctor/appointments', name: 'doctor.appointments.index', component: ..., meta: { requiresAuth: true, requiresDoctor: true } },
-    // { path: '/doctor/appointments/:id', name: 'doctor.appointments.show', component: ..., meta: { requiresAuth: true, requiresDoctor: true } },
-    // { path: '/doctor/profile', name: 'doctor.profile.show', component: ..., meta: { requiresAuth: true, requiresDoctor: true } },
+
 ];
 
 const routes: Array<RouteRecordRaw> = [
@@ -141,14 +136,14 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: DashboardPatientPage, // Domyślny komponent, jeśli rola nie jest admin/doctor
+        component: DashboardPatientPage,
         meta: {
             requiresAuth: true,
             dynamicTitle: true
         },
         beforeEnter: (to, from, next) => {
             const authStore = useAuthStore();
-            if (!authStore.user) { // Dodatkowe zabezpieczenie
+            if (!authStore.user) {
                 return next({ name: 'login' });
             }
             const userRole = (authStore.user as any).role;
@@ -156,12 +151,11 @@ const routes: Array<RouteRecordRaw> = [
             if (userRole === 'admin') {
                 return next({ name: 'admin.dashboard' });
             } else if (userRole === 'doctor') {
-                // Zamiast ustawiać tytuł tutaj i renderować DashboardPatientPage,
-                // przekieruj na dedykowaną trasę dashboardu lekarza.
+
                 return next({ name: 'doctor.dashboard' });
-            } else { // patient
+            } else {
                 to.meta.title = 'Panel Pacjenta';
-                // Pozwól na załadowanie DashboardPatientPage (już zdefiniowany w 'component')
+
                 next();
             }
         }
@@ -191,9 +185,9 @@ const routes: Array<RouteRecordRaw> = [
         meta: {title: 'Wygląd Aplikacji', requiresAuth: true}
     },
     {
-        path: '/profile/settings', // Stara ścieżka
+        path: '/profile/settings',
         name: 'profile.settings',
-        redirect: { name: 'settings.profile' } // Przekieruj na nową
+        redirect: { name: 'settings.profile' }
     },
     {
         path: '/reset-password/:token',
@@ -232,7 +226,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'doctor.detail',
         component: DoctorDetailPage,
         props: true,
-        meta: {title: 'Szczegóły lekarza', requiresAuth: true} // Poprawka literówki
+        meta: {title: 'Szczegóły lekarza', requiresAuth: true}
     },
     {
         path: '/patient/appointments',
@@ -250,7 +244,7 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/patient/appointments/book',
         name: 'book.appointment',
-        component: BookAppointmentPage, // Użyj poprawnej nazwy komponentu
+        component: BookAppointmentPage,
         meta: {title: 'Rezerwacja Wizyty', requiresAuth: true}
     },
     {
@@ -330,7 +324,7 @@ const routes: Array<RouteRecordRaw> = [
 
 
     ...adminRoutes,
-    ...doctorRoutes // <<< --- DODAJ TRASY LEKARZA DO GŁÓWNEJ TABLICY
+    ...doctorRoutes
 ];
 
 const router = createRouter({
@@ -343,52 +337,43 @@ let authInitialized = false;
 
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
-    // Nie używaj storeToRefs tutaj, jeśli isLoggedIn jest prostym getterem
-    // const { isLoggedIn } = storeToRefs(authStore); // Można pominąć, jeśli odwołujesz się przez authStore.isLoggedIn
+
 
     if (!authInitialized) {
-        console.log('Router Guard: Inicjalizacja autoryzacji...');
         try {
             await authStore.initAuth();
             authInitialized = true;
-            console.log('Router Guard: Autoryzacja zainicjowana. Zalogowany:', authStore.isLoggedIn);
         } catch (error) {
-            console.error('Router Guard: Błąd inicjalizacji autoryzacji:', error);
+            console.error('Błąd podczas inicjalizacji autoryzacji:', error);
         }
     }
 
     const requiresAuth = to.meta.requiresAuth === true;
     const requiresGuest = to.meta.requiresGuest === true;
     const requiresAdmin = to.meta.requiresAdmin === true;
-    const requiresDoctor = to.meta.requiresDoctor === true; // Odczytaj meta field
+    const requiresDoctor = to.meta.requiresDoctor === true;
 
     const isAdmin = () => {
         if (!authStore.user) return false;
-        return (authStore.user as any).role === 'admin'; // Uproszczone
+        return (authStore.user as any).role === 'admin';
     };
 
-    const isDoctor = () => { // Zdefiniuj funkcję isDoctor
+    const isDoctor = () => {
         if (!authStore.user) return false;
-        return (authStore.user as any).role === 'doctor'; // Uproszczone
+        return (authStore.user as any).role === 'doctor';
     };
 
-    console.log(`Router Guard: Nawigacja do ${to.path}. Wymaga Auth: ${requiresAuth}, Zalogowany: ${authStore.isLoggedIn}, Wymaga Admin: ${requiresAdmin}, Jest Admin: ${isAdmin()}, Wymaga Doctor: ${requiresDoctor}, Jest Doctor: ${isDoctor()}`);
 
     if (requiresAuth && !authStore.isLoggedIn) {
-        console.log(`Router Guard: Przekierowanie do logowania z ${to.path} (wymaga autoryzacji, brak zalogowania)`);
-        next({name: 'login', query: { redirect: to.fullPath } }); // Przekaż ścieżkę przekierowania
+        next({name: 'login', query: { redirect: to.fullPath } });
     } else if (requiresGuest && authStore.isLoggedIn) {
-        console.log('Router Guard: Przekierowanie do dashboardu (wymaga gościa, użytkownik zalogowany)');
         next({name: 'dashboard'});
     } else if (requiresAdmin && !isAdmin()) {
-        console.log('Router Guard: Brak uprawnień admina, przekierowanie do dashboardu');
-        next({name: 'dashboard'}); // Lub na stronę błędu 403/dostępu zabronionego
-    } else if (requiresDoctor && !isDoctor()) { // <<< --- DODAJ SPRAWDZENIE DLA LEKARZA
-        console.log('Router Guard: Brak uprawnień lekarza, przekierowanie do dashboardu');
-        next({ name: 'dashboard' }); // Lub na stronę błędu 403/dostępu zabronionego
+        next({name: 'dashboard'});
+    } else if (requiresDoctor && !isDoctor()) {
+        next({ name: 'dashboard' });
     }
     else {
-        console.log(`Router Guard: Przechodzę do ${String(to.name || to.path)}`);
         next();
     }
 });

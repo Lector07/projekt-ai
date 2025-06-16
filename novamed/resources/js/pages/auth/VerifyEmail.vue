@@ -1,34 +1,65 @@
 <script setup lang="ts">
-import TextLink from '@/components/TextLink.vue';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 defineProps<{
     status?: string;
 }>();
 
-const form = useForm({});
+const loading = ref(false);
+const message = ref('');
+const router = useRouter();
 
-const submit = () => {
-    form.post(route('verification.send'));
+const resendVerification = async () => {
+    loading.value = true;
+    message.value = '';
+
+    try {
+        await axios.post('/api/v1/email/verification-notification');
+        message.value = 'Link weryfikacyjny został wysłany na Twój adres email.';
+    } catch (error: any) {
+        message.value = `Błąd: ${error.response?.data?.message || 'Nie udało się wysłać linku weryfikacyjnego'}`;
+    } finally {
+        loading.value = false;
+    }
+};
+
+const logout = async () => {
+    try {
+        await axios.post('/api/v1/auth/logout');
+        localStorage.removeItem('token');
+        router.push('/api/v1/login');
+    } catch (error) {
+        console.error('Błąd podczas wylogowywania', error);
+    }
 };
 </script>
 
 <template>
-    <AuthLayout title="Verify email" description="Please verify your email address by clicking on the link we just emailed to you.">
+    <AuthLayout title="Weryfikacja email" description="Prosimy o weryfikację adresu email poprzez kliknięcie w link, który właśnie wysłaliśmy na Twój adres email.">
 
         <div v-if="status === 'verification-link-sent'" class="mb-4 text-center text-sm font-medium text-green-600">
-            A new verification link has been sent to the email address you provided during registration.
+            Nowy link weryfikacyjny został wysłany na adres email podany podczas rejestracji.
         </div>
 
-        <form @submit.prevent="submit" class="space-y-6 text-center">
-            <Button :disabled="form.processing" variant="secondary">
-                <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                Resend verification email
+        <div v-if="message" class="mb-4 text-center text-sm font-medium"
+             :class="message.includes('Błąd') ? 'text-red-600' : 'text-green-600'">
+            {{ message }}
+        </div>
+
+        <form @submit.prevent="resendVerification" class="space-y-6 text-center">
+            <Button :disabled="loading" variant="secondary">
+                <LoaderCircle v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+                Wyślij ponownie email weryfikacyjny
             </Button>
 
-            <TextLink :href="route('logout')" method="post" as="button" class="mx-auto block text-sm"> Log out </TextLink>
+            <button @click="logout" type="button" class="mx-auto block text-sm text-gray-600 hover:text-gray-900">
+                Wyloguj się
+            </button>
         </form>
     </AuthLayout>
 </template>
