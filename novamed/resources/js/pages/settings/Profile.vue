@@ -61,12 +61,10 @@ const avatarRecentlySuccessful = ref(false);
 let avatarSuccessTimeout: number | null = null;
 const deletingAvatar = ref(false);
 
-// Dodaj te zmienne po istniejących zmiennych stanu
 const resendingVerification = ref(false);
 const verificationSent = ref(false);
 const status = ref<string | null>(null);
 
-// Dodaj tę funkcję przed końcem skryptu
 async function resendVerificationEmail() {
     if (resendingVerification.value) return;
 
@@ -364,11 +362,11 @@ const getInitials = (name: string | undefined) => {
                                 <Button
                                     type="button"
                                     variant="link"
-                                    class="p-0 h-auto text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500"
+                                    class="p-1 h-auto text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500"
                                     @click="resendVerificationEmail"
                                     :disabled="resendingVerification"
                                 >
-                                    {{ resendingVerification ? 'Wysyłanie...' : 'Kliknij tutaj, aby ponownie wysłać link weryfikacyjny.' }}
+                                    {{ resendingVerification ? 'Wysyłanie...' : 'Kliknij tutaj, aby wysłać link weryfikacyjny.' }}
                                 </Button>
                             </p>
 

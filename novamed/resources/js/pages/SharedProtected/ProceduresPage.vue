@@ -181,12 +181,12 @@ const getCategoryName = (procedure: Procedure): string => {
                                     </span>
                                 </div>
 
-                                <Separator class="my-2 bg-nova-accent" />
+                                <Separator class="my-4 " />
 
                                 <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ procedure.description }}</p>
 
                                 <div class="flex items-center justify-between">
-                                    <div class=" dark:text-nova-light bg-nova-accent/80 border-double text-nova-light p-1  rounded-md font-medium">Cena bazowa: <span class="text-nova-light">{{ procedure.base_price }} zł</span></div>
+                                    <div class=" dark:text-nova-light text-black border-double  p-1  rounded-md font-medium">Cena bazowa: <span class="text-nova-accent">{{ procedure.base_price }} zł</span></div>
                                     <Button as-child class="bg-nova-primary dark:bg-nova-accent dark:text-nova-light hover:bg-nova-accent">
                                         <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }"> Szczegóły </router-link>
                                     </Button>

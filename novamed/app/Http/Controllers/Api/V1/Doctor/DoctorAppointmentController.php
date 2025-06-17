@@ -106,13 +106,16 @@ class DoctorAppointmentController extends Controller
 
     public function getScheduleEvents(Request $request): AnonymousResourceCollection
     {
+        //pobranie zaloowanego usera
         $user = $request->user();
         $doctor = $user->doctor;
 
+        //sprawdzenie czy lekarz istnieje
         if (!$doctor) {
             return AppointmentResource::collection(collect());
         }
 
+        //walidacja daty
         $request->validate([
             'start' => 'required|date_format:Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vZ,Y-m-d',
             'end' => 'required|date_format:Y-m-d\TH:i:sP,Y-m-d\TH:i:s.vZ,Y-m-d|after_or_equal:start',
@@ -121,10 +124,13 @@ class DoctorAppointmentController extends Controller
         $start = Carbon::parse($request->input('start'))->startOfDay();
         $end = Carbon::parse($request->input('end'))->endOfDay();
 
+        //pobranie wizyt ziuta w podanym zakresie
         $query = Appointment::where('doctor_id', $doctor->id)
             ->with(['patient:id,name', 'procedure:id,name,duration_minutes'])
             ->whereBetween('appointment_datetime', [$start, $end])
-            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled_by_clinic']);
+            //wykluczenie wizyt co sa anulowane lub zakonczone
+            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled_by_clinic', 'completed', 'no_show', 'cancelled']);
+
 
         $appointments = $query->orderBy('appointment_datetime', 'asc')->get();
 

@@ -61,15 +61,18 @@ class DoctorController extends Controller
             'end_date' => 'sometimes|date_format:Y-m-d|after_or_equal:start_date',
         ]);
 
+        //zakres daty
         $startDate = Carbon::parse($validated['start_date'] ?? Carbon::now()->startOfMonth())->startOfDay();
         $endDate = Carbon::parse($validated['end_date'] ?? Carbon::now()->endOfMonth())->endOfDay();
 
+        //wszystkie aktywne wizyty
         $bookedAppointments = Appointment::where('doctor_id', $doctor->id)
             ->whereBetween('appointment_datetime', [$startDate, $endDate])
             ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
             ->with('procedure:id,duration_minutes')
             ->get(['id', 'appointment_datetime', 'procedure_id']);
 
+        //mapowanie do jsona
         $formattedBooked = $bookedAppointments->map(function ($appointment) {
             $dt = Carbon::parse($appointment->appointment_datetime);
             return [
@@ -95,7 +98,9 @@ class DoctorController extends Controller
         $endDate = Carbon::parse($validated['end_date'])->endOfDay();
         $procedureId = $validated['procedure_id'] ?? null;
 
+        //domyslny czas zabiegu
         $procedureDuration = 30;
+        //jak poda id procedury to pobierz czas trwania
         if ($procedureId) {
             $procedure = Procedure::find($procedureId);
             $procedureDuration = $procedure?->duration_minutes ?? 30;
@@ -103,15 +108,18 @@ class DoctorController extends Controller
 
 
         $availability = [];
-        $period = CarbonPeriod::create($startDate, $endDate);
+        $period = CarbonPeriod::create($startDate, $endDate); //okres dat do sprawdzenia
 
+        //pobrania aktywnych wizyt ziuta
         $existingAppointments = Appointment::where('doctor_id', $doctor->id)
             ->whereBetween('appointment_datetime', [$startDate, $endDate])
             ->whereNotIn('status', ['cancelled_by_patient', 'cancalled_by_clinic', 'cancelled', 'completed', 'no_show'])
             ->with('procedure:id,duration_minutes')
             ->get();
 
+        //przejscie po wszystkich dniach z okresu
         foreach ($period as $date) {
+            //sprawdzenie czy to pon-pt
             if ($date->isWeekday()) {
                 $workStartTime = '09:00';
                 $workEndTime = '17:00';
@@ -119,6 +127,7 @@ class DoctorController extends Controller
                 $dayStart = Carbon::parse($date->format('Y-m-d') . ' ' . $workStartTime);
                 $dayEnd = Carbon::parse($date->format('Y-m-d') . ' ' . $workEndTime);
 
+                //pobranie zajetych segmentow
                 $busySegments = $existingAppointments
                     ->filter(function($appt) use ($date) {
                         return Carbon::parse($appt->appointment_datetime)->isSameDay($date);
@@ -137,16 +146,21 @@ class DoctorController extends Controller
                 $availableSlots = [];
                 $currentSlot = $dayStart->copy();
 
+                //generowanie slota co 30 min
+                // sprawdzenie czy slot nie przekracza konca dnia
                 while ($currentSlot->copy()->addMinutes($procedureDuration)->lte($dayEnd)) {
+                    // sprawdzenie czy slot zaczyna się na 00 albo 30
                     $minutes = (int)$currentSlot->format('i');
                     if ($minutes !== 0 && $minutes !== 30) {
                         $currentSlot->setTime(
                             $currentSlot->hour + ($minutes > 30 ? 1 : 0),
                             $minutes > 30 ? 0 : 30
                         );
+                        //przeskoczenie do kolejnego slotu
                         continue;
                     }
 
+                    //sprawdzenie czy slot nie koliduje z zajetymi segmentami
                     if (!$this->isOverlapping($currentSlot, $procedureDuration, $busySegments)) {
                         $availableSlots[] = $currentSlot->format('H:i');
                     }
@@ -168,9 +182,11 @@ class DoctorController extends Controller
 
     private function isOverlapping(Carbon $start, int $duration, $busySegments): bool
     {
+        //obliczenie konca slotu
         $end = $start->copy()->addMinutes($duration);
 
         foreach ($busySegments as $segment) {
+            //sprawdzenie czy segmenty koliduja
             if ($start->lt($segment['end']) && $end->gt($segment['start'])) {
                 return true;
             }

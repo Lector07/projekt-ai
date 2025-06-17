@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Events\AppointmentScheduled;
+use App\Listeners\SendAppointmentScheduledNotification;
 use App\Models\Doctor;
 use App\Observers\DoctorObserver;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\ResetPassword;
 
@@ -31,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\Faker\Generator::class, function ($app) {
             return \Faker\Factory::create(config('faker.locale', 'pl_PL'));
         });
+
+        Event::listen(
+            AppointmentScheduled::class,
+            SendAppointmentScheduledNotification::class
+        );
     }
 
     protected $observers = [

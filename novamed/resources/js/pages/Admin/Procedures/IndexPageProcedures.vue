@@ -1,45 +1,45 @@
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input'
-import {InputError} from '@/components/ui/input-error';
-import {TableHeader, TableRow, TableCell, TableHead, Table, TableBody} from '@/components/ui/table';
-import {Card, CardHeader, CardTitle, CardDescription, CardContent} from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { InputError } from '@/components/ui/input-error';
+import { TableHeader, TableRow, TableCell, TableHead, Table, TableBody } from '@/components/ui/table';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import InputNumber from 'primevue/inputnumber';
 import Icon from '@/components/Icon.vue';
-import {Search} from 'lucide-vue-next';
+import { Search } from 'lucide-vue-next';
 import FloatLabel from 'primevue/floatlabel';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger
-} from '@/components/ui/tooltip'
+} from '@/components/ui/tooltip';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
+    SelectValue
 } from '@/components/ui/select';
-import {Textarea} from '@/components/ui/textarea'
-import {Label} from '@/components/ui/label'
-import {useToast} from 'primevue/usetoast';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from 'primevue/usetoast';
 import {
     Pagination,
     PaginationEllipsis,
     PaginationFirst,
     PaginationPrevious,
     PaginationLast,
-    PaginationNext,
+    PaginationNext
 } from '@/components/ui/pagination';
-import {PaginationList, PaginationListItem} from 'reka-ui';
-import type {BreadcrumbItem} from "@/types";
-import {ScrollArea} from "@/components/ui/scroll-area";
-import {Separator} from "@/components/ui/separator";
+import { PaginationList, PaginationListItem } from 'reka-ui';
+import type { BreadcrumbItem } from '@/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 const toast = useToast();
 const loading = ref(false);
@@ -66,7 +66,7 @@ const newProcedure = ref({
     base_price: 0,
     procedure_category_id: null,
     recovery_timeline_info: '',
-    duration: 30,
+    duration: 30
 });
 
 const loadProcedures = async () => {
@@ -128,7 +128,11 @@ const addProcedure = async () => {
 };
 
 const editProcedure = (procedure: any) => {
-    selectedProcedure.value = {...procedure};
+    selectedProcedure.value = {
+        ...procedure,
+        procedure_category_id: procedure.procedure_category_id || procedure.category?.id || null,
+        recovery_timeline_info: procedure.recovery_info || ''
+    };
     showEditForm.value = true;
 };
 
@@ -194,7 +198,7 @@ const resetFilters = () => {
     currentPage.value = 1;
     loadProcedures();
 };
-// Toasty
+
 const showSuccessToast = (summary: string, detail: string) => {
     toast.add({
         severity: 'success',
@@ -240,7 +244,7 @@ const formatDuration = (minutes) => {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {title: 'Zarządzanie zabiegamiami'},
+    { title: 'Zarządzanie zabiegamiami' }
 ];
 
 const recoveryPlaceholder = `Dzień 1-3: ...
@@ -262,7 +266,7 @@ Miesiąc 3-6: ...`;
                         </div>
                         <Button @click="showAddForm = true"
                                 class="mt-2 sm:mt-0 bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
-                            <Icon name="plus" size="16" class="mr-2"/>
+                            <Icon name="plus" size="16" class="mr-2" />
                             Dodaj Zabieg
                         </Button>
                     </div>
@@ -281,7 +285,7 @@ Miesiąc 3-6: ...`;
                                 />
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
                                      @click="currentPage = 1; loadProcedures()">
-                                    <Search class="h-4 w-4 text-gray-400"/>
+                                    <Search class="h-4 w-4 text-gray-400" />
                                 </div>
                             </div>
                         </div>
@@ -290,7 +294,7 @@ Miesiąc 3-6: ...`;
                             <Select v-model="selectedCategory"
                                     @update:modelValue="() => { currentPage = 1; loadProcedures() }">
                                 <SelectTrigger id="category" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
+                                    <SelectValue :placeholder="'Wybierz kategorię'" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -304,7 +308,7 @@ Miesiąc 3-6: ...`;
                                 size="sm"
                                 @click="resetFilters"
                                 class="mt-2">
-                                <Icon name="x-circle" size="14" class="mr-1"/>
+                                <Icon name="x-circle" size="14" class="mr-1" />
                                 Wyczyść filtry
                             </Button>
                         </div>
@@ -314,7 +318,7 @@ Miesiąc 3-6: ...`;
 
             <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-hidden">
                 <div v-if="loading" class="flex justify-center items-center p-8">
-                    <Icon name="loader2" size="32" class="animate-spin text-nova-primary"/>
+                    <Icon name="loader2" size="32" class="animate-spin text-nova-primary" />
                 </div>
 
                 <div v-else-if="error" class="p-6 text-center text-red-500">
@@ -345,12 +349,15 @@ Miesiąc 3-6: ...`;
                                     <TableCell class="font-medium">{{ procedure.name }}</TableCell>
                                     <TableCell class="text-sm text-gray-500 max-w-[200px] min-w-[150px]">
                                         <div v-if="procedure.description" class="truncate">
-                                            <span :title="procedure.description">{{ truncateText(procedure.description, 40) }}</span>
+                                            <span
+                                                :title="procedure.description">{{ truncateText(procedure.description, 40)
+                                                }}</span>
                                         </div>
                                         <div v-else class="text-gray-400">Brak opisu</div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" class="bg-nova-primary dark:bg-nova-accent text-nova-light">
+                                        <Badge variant="outline"
+                                               class="bg-nova-primary dark:bg-nova-accent text-nova-light">
                                             {{ procedure.category?.name || 'Brak kategorii' }}
                                         </Badge>
                                     </TableCell>
@@ -363,7 +370,7 @@ Miesiąc 3-6: ...`;
                                             <Tooltip>
                                                 <TooltipTrigger>
                                                     <Button variant="ghost" size="sm" @click="editProcedure(procedure)">
-                                                        <Icon name="edit" size="16"/>
+                                                        <Icon name="edit" size="16" />
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -373,8 +380,9 @@ Miesiąc 3-6: ...`;
 
                                             <Tooltip>
                                                 <TooltipTrigger>
-                                                    <Button variant="ghost" size="sm" @click="deleteProcedure(procedure.id)">
-                                                        <Icon name="trash" size="16" class="text-red-500"/>
+                                                    <Button variant="ghost" size="sm"
+                                                            @click="deleteProcedure(procedure.id)">
+                                                        <Icon name="trash" size="16" class="text-red-500" />
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>
@@ -400,8 +408,8 @@ Miesiąc 3-6: ...`;
                         @update:page="goToPage"
                     >
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                            <PaginationFirst @click="goToPage(1)"/>
-                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
+                            <PaginationFirst @click="goToPage(1)" />
+                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))" />
 
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
@@ -413,11 +421,11 @@ Miesiąc 3-6: ...`;
                                         {{ item.value }}
                                     </Button>
                                 </PaginationListItem>
-                                <PaginationEllipsis v-else :index="index"/>
+                                <PaginationEllipsis v-else :index="index" />
                             </template>
 
-                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
-                            <PaginationLast @click="goToPage(totalPages)"/>
+                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))" />
+                            <PaginationLast @click="goToPage(totalPages)" />
                         </PaginationList>
                     </Pagination>
                 </div>
@@ -429,7 +437,7 @@ Miesiąc 3-6: ...`;
                 <CardHeader class="flex justify-between items-center border-b">
                     <CardTitle>Dodaj nowy zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showAddForm = false">
-                        <Icon name="x" size="18"/>
+                        <Icon name="x" size="18" />
                     </Button>
                 </CardHeader>
                 <CardContent class="pt-4">
@@ -437,15 +445,15 @@ Miesiąc 3-6: ...`;
                         <div class="space-y-2">
                             <Label for="name">Nazwa</Label>
                             <Input id="name" v-model="newProcedure.name" placeholder="Wpisz nazwę zabiegu"
-                                   :class="{'border-red-500': formErrors.name}"/>
-                            <InputError :message="formErrors.name?.[0]"/>
+                                   :class="{'border-red-500': formErrors.name}" />
+                            <InputError :message="formErrors.name?.[0]" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="category_id">Kategoria</Label>
                             <Select v-model="newProcedure.procedure_category_id">
-                            <SelectTrigger id="category_id" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
+                                <SelectTrigger id="category_id" class="w-full">
+                                    <SelectValue :placeholder="'Wybierz kategorię'" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -453,7 +461,7 @@ Miesiąc 3-6: ...`;
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="formErrors.category_id?.[0]"/>
+                            <InputError :message="formErrors.category_id?.[0]" />
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -475,13 +483,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.base_price}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14"/>
+                                        <Icon name="plus" size="14" />
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2"/>
+                                        <Icon name="minus" size="14" class="mr-2" />
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.base_price?.[0]"/>
+                                <InputError :message="formErrors.base_price?.[0]" />
                             </div>
                             <div class="space-y-2">
                                 <Label for="duration">Czas trwania (minuty)</Label>
@@ -497,13 +505,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.duration}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14"/>
+                                        <Icon name="plus" size="14" />
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2"/>
+                                        <Icon name="minus" size="14" class="mr-2" />
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.duration?.[0]"/>
+                                <InputError :message="formErrors.duration?.[0]" />
                             </div>
                         </div>
 
@@ -516,7 +524,7 @@ Miesiąc 3-6: ...`;
                                 class="w-full resize-none"
                                 :class="{'border-red-500': formErrors.description}"
                             />
-                            <InputError :message="formErrors.description?.[0]"/>
+                            <InputError :message="formErrors.description?.[0]" />
                         </div>
 
                         <div class="space-y-2">
@@ -532,7 +540,7 @@ Miesiąc 3-6: ...`;
                                 />
                             </FloatLabel>
                             <p class="text-xs mt-1 ml-1 text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
-                            <InputError :message="formErrors.recovery_info?.[0]"/>
+                            <InputError :message="formErrors.recovery_info?.[0]" />
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
@@ -542,7 +550,7 @@ Miesiąc 3-6: ...`;
                                 :disabled="formLoading"
                                 class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                             >
-                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16"/>
+                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16" />
                                 <span>Zapisz Procedurę</span>
                             </Button>
                         </div>
@@ -557,7 +565,7 @@ Miesiąc 3-6: ...`;
                 <CardHeader class="flex justify-between items-center border-b">
                     <CardTitle>Edytuj zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showEditForm = false">
-                        <Icon name="x" size="18"/>
+                        <Icon name="x" size="18" />
                     </Button>
                 </CardHeader>
                 <CardContent class="pt-4">
@@ -565,15 +573,15 @@ Miesiąc 3-6: ...`;
                         <div class="space-y-2">
                             <Label for="edit-name">Nazwa</Label>
                             <Input id="edit-name" v-model="selectedProcedure.name"
-                                   :class="{'border-red-500': formErrors.name}"/>
-                            <InputError :message="formErrors.name?.[0]"/>
+                                   :class="{'border-red-500': formErrors.name}" />
+                            <InputError :message="formErrors.name?.[0]" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="edit-category_id">Kategoria</Label>
                             <Select v-model="selectedProcedure.procedure_category_id">
                                 <SelectTrigger id="edit-category_id" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
+                                    <SelectValue :placeholder="'Wybierz kategorię'" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -581,7 +589,7 @@ Miesiąc 3-6: ...`;
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="formErrors.category_id?.[0]"/>
+                            <InputError :message="formErrors.category_id?.[0]" />
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -601,13 +609,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.base_price}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14"/>
+                                        <Icon name="plus" size="14" />
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2"/>
+                                        <Icon name="minus" size="14" class="mr-2" />
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.base_price?.[0]"/>
+                                <InputError :message="formErrors.base_price?.[0]" />
                             </div>
                             <div class="space-y-2">
                                 <Label for="edit-duration">Czas trwania (minuty)</Label>
@@ -623,13 +631,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.duration}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14"/>
+                                        <Icon name="plus" size="14" />
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2"/>
+                                        <Icon name="minus" size="14" class="mr-2" />
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.duration?.[0]"/>
+                                <InputError :message="formErrors.duration?.[0]" />
                             </div>
                         </div>
 
@@ -644,23 +652,23 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.description}"
                                 />
                             </FloatLabel>
-                            <InputError :message="formErrors.description?.[0]"/>
+                            <InputError :message="formErrors.description?.[0]" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="edit-recovery_info">Informacje o Rekonwalescencji</Label>
+                            <Label for="edit-recovery_timeline_info">Informacje o Rekonwalescencji</Label>
                             <FloatLabel>
-                                <Textarea
-                                    id="edit-recovery_timeline_info"
-                                    v-model="selectedProcedure.recovery_timeline_info"
-                                    rows="5"
-                                    class="w-full resize-none"
-                                    :class="{'p-invalid': formErrors.recovery_info}"
-                                    :placeholder="recoveryPlaceholder"
-                                />
+        <Textarea
+            id="edit-recovery_timeline_info"
+            v-model="selectedProcedure.recovery_timeline_info"
+            rows="5"
+            class="w-full resize-none"
+            :class="{'p-invalid': formErrors.recovery_timeline_info}"
+            :placeholder="recoveryPlaceholder"
+        />
                             </FloatLabel>
                             <p class="text-xs text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
-                            <InputError :message="formErrors.recovery_info?.[0]"/>
+                            <InputError :message="formErrors.recovery_timeline_info?.[0]" />
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
@@ -670,8 +678,8 @@ Miesiąc 3-6: ...`;
                                 :disabled="formLoading"
                                 class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                             >
-                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16"/>
-                                <span>Aktualizuj Procedurę</span>
+                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16" />
+                                <span>Aktualizuj Zabieg</span>
                             </Button>
                         </div>
                     </form>

@@ -133,7 +133,6 @@ const appointmentsChartData = computed(() => {
         labels = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
         data = stats.value.charts?.appointmentsPerWeek || [0, 0, 0, 0, 0, 0, 0];
     } else if (selectedTimeRange.value === 'day') {
-        // Dla dni potrzebujemy ostatnich 7 dni
         const today = new Date();
         labels = Array(7)
             .fill(0)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Events\AppointmentScheduled;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreAppointmentRequest; // Upewnij się, że to jest właściwy FormRequest dla pacjenta
 use App\Models\Appointment;
@@ -73,6 +74,10 @@ class PatientAppointmentController extends Controller
 
         $appointment->load(['doctor', 'procedure']);
 
+        if ($appointment->status === 'scheduled') {
+            event(new AppointmentScheduled($appointment));
+        }
+
         return new AppointmentResource($appointment);
     }
 
@@ -106,28 +111,28 @@ class PatientAppointmentController extends Controller
      * Check appointment availability.
      */
     public function checkAvailability(Request $request): JsonResponse
-    {
+    { //walidacja danych
         try {
             $validated = $request->validate([
                 'doctor_id' => 'required|exists:doctors,id',
                 'appointment_datetime' => 'required|date',
                 'procedure_id' => 'required|exists:procedures,id'
             ]);
-
+            //przypisanie do zmiennych
             $doctorId = $validated['doctor_id'];
             $appointmentDatetime = Carbon::parse($validated['appointment_datetime']);
             $procedureId = $validated['procedure_id'];
-
+            //pobranie szczolow zabiegu
             $procedure = \App\Models\Procedure::find($procedureId);
             $procedureDuration = $procedure ? $procedure->duration_minutes : 30;
-
+            //przewidywany czas zakonczenia
             $appointmentEnd = $appointmentDatetime->copy()->addMinutes($procedureDuration);
-
+            //pobranie aktywnych wizyt lekarza
             $activeAppointments = Appointment::where('doctor_id', $doctorId)
-                ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
+                ->whereNotIn('status', ['cancelled_by_patient', 'cancelled_by_clinic', 'cancelled', 'completed', 'no_show'])
                 ->with('procedure')
                 ->get();
-
+            //przechodzenie po kazdej aktywnej wizycie
             foreach ($activeAppointments as $existingAppointment) {
                 $existingStart = Carbon::parse($existingAppointment->appointment_datetime);
 
@@ -136,6 +141,7 @@ class PatientAppointmentController extends Controller
 
                 $existingEnd = $existingStart->copy()->addMinutes($existingDuration);
 
+                //sprawdzenie czy nowa wizyta koliduje z istniejaca
                 if (($appointmentDatetime < $existingEnd) && ($appointmentEnd > $existingStart)) {
                     return response()->json([
                         'available' => false,

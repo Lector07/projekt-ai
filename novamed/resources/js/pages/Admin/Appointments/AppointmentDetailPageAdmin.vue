@@ -47,8 +47,8 @@ interface Appointment {
     procedure: Procedure | null;
     created_at: string;
     updated_at: string;
-    patient_id: number | null; // Zmienione na number | null
-    doctor_id: number | null;  // Zmienione na number | null
+    patient_id: number | null;
+    doctor_id: number | null;
     procedure_id: number;
 }
 

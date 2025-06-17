@@ -139,17 +139,13 @@ const deleteCategory = async (id: number) => {
     try {
         await axios.delete(`/api/v1/admin/procedure-categories/${id}`);
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Kategoria została usunięta.', life: 3000 });
-        fetchCategories(); // Odśwież dane
+        fetchCategories();
     } catch (err) {
         toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się usunąć kategorii.', life: 3000 });
         console.error(err);
     }
 };
 
-const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('pl-PL');
-};
 
 onMounted(() => {
     fetchCategories();

@@ -52,6 +52,11 @@ class StoreUserRequest extends FormRequest
             'email.unique' => 'Ten adres email jest już zajęty',
             'password.required' => 'Hasło jest wymagane',
             'password.confirmed' => 'Hasła nie są identyczne',
+            'password.mixed_case' => 'Hasło musi zawierać wielkie i małe litery',
+            'password.letters' => 'Hasło musi zawierać litery',
+            'password.min' => 'Hasło musi mieć co najmniej 8 znaków',
+            'password.symbols' => 'Hasło musi zawierać symbole',
+            'password.uncompromised' => 'Hasło nie może być powszechnie używane lub łatwe do odgadnięcia',
             'role.required' => 'Rola jest wymagana',
             'role.in' => 'Nieprawidłowa rola użytkownika'
         ];
