@@ -118,30 +118,24 @@ class PatientAppointmentController extends Controller
             $appointmentDatetime = Carbon::parse($validated['appointment_datetime']);
             $procedureId = $validated['procedure_id'];
 
-            // Pobierz czas trwania procedury
             $procedure = \App\Models\Procedure::find($procedureId);
             $procedureDuration = $procedure ? $procedure->duration_minutes : 30;
 
-            // Oblicz czas zakończenia nowej wizyty
             $appointmentEnd = $appointmentDatetime->copy()->addMinutes($procedureDuration);
 
-            // Pobierz wszystkie aktywne wizyty dla tego lekarza
             $activeAppointments = Appointment::where('doctor_id', $doctorId)
                 ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
-                ->with('procedure') // Dołącz relację procedure
+                ->with('procedure')
                 ->get();
 
-            // Sprawdź nakładanie się terminów w PHP
             foreach ($activeAppointments as $existingAppointment) {
                 $existingStart = Carbon::parse($existingAppointment->appointment_datetime);
 
-                // Poprawka tutaj - pobierz czas trwania procedury bezpośrednio z relacji
                 $existingDuration = $existingAppointment->procedure ?
                     $existingAppointment->procedure->duration_minutes : 30;
 
                 $existingEnd = $existingStart->copy()->addMinutes($existingDuration);
 
-                // Sprawdź czy terminy nakładają się
                 if (($appointmentDatetime < $existingEnd) && ($appointmentEnd > $existingStart)) {
                     return response()->json([
                         'available' => false,

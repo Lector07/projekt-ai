@@ -63,14 +63,11 @@ class AdminDoctorController extends Controller
             $doctor->specialization = $validated['specialization'];
 
             if (isset($validated['bio'])) $doctor->bio = $validated['bio'];
-            if (isset($validated['price_modifier'])) $doctor->price_modifier = $validated['price_modifier'];
 
-            // Priorytetowo obsługujemy user_id, jeśli istnieje
             if (isset($validated['user_id']) && !empty($validated['user_id'])) {
                 $user = User::findOrFail($validated['user_id']);
                 $doctor->user()->associate($user);
             }
-            // Tylko gdy nie podano user_id, próbujemy utworzyć nowego użytkownika
             else if (isset($validated['email']) && isset($validated['password'])) {
                 $user = new User();
                 $user->name = $validated['first_name'] . ' ' . $validated['last_name'];
@@ -114,7 +111,7 @@ class AdminDoctorController extends Controller
 
         if (isset($validated['procedure_ids'])) {
             $doctor->procedures()->sync($validated['procedure_ids']);
-        } elseif ($request->has('procedure_ids') && $validated['procedure_ids'] === null) {
+        } elseif ($request->has('procedure_ids') && array_key_exists('procedure_ids', $validated) && $validated['procedure_ids'] === null) {
             $doctor->procedures()->detach();
         }
 

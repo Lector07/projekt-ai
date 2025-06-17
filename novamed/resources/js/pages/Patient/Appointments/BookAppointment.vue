@@ -74,6 +74,22 @@ async function fetchProcedures() {
     }
 }
 
+function rejectProposedTime() {
+    if (appointmentDate.value && appointmentTime.value) {
+        availabilityStatus.value = {
+            available: false,
+            message: "Wybrany termin koliduje z inną wizytą."
+        };
+
+        toast.add({
+            severity: 'error',
+            summary: 'Termin niedostępny',
+            detail: 'Nie można zarezerwować wizyty w wybranym terminie.',
+            life: 5000,
+        });
+    }
+}
+
 async function fetchDoctorsForProcedure(procedureIdAsString: string) {
     const procedureId = Number(procedureIdAsString);
     if (!procedureId) {
@@ -182,11 +198,9 @@ const checkAppointmentAvailability = async () => {
                 error.response.status === 409 ||
                 (error.response.data && error.response.data.message && error.response.data.message.includes('koliduje z inną wizytą'))
             ) {
-                // Pokaż okno dialogowe z propozycją alternatywnego terminu
                 if (availabilityCalendar.value && appointmentTime.value) {
                     availabilityCalendar.value.handleBookingConflict(appointmentTime.value);
                 } else {
-                    // Standardowa obsługa, jeśli nie można znaleźć komponentu kalendarza
                     availabilityStatus.value = {
                         available: false,
                         message: error.response.data.message || 'Wybrany termin koliduje z inną wizytą.',
@@ -264,13 +278,10 @@ async function submitAppointment() {
     try {
         const response = await axios.post('/api/v1/patient/appointments', payload);
 
-        // Zapisz dane potwierdzonej rezerwacji
         confirmedAppointment.value = response.data.data;
 
-        // Pokaż modal potwierdzenia
         showConfirmationModal.value = true;
 
-        // Toast potwierdzający
         toast.add({
             severity: 'success',
             summary: 'Sukces!',
@@ -328,7 +339,6 @@ async function submitAppointment() {
     }
 }
 
-// Funkcja do zamknięcia modalu i przekierowania
 function closeConfirmationAndRedirect() {
     showConfirmationModal.value = false;
     router.push({ name: 'patient.appointments' });
@@ -338,6 +348,14 @@ function handleDateTimeSelected(date: string, time: string) {
     appointmentDate.value = date;
     appointmentTime.value = time;
     formErrors.value.appointment_datetime = undefined;
+
+    const currentStatus = availabilityCalendar.value?.errorMessage;
+    if (currentStatus && currentStatus.includes('niedostępny')) {
+        availabilityStatus.value = {
+            available: false,
+            message: "Wybrany termin koliduje z inną wizytą."
+        };
+    }
 }
 
 onMounted(async () => {
@@ -505,9 +523,6 @@ watch(
                                 <Icon name="check-circle" class="mr-2 inline-block h-5 w-5" />
                                 Wybrany termin: {{ appointmentDate }}, godz. {{ appointmentTime }}
                             </p>
-                        </div>
-                        <div v-if="formErrors.appointment_datetime" class="mt-1 text-center text-sm text-red-500">
-                            {{ formErrors.appointment_datetime[0] }}
                         </div>
                     </div>
 

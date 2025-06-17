@@ -21,7 +21,9 @@ class ProcedureResource extends JsonResource
             'description' => $this->description,
             'base_price' => $this->base_price,
             'recovery_info' => $this->recovery_timeline_info,
+            'duration' => $this->duration_minutes,
             'category' => new ProcedureCategoryResource($this->whenLoaded('category')),
+
         ];
     }
 }

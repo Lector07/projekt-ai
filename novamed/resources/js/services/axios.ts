@@ -20,7 +20,18 @@ const logoutEndpoints = ['/api/v1/auth/logout', '/api/auth/logout', '/logout', '
 const authCheckEndpoints = ['/api/v1/user', '/api/auth/user', '/api/user'];
 const skipRedirectEndpoints = [
     '/api/v1/appointments/check-availability',
-    '/api/v1/doctors/availability'
+    'api/v1/patient/appointments',
+    '/api/v1/doctors/availability',
+    '/api/v1/admin/procedures',
+    '/api/v1/admin/procedure-categories',
+    '/api/v1/admin/appointments',
+    '/api/v1/register',
+    '/api/v1/login',
+    '/api/v1/password/reset',
+    '/api/v1/password/email',
+    '/api/v1/auth/logout', '/api/auth/logout', '/logout', '/api/v1/logout',
+    '/api/v1/admin/doctors',
+    '/api/v1/user/password'
 ];
 
 const isLogoutUrl = (url: string | undefined | null) => {
@@ -38,6 +49,13 @@ const shouldSkipRedirect = (url: string | undefined | null) => {
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
+
+        const skipAuthRedirect = error.config?.headers?.['X-Skip-Auth-Redirect'];
+
+        if (skipAuthRedirect && (error.response?.status === 401 || error.response?.status === 419)) {
+            return Promise.reject(error);
+        }
+
         if (error.response) {
             const status = error.response.status;
             const url = error.config?.url;

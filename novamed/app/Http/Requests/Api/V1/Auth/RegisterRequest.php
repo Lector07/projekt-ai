@@ -39,7 +39,9 @@ class RegisterRequest extends FormRequest
             'email.email' => 'Podaj prawidłowy adres email',
             'email.unique' => 'Ten adres email jest już zajęty',
             'password.required' => 'Hasło jest wymagane',
-            'password.confirmed' => 'Hasła nie są identyczne'
+            'password.confirmed' => 'Hasła nie są identyczne',
+            'password_confirmation.same' => 'Hasła muszą być identyczne',
+            'password_confirmation.required' => 'Potwierdzenie hasła jest wymagane'
         ];
     }
 }

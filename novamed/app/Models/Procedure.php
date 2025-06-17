@@ -39,4 +39,14 @@ class Procedure extends Model
     {
         return $this->belongsToMany(Doctor::class, 'doctor_procedure', 'procedure_id', 'doctor_id');
     }
+
+    public function getDurationAttribute()
+    {
+        return $this->duration_minutes;
+    }
+
+    public function setDurationAttribute($value)
+    {
+        $this->attributes['duration_minutes'] = $value;
+    }
 }

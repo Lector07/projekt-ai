@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {Button} from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
-import {Label} from '@/components/ui/label';
-import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
-import {Calendar} from '@/components/ui/calendar';
-import type {BreadcrumbItem} from "@/types";
-import {parseDate} from '@internationalized/date';
-import type {DateValue} from '@internationalized/date';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import type { BreadcrumbItem } from "@/types";
+import { parseDate } from '@internationalized/date';
+import type { DateValue } from '@internationalized/date';
 
 interface Doctor {
     id: number;
@@ -47,11 +47,10 @@ interface Appointment {
     procedure: Procedure | null;
     created_at: string;
     updated_at: string;
-    patient_id: number;
-    doctor_id: number | null;
+    patient_id: number | null; // Zmienione na number | null
+    doctor_id: number | null;  // Zmienione na number | null
     procedure_id: number;
 }
-
 
 const route = useRoute();
 const router = useRouter();
@@ -81,7 +80,10 @@ const formatStatus = (status: string): string => {
         'scheduled': 'Zaplanowana',
         'completed': 'Zakończona',
         'cancelled': 'Anulowana',
-        'no-show': 'Nieobecność'
+        'no-show': 'Nieobecność',
+        'confirmed': 'Potwierdzona',
+        'cancelled_by_patient': 'Anulowana przez pacjenta',
+        'cancelled_by_clinic': 'Anulowana przez klinikę',
     };
     return statuses[status] || status;
 };
@@ -89,10 +91,13 @@ const formatStatus = (status: string): string => {
 const getStatusClass = (status: string): string => {
     switch (status) {
         case 'scheduled':
+        case 'confirmed':
             return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
         case 'completed':
             return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
         case 'cancelled':
+        case 'cancelled_by_patient':
+        case 'cancelled_by_clinic':
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
         case 'no-show':
             return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
@@ -119,19 +124,23 @@ const fetchAppointment = async () => {
         const appointmentId = route.params.id;
 
         const response = await axios.get(`/api/v1/admin/appointments/${appointmentId}`);
-        appointment.value = response.data.data;
+        const fetchedAppointmentData = response.data.data;
 
-        console.log("Początkowe dane wizyty:", appointment.value);
+        appointment.value = {
+            ...fetchedAppointmentData,
+            patient_id: fetchedAppointmentData.patient ? Number(fetchedAppointmentData.patient.id) : null,
+            doctor_id: fetchedAppointmentData.doctor ? Number(fetchedAppointmentData.doctor.id) : null,
+            procedure_id: fetchedAppointmentData.procedure ? Number(fetchedAppointmentData.procedure.id) : 0,
+        };
 
         if (appointment.value?.patient?.id) {
             try {
                 const patientResponse = await axios.get(`/api/v1/admin/users/${appointment.value.patient.id}`);
-                if (patientResponse.data && patientResponse.data.data) {
+                if (patientResponse.data && patientResponse.data.data && appointment.value.patient) {
                     appointment.value.patient = {
                         ...appointment.value.patient,
                         ...patientResponse.data.data
                     };
-                    console.log("Dane pacjenta po aktualizacji (z avatarem):", appointment.value.patient);
                 }
             } catch (err) {
                 console.error('Błąd pobierania pełnych danych pacjenta:', err);
@@ -141,12 +150,11 @@ const fetchAppointment = async () => {
         if (appointment.value?.doctor?.id) {
             try {
                 const doctorResponse = await axios.get(`/api/v1/admin/doctors/${appointment.value.doctor.id}`);
-                if (doctorResponse.data && doctorResponse.data.data) {
+                if (doctorResponse.data && doctorResponse.data.data && appointment.value.doctor) {
                     appointment.value.doctor = {
                         ...appointment.value.doctor,
                         ...doctorResponse.data.data
                     };
-                    console.log("Dane lekarza po aktualizacji:", appointment.value.doctor);
                 }
             } catch (err) {
                 console.error('Błąd pobierania danych lekarza:', err);
@@ -156,12 +164,11 @@ const fetchAppointment = async () => {
         if (appointment.value?.procedure?.id) {
             try {
                 const procedureResponse = await axios.get(`/api/v1/admin/procedures/${appointment.value.procedure.id}`);
-                if (procedureResponse.data && procedureResponse.data.data) {
+                if (procedureResponse.data && procedureResponse.data.data && appointment.value.procedure) {
                     appointment.value.procedure = {
                         ...appointment.value.procedure,
                         ...procedureResponse.data.data
                     };
-                    console.log("Dane procedury po aktualizacji:", appointment.value.procedure);
                 }
             } catch (err) {
                 console.error('Błąd pobierania danych procedury:', err);
@@ -189,11 +196,12 @@ const allDoctors = ref<{ id: number, name: string }[]>([]);
 const patientsLoading = ref(false);
 const doctorsLoading = ref(false);
 
-
 const statusOptions = [
     {value: 'scheduled', label: 'Zaplanowana'},
+    {value: 'confirmed', label: 'Potwierdzona'},
     {value: 'completed', label: 'Zakończona'},
-    {value: 'cancelled', label: 'Anulowana'},
+    {value: 'cancelled_by_patient', label: 'Anul. (Pacjent)'},
+    {value: 'cancelled_by_clinic', label: 'Anul. (Klinika)'},
     {value: 'no-show', label: 'Nieobecność'}
 ];
 
@@ -204,6 +212,13 @@ const goBack = () => {
 const goToEdit = async () => {
     if (appointment.value) {
         await Promise.all([loadPatients(), loadDoctors()]);
+
+        if (appointment.value.patient_id === null && appointment.value.patient?.id) {
+            appointment.value.patient_id = Number(appointment.value.patient.id);
+        }
+        if (appointment.value.doctor_id === null && appointment.value.doctor?.id) {
+            appointment.value.doctor_id = Number(appointment.value.doctor.id);
+        }
 
         if (appointment.value.appointment_datetime) {
             try {
@@ -244,32 +259,34 @@ const updateAppointment = async () => {
             status: appointment.value.status,
             patient_notes: appointment.value.patient_notes,
             doctor_notes: appointment.value.doctor_notes,
-            appointment_datetime: selectedDate.value ? formatDateValue(selectedDate.value) : null,
+            appointment_datetime: selectedDate.value ? `${formatDateValue(selectedDate.value)} ${new Date(appointment.value.appointment_datetime).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : null,
             patient_id: appointment.value.patient_id,
-            doctor_id: appointment.value.doctor_id
+            doctor_id: appointment.value.doctor_id,
+            procedure_id: appointment.value.procedure_id
         };
 
         await axios.put(`/api/v1/admin/appointments/${appointment.value.id}`, formData);
-        await fetchAppointment(); // Refresh data
+        await fetchAppointment();
         showEditModal.value = false;
     } catch (error: any) {
         if (error.response?.status === 422) {
             appointmentErrors.value = error.response.data.errors;
         } else {
             console.error("Błąd aktualizacji wizyty:", error);
-            // Można dodać toast o błędzie
         }
     } finally {
         appointmentFormLoading.value = false;
     }
 };
 
-
 const loadPatients = async () => {
     patientsLoading.value = true;
     try {
-        const response = await axios.get('/api/v1/admin/patients');
-        allPatients.value = response.data.data || [];
+        const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000');
+        allPatients.value = response.data.data.map((patient: any) => ({
+            id: Number(patient.id),
+            name: patient.name
+        })) || [];
     } catch (error) {
         console.error('Błąd podczas pobierania pacjentów:', error);
     } finally {
@@ -277,12 +294,14 @@ const loadPatients = async () => {
     }
 };
 
-
 const loadDoctors = async () => {
     doctorsLoading.value = true;
     try {
-        const response = await axios.get('/api/v1/admin/doctors');
-        allDoctors.value = response.data.data.map((doc: any) => ({ id: doc.id, name: `${doc.first_name} ${doc.last_name}` })) || [];
+        const response = await axios.get('/api/v1/admin/doctors?per_page=1000');
+        allDoctors.value = response.data.data.map((doc: any) => ({
+            id: Number(doc.id),
+            name: `${doc.first_name} ${doc.last_name}`
+        })) || [];
     } catch (error) {
         console.error('Błąd podczas pobierania lekarzy:', error);
     } finally {
@@ -510,7 +529,6 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Modal edycji wizyty -->
         <div v-if="showEditModal && appointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-auto shadow-lg my-8">
@@ -530,7 +548,7 @@ onMounted(() => {
                             class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
                             :class="{'border-red-500': appointmentErrors.patient_id}"
                         >
-                            <option value="" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
+                            <option :value="null" disabled>{{ patientsLoading ? 'Ładowanie pacjentów...' : 'Wybierz pacjenta' }}</option>
                             <option v-for="patientItem in allPatients" :key="patientItem.id" :value="patientItem.id">
                                 {{ patientItem.name }}
                             </option>
@@ -557,7 +575,6 @@ onMounted(() => {
                             {{ appointmentErrors.doctor_id[0] }}
                         </div>
                     </div>
-                    <!-- Procedura nie jest edytowalna w tym formularzu, zgodnie z oryginalnym kodem -->
                     <div class="space-y-1">
                         <Label class="dark:text-gray-200 text-sm">Data wizyty</Label>
                         <Popover>
@@ -569,7 +586,7 @@ onMounted(() => {
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
                                     {{
-                                        selectedDate ? formatDateTime(formatDateValue(selectedDate)) : "Wybierz datę wizyty"
+                                        selectedDate ? new Date(formatDateValue(selectedDate)).toLocaleDateString('pl-PL') : "Wybierz datę wizyty"
                                     }}
                                 </Button>
                             </PopoverTrigger>

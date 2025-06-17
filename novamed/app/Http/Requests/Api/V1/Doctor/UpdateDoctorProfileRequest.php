@@ -30,8 +30,6 @@ class UpdateDoctorProfileRequest extends FormRequest
         return [
             'specialization.required' => 'Specjalizacja jest wymagana.',
             'bio.max' => 'Opis bio nie może przekraczać 2000 znaków.',
-            'price_modifier.numeric' => 'Modyfikator ceny musi być liczbą.',
-            'price_modifier.min' => 'Modyfikator ceny nie może być ujemny.',
         ];
     }
 }

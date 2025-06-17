@@ -96,6 +96,9 @@ class AdminProcedureController extends Controller
         $validated = $request->validated();
         $procedure->update($validated);
 
+        $procedure->duration = $request->duration;
+        $procedure->update($validated);
+
         return new ProcedureResource($procedure->fresh()->load('category'));
     }
 

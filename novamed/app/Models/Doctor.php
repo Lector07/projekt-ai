@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage; // <<< DODAJ DO URL AVATARA
+use Illuminate\Support\Facades\Storage;
 
 class Doctor extends Model
 {
@@ -19,7 +19,6 @@ class Doctor extends Model
         'specialization',
         'bio',
         'profile_picture_path',
-        'price_modifier',
         'user_id',
     ];
 

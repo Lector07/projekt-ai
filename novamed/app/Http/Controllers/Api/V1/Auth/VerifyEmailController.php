@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 
 class VerifyEmailController extends Controller
 {
@@ -15,18 +14,18 @@ class VerifyEmailController extends Controller
         $user = User::findOrFail($id);
 
         if (!hash_equals(sha1($user->getEmailForVerification()), $hash)) {
-            return response()->json(['message' => 'Nieprawidłowy lub wygasły link weryfikacyjny'], 403);
+            return redirect('/#/login?error=invalid_verification');
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email już zweryfikowany']);
+            return redirect('/#/login?verified=already');
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        return response()->json(['message' => 'Email został zweryfikowany']);
+        return redirect('/#/login?verified=1');
     }
 
     public function resend(Request $request)

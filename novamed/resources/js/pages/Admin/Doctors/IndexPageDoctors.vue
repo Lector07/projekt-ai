@@ -32,7 +32,6 @@ interface Doctor {
     full_name?: string;
     specialization: string;
     bio?: string | null;
-    price_modifier?: number | null;
     user_id?: number | null;
     user?: {
         id: number;
@@ -55,7 +54,6 @@ interface DoctorForm {
     last_name: string;
     specialization: string;
     bio?: string | null;
-    price_modifier?: number;
     user_id?: number | null;
     user?: {
         id: number;
@@ -104,7 +102,6 @@ const newDoctor = ref<DoctorForm>({
     last_name: '',
     specialization: '',
     bio: null,
-    price_modifier: 1.0,
     user_id: undefined,
     procedure_ids: [],
 });
@@ -247,8 +244,22 @@ const validateDoctorForm = (doctorData: DoctorForm) => {
     if (!doctorData.specialization) errors.specialization = ['Specjalizacja jest wymagana'];
 
     if (!doctorData.user_id) {
-        if (!doctorData.email) errors.email = ['Email jest wymagany, gdy nie tworzysz nowego użytkownika'];
-        if (!doctorData.password) errors.password = ['Hasło jest wymagane, gdy nie tworzysz nowego użytkownika'];
+        if (!doctorData.email) {
+            errors.email = ['Email jest wymagany'];
+        } else {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(doctorData.email)) {
+                errors.email = ['Podany adres email jest nieprawidłowy'];
+            }
+        }
+
+        if (!doctorData.password) errors.password = ['Hasło jest wymagane'];
+        if (!doctorData.password_confirmation) errors.password_confirmation = ['Potwierdzenie hasła jest wymagane'];
+
+        if (doctorData.password && doctorData.password_confirmation &&
+            doctorData.password !== doctorData.password_confirmation) {
+            errors.password = ['Hasło i potwierdzenie hasła muszą być identyczne'];
+        }
     }
 
     doctorFormErrors.value = errors;
@@ -520,7 +531,6 @@ onMounted(() => {
                                 <TableHead class="dark:text-gray-200">Email</TableHead>
                                 <TableHead class="dark:text-gray-200">Specjalizacja</TableHead>
                                 <TableHead class="dark:text-gray-200">Bio</TableHead>
-                                <TableHead class="dark:text-gray-200">Modyfikator ceny</TableHead>
                                 <TableHead class="dark:text-gray-200">Data dodania</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -560,7 +570,6 @@ onMounted(() => {
                                                     {{ truncateText(doctor.bio, 40) }}
                                                 </div>
                                             </TableCell>
-                                            <TableCell class="dark:text-gray-300">{{ doctor.price_modifier || '1.00' }} </TableCell>
                                             <TableCell class="dark:text-gray-300">
                                                 {{ formatDate(doctor.created_at) }}
                                             </TableCell>
@@ -691,30 +700,6 @@ onMounted(() => {
                             placeholder="Dodaj opis lekarza"
                         />
                         <InputError :message="doctorFormErrors.bio?.[0]" />
-                    </div>
-                    <div class="space-y-1">
-                        <Label for="new-price_modifier" class="dark:text-gray-300">Modyfikator ceny</Label>
-                        <InputNumber
-                            id="new-price_modifier"
-                            v-model="newDoctor.price_modifier"
-                            :min="0.5"
-                            :max="2.0"
-                            :step="0.05"
-                            showButtons
-                            buttonLayout="horizontal"
-                            inputClass="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                            class="w-full"
-                            :class="{ 'p-invalid': doctorFormErrors.price_modifier }"
-                        >
-                            <template #incrementbuttonicon>
-                                <Icon name="plus" size="14" />
-                            </template>
-                            <template #decrementbuttonicon>
-                                <Icon name="minus" size="14" />
-                            </template>
-                        </InputNumber>
-                        <p class="text-muted-foreground mt-1 text-xs dark:text-gray-400">Wartość 1.0 oznacza standardową cenę, 1.1 to +10%</p>
-                        <InputError :message="doctorFormErrors.price_modifier?.[0]" />
                     </div>
                     <div class="space-y-1">
                         <Label for="new-user_id" class="dark:text-gray-300">Powiąż z Użytkownikiem (opcjonalnie)</Label>
@@ -860,30 +845,6 @@ onMounted(() => {
                             :class="{ 'border-red-500': doctorFormErrors.bio }"
                         />
                         <InputError :message="doctorFormErrors.bio?.[0]" />
-                    </div>
-                    <div class="space-y-1">
-                        <Label for="edit-price_modifier" class="dark:text-gray-300">Modyfikator ceny</Label>
-                        <InputNumber
-                            id="edit-price_modifier"
-                            v-model="selectedDoctor.price_modifier"
-                            :min="0.5"
-                            :max="2.0"
-                            :step="0.05"
-                            showButtons
-                            buttonLayout="horizontal"
-                            inputClass="w-full rounded-md border border-input px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                            class="w-full"
-                            :class="{ 'p-invalid': doctorFormErrors.price_modifier }"
-                        >
-                            <template #incrementbuttonicon>
-                                <Icon name="plus" size="14" />
-                            </template>
-                            <template #decrementbuttonicon>
-                                <Icon name="minus" size="14" />
-                            </template>
-                        </InputNumber>
-                        <p class="text-muted-foreground mt-1 text-xs dark:text-gray-400">Wartość 1.0 oznacza standardową cenę, 1.1 to +10%</p>
-                        <InputError :message="doctorFormErrors.price_modifier?.[0]" />
                     </div>
                     <div class="space-y-1">
                         <Label class="dark:text-gray-300">Wykonywane Zabiegi</Label>

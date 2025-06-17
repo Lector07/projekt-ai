@@ -24,6 +24,7 @@ class AdminDashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $useTimeFilter = $request->has('start_date') || $request->has('end_date');
+        $timeRange = $request->input('time_range', 'month');
 
         $startDate = $request->input('start_date')
             ? Carbon::parse($request->input('start_date'))->startOfDay()
@@ -67,11 +68,37 @@ class AdminDashboardController extends Controller
         $appointmentsForAnalysis = clone $appointmentsQuery;
         $appointments = $appointmentsForAnalysis->get(['id', 'appointment_datetime', 'procedure_id']);
 
+        // Dane miesięczne (istniejące)
         $appointmentsPerMonthArray = array_fill(0, 12, 0);
-
         foreach ($appointments as $appointment) {
             $month = Carbon::parse($appointment->appointment_datetime)->month - 1;
             $appointmentsPerMonthArray[$month]++;
+        }
+
+        // Dane tygodniowe (dni tygodnia)
+        $appointmentsPerWeekArray = array_fill(0, 7, 0);
+        foreach ($appointments as $appointment) {
+            // W PHP niedziela=0, poniedziałek=1, korygujemy aby poniedziałek=0
+            $dayOfWeek = (Carbon::parse($appointment->appointment_datetime)->dayOfWeek + 6) % 7;
+            $appointmentsPerWeekArray[$dayOfWeek]++;
+        }
+
+        // Dane dzienne (ostatnie 7 dni)
+        $appointmentsPerDayArray = array_fill(0, 7, 0);
+        $last7Days = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $last7Days[] = Carbon::now()->subDays($i)->startOfDay();
+        }
+
+        foreach ($appointments as $appointment) {
+            $appointmentDate = Carbon::parse($appointment->appointment_datetime)->startOfDay();
+
+            for ($i = 0; $i < 7; $i++) {
+                if ($appointmentDate->equalTo($last7Days[$i])) {
+                    $appointmentsPerDayArray[$i]++;
+                    break;
+                }
+            }
         }
 
         $procedureCounts = [];
@@ -117,11 +144,13 @@ class AdminDashboardController extends Controller
                 'total' => $totalAppointments,
                 'upcoming' => $upcomingAppointments,
                 'completed' => $completedAppointments,
-                'cancelled' => $cancelledAppointments, // Ogólne anulowane
-                'cancelled_by_patient' => $cancelledByPatientCount, // Dodana nowa statystyka
+                'cancelled' => $cancelledAppointments,
+                'cancelled_by_patient' => $cancelledByPatientCount,
             ],
             'charts' => [
                 'appointmentsPerMonth' => $appointmentsPerMonthArray,
+                'appointmentsPerWeek' => $appointmentsPerWeekArray,
+                'appointmentsPerDay' => $appointmentsPerDayArray,
                 'popularProcedures' => $popularProcedures,
             ],
         ];

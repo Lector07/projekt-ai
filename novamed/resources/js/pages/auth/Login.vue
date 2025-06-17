@@ -31,7 +31,7 @@ async function submit() {
     try {
         await axios.get('/sanctum/csrf-cookie');
 
-        const response = await axios.post('/api/v1/login', form.value, {
+        await axios.post('/api/v1/login', form.value, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

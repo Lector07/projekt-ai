@@ -26,8 +26,7 @@ class AdminProcedureCategoryController extends Controller
         try {
             $this->authorize('viewAny', ProcedureCategory::class);
 
-            $categories = ProcedureCategory::orderBy('name')->get();
-
+            $categories = ProcedureCategory::orderBy('id', 'asc')->get();
             return response()->json([
                 'data' => ProcedureCategoryResource::collection($categories)
             ]);
@@ -95,7 +94,7 @@ class AdminProcedureCategoryController extends Controller
             $this->authorize('update', $procedureCategory);
             $validated = $request->validated();
 
-            $validated['slug'] = Str::slug($validated['name']);
+            $validated['slug'] = $validated['slug'] ?? '';
 
             $procedureCategory->update($validated);
 

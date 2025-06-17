@@ -435,7 +435,14 @@ function acceptProposedTime() {
 function rejectProposedTime() {
     showProposalDialog.value = false;
     proposedAlternative.value = null;
-    unavailableSelectedTime.value = null;
+
+    if (selectedDate.value && unavailableSelectedTime.value) {
+        const dateStr = formatDate(selectedDate.value);
+        selectedTime.value = unavailableSelectedTime.value;
+        errorMessage.value = "Ten termin jest niedostępny. Wizyty się nakładają.";
+        emit('dateSelected', dateStr, unavailableSelectedTime.value);
+    }
+
 }
 
 function previousMonth() {

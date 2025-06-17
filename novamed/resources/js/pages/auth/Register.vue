@@ -14,6 +14,16 @@ import Toast from "primevue/toast";
 
 const toast = useToast();
 
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 422) {
+            return Promise.reject(error);
+        }
+        return Promise.reject(error);
+    }
+);
+
 const form = ref({
     name: '',
     email: '',
@@ -121,6 +131,7 @@ async function submit() {
                         v-model="form.password_confirmation"
                         placeholder="Potwierdź hasło"
                     />
+                    <InputError :message="errors.password_confirmation ? errors.password_confirmation[0] : ''" />
                 </div>
 
                 <Button type="submit" class="mt-2 w-full bg-nova-dark hover:bg-nova-accent" tabindex="5" :disabled="isLoading">

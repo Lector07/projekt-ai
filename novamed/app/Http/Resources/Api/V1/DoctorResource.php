@@ -16,7 +16,6 @@ class DoctorResource extends JsonResource
             'last_name' => $this->last_name,
             'specialization' => $this->specialization,
             'bio' => $this->bio,
-            'price_modifier' => $this->price_modifier,
             'profile_picture_url' => $this->profile_picture_path
                 ? Storage::disk('public')->url($this->profile_picture_path)
                 : null,

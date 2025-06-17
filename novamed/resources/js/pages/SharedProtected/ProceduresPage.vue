@@ -175,7 +175,7 @@ const getCategoryName = (procedure: Procedure): string => {
                         <div v-else v-for="procedure in procedures" :key="procedure.id" class="mb-4">
                             <div class="border-sidebar-border/70 dark:border-sidebar-border rounded-lg border p-4">
                                 <div class="mb-2 flex items-center justify-between">
-                                    <h3 class="text-xl font-medium">{{ procedure.name }}</h3>
+                                    <h3 class="text-xl font-semibold">{{ procedure.name }}</h3>
                                     <span class="bg-nova-accent dark:bg-nova-primary text-nova-light rounded-full px-3 py-1 text-sm font-medium">
                                         {{ getCategoryName(procedure) }}
                                     </span>
@@ -186,7 +186,7 @@ const getCategoryName = (procedure: Procedure): string => {
                                 <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ procedure.description }}</p>
 
                                 <div class="flex items-center justify-between">
-                                    <div class="text-nova-darkest dark:text-nova-light font-extrabold">{{ procedure.base_price }} zł</div>
+                                    <div class=" dark:text-nova-light bg-nova-accent/80 border-double text-nova-light p-1  rounded-md font-medium">Cena bazowa: <span class="text-nova-light">{{ procedure.base_price }} zł</span></div>
                                     <Button as-child class="bg-nova-primary dark:bg-nova-accent dark:text-nova-light hover:bg-nova-accent">
                                         <router-link :to="{ name: 'procedure.detail', params: { id: procedure.id } }"> Szczegóły </router-link>
                                     </Button>

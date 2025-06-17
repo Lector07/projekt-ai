@@ -73,7 +73,7 @@ async function resendVerificationEmail() {
     resendingVerification.value = true;
 
     try {
-        await axios.post('/api/v1/email/verification-notification');
+        await axios.post('/api/email/verification-notification');
         status.value = 'verification-link-sent';
         verificationSent.value = true;
 

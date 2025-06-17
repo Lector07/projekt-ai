@@ -27,6 +27,7 @@ class StoreProcedureRequest extends FormRequest
             'base_price' => 'required|numeric|min:0',
             'procedure_category_id' => 'required|exists:procedure_categories,id',
             'recovery_timeline_info' => 'nullable|string|max:1000',
+            'duration' => 'nullable|integer|min:5',
         ];
     }
 
@@ -54,6 +55,10 @@ class StoreProcedureRequest extends FormRequest
 
             'recovery_timeline_info.string' => 'Informacja o czasie rekonwalescencji musi być tekstem.',
             'recovery_timeline_info.max' => 'Informacja o czasie rekonwalescencji nie może przekraczać 1000 znaków.',
+
+            'duration.integer' => 'Czas trwania musi być liczbą całkowitą.',
+            'duration.min' => 'Czas trwania musi wynosić co najmniej 5 minut.',
+
         ];
     }
 }

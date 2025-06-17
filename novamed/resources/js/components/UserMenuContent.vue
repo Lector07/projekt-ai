@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue'; // Usunięto nieużywany import computed
 import UserInfo from '@/components/UserInfo.vue';
 import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types';
 import { LogOut, Settings } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-// Załóżmy, że masz store i importujesz go:
 import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
@@ -24,18 +23,25 @@ async function handleLogout() {
     isLoggingOut.value = true;
 
     try {
-        await axios.post('/api/v1/logout');
-        authStore.logout(); // Aktualizuj stan globalny
+        authStore.logout();
+
         router.push({ name: 'login' });
+
+        if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify({})], { type: 'application/json' });
+            navigator.sendBeacon('/api/v1/logout', blob);
+        } else {
+            setTimeout(() => {
+                axios.post('/api/v1/logout', {});
+            }, 100);
+        }
     } catch (error) {
         console.error("Błąd podczas wylogowywania:", error);
-        alert('Wystąpił błąd podczas wylogowywania.');
+        router.push({ name: 'login' });
     } finally {
         isLoggingOut.value = false;
     }
 }
-
-// const isLoggedIn = computed(() => authStore.isLoggedIn);
 </script>
 
 <template>

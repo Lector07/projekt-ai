@@ -26,7 +26,6 @@ class UpdateDoctorRequest extends FormRequest
             'last_name' => 'sometimes|required|string|max:255',
             'specialization' => 'sometimes|required|string|max:255',
             'bio' => 'sometimes|nullable|string',
-            'price_modifier' => 'sometimes|nullable|numeric|min:0',
         ];
     }
 
@@ -43,8 +42,6 @@ class UpdateDoctorRequest extends FormRequest
             'specialization.string' => 'Specjalizacja musi być ciągiem znaków.',
             'specialization.max' => 'Specjalizacja nie może przekraczać 255 znaków.',
             'bio.string' => 'Opis musi być ciągiem znaków.',
-            'price_modifier.numeric' => 'Modyfikator ceny musi być liczbą.',
-            'price_modifier.min' => 'Modyfikator ceny musi być większy lub równy 0.',
         ];
 
     }

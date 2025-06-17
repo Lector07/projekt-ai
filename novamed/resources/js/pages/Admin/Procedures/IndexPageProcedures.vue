@@ -66,6 +66,7 @@ const newProcedure = ref({
     base_price: 0,
     procedure_category_id: null,
     recovery_timeline_info: '',
+    duration: 30,
 });
 
 const loadProcedures = async () => {
@@ -175,7 +176,8 @@ const resetForm = () => {
         description: '',
         base_price: 0,
         procedure_category_id: null,
-        recovery_timeline_info: ''
+        recovery_timeline_info: '',
+        duration: 30
     };
     formErrors.value = {};
 };
@@ -221,6 +223,20 @@ const formatPrice = (price: number) => {
         style: 'currency',
         currency: 'PLN'
     }).format(price);
+};
+
+const formatDuration = (minutes) => {
+    if (!minutes) return 'Nie określono';
+
+    if (minutes < 60) {
+        return `${minutes} min`;
+    } else {
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return remainingMinutes > 0
+            ? `${hours} godz. ${remainingMinutes} min`
+            : `${hours} godz.`;
+    }
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -318,6 +334,7 @@ Miesiąc 3-6: ...`;
                                     <TableHead class="whitespace-nowrap">Nazwa</TableHead>
                                     <TableHead class="max-w-[40%]">Opis</TableHead>
                                     <TableHead class="whitespace-nowrap">Kategoria</TableHead>
+                                    <TableHead class="whitespace-nowrap text-center">Czas trwania</TableHead>
                                     <TableHead class="text-center whitespace-nowrap">Cena Bazowa</TableHead>
                                     <TableHead class="text-center whitespace-nowrap">Akcje</TableHead>
                                 </TableRow>
@@ -336,6 +353,9 @@ Miesiąc 3-6: ...`;
                                         <Badge variant="outline" class="bg-nova-primary dark:bg-nova-accent text-nova-light">
                                             {{ procedure.category?.name || 'Brak kategorii' }}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell class="text-left">
+                                        {{ formatDuration(procedure.duration) }}
                                     </TableCell>
                                     <TableCell class="text-left">{{ formatPrice(procedure.base_price) }}</TableCell>
                                     <TableCell class="text-left">
@@ -463,6 +483,28 @@ Miesiąc 3-6: ...`;
                                 </InputNumber>
                                 <InputError :message="formErrors.base_price?.[0]"/>
                             </div>
+                            <div class="space-y-2">
+                                <Label for="duration">Czas trwania (minuty)</Label>
+                                <InputNumber
+                                    id="duration"
+                                    v-model="newProcedure.duration"
+                                    :min="5"
+                                    :step="5"
+                                    showButtons
+                                    buttonLayout="horizontal"
+                                    inputClass="w-full rounded-md border border-input px-3 py-2 text-sm"
+                                    class="w-full rounded-md border border-input px-3 py-2 text-sm"
+                                    :class="{'p-invalid': formErrors.duration}"
+                                >
+                                    <template #incrementbuttonicon>
+                                        <Icon name="plus" size="14"/>
+                                    </template>
+                                    <template #decrementbuttonicon>
+                                        <Icon name="minus" size="14" class="mr-2"/>
+                                    </template>
+                                </InputNumber>
+                                <InputError :message="formErrors.duration?.[0]"/>
+                            </div>
                         </div>
 
                         <div class="space-y-2">
@@ -566,6 +608,28 @@ Miesiąc 3-6: ...`;
                                     </template>
                                 </InputNumber>
                                 <InputError :message="formErrors.base_price?.[0]"/>
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="edit-duration">Czas trwania (minuty)</Label>
+                                <InputNumber
+                                    id="edit-duration"
+                                    v-model="selectedProcedure.duration"
+                                    :min="5"
+                                    :step="5"
+                                    showButtons
+                                    buttonLayout="horizontal"
+                                    inputClass="w-full rounded-md border border-input px-3 py-2 text-sm"
+                                    class="w-full rounded-md border border-input px-3 py-2 text-sm"
+                                    :class="{'p-invalid': formErrors.duration}"
+                                >
+                                    <template #incrementbuttonicon>
+                                        <Icon name="plus" size="14"/>
+                                    </template>
+                                    <template #decrementbuttonicon>
+                                        <Icon name="minus" size="14" class="mr-2"/>
+                                    </template>
+                                </InputNumber>
+                                <InputError :message="formErrors.duration?.[0]"/>
                             </div>
                         </div>
 

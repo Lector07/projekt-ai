@@ -19,7 +19,7 @@ const resendVerification = async () => {
     message.value = '';
 
     try {
-        await axios.post('/api/v1/email/verification-notification');
+        await axios.post('/api/email/verification-notification');
         message.value = 'Link weryfikacyjny został wysłany na Twój adres email.';
     } catch (error: any) {
         message.value = `Błąd: ${error.response?.data?.message || 'Nie udało się wysłać linku weryfikacyjnego'}`;
@@ -32,7 +32,7 @@ const logout = async () => {
     try {
         await axios.post('/api/v1/auth/logout');
         localStorage.removeItem('token');
-        router.push('/api/v1/login');
+        router.push('/login');
     } catch (error) {
         console.error('Błąd podczas wylogowywania', error);
     }

@@ -56,8 +56,8 @@ class AdminAppointmentController extends Controller
             $query->where('status', 'ilike', $request->status);
         }
 
-        $query->orderBy('appointment_datetime', 'desc');
-
+        $query->orderBy('id', 'desc');
+        
         $appointments = $query->paginate();
 
         return AppointmentResource::collection($appointments);

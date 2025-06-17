@@ -75,7 +75,6 @@ class DoctorController extends Controller
             return [
                 'date' => $dt->format('Y-m-d'),
                 'time' => $dt->format('H:i'),
-                // Dodajemy czas zakończenia, jeśli jest potrzebny do precyzyjnego sprawdzania konfliktów
                 'end_time' => $dt->copy()->addMinutes($appointment->procedure->duration_minutes ?? 30)->format('H:i'),
                 'procedure_duration' => $appointment->procedure->duration_minutes ?? 30,
             ];
@@ -102,14 +101,13 @@ class DoctorController extends Controller
             $procedureDuration = $procedure?->duration_minutes ?? 30;
         }
 
-        $maxConsecutiveWorkMinutes = 180;
 
         $availability = [];
         $period = CarbonPeriod::create($startDate, $endDate);
 
         $existingAppointments = Appointment::where('doctor_id', $doctor->id)
             ->whereBetween('appointment_datetime', [$startDate, $endDate])
-            ->whereNotIn('status', ['cancelled_by_patient', 'cancelled', 'completed', 'no_show'])
+            ->whereNotIn('status', ['cancelled_by_patient', 'cancalled_by_clinic', 'cancelled', 'completed', 'no_show'])
             ->with('procedure:id,duration_minutes')
             ->get();
 
@@ -136,15 +134,12 @@ class DoctorController extends Controller
                     ->sortBy('start')
                     ->values();
 
-                // Generuj standardowe 30-minutowe sloty (9:00, 9:30, 10:00, ...)
                 $availableSlots = [];
                 $currentSlot = $dayStart->copy();
 
                 while ($currentSlot->copy()->addMinutes($procedureDuration)->lte($dayEnd)) {
-                    // Upewnij się, że slot ma minuty 00 lub 30
                     $minutes = (int)$currentSlot->format('i');
                     if ($minutes !== 0 && $minutes !== 30) {
-                        // Zaokrąglij do następnego 30-minutowego interwału
                         $currentSlot->setTime(
                             $currentSlot->hour + ($minutes > 30 ? 1 : 0),
                             $minutes > 30 ? 0 : 30
@@ -152,12 +147,10 @@ class DoctorController extends Controller
                         continue;
                     }
 
-                    // Sprawdź, czy slot nie koliduje z istniejącymi rezerwacjami
                     if (!$this->isOverlapping($currentSlot, $procedureDuration, $busySegments)) {
                         $availableSlots[] = $currentSlot->format('H:i');
                     }
 
-                    // Przejdź do następnego slotu (dokładnie +30 minut)
                     $currentSlot->addMinutes(30);
                 }
 

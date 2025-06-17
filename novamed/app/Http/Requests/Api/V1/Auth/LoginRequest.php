@@ -45,7 +45,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Podane dane uwierzytelniające są nieprawidłowe.',
             ]);
         }
 
@@ -68,10 +68,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Zbyt wiele prób logowania. Spróbuj ponownie za ' . $seconds . ' sekund.',
         ]);
     }
 
@@ -89,6 +86,7 @@ class LoginRequest extends FormRequest
             'email.required' => 'Adres e-mail jest wymagany.',
             'email.string' => 'Adres e-mail musi być ciągiem znaków.',
             'email.email' => 'Adres e-mail musi być poprawnym adresem e-mail.',
+            'email.exists' => 'Podany adres e-mail nie został odnaleziony w systemie.',
             'password.required' => 'Hasło jest wymagane.',
             'password.string' => 'Hasło musi być ciągiem znaków.',
         ];

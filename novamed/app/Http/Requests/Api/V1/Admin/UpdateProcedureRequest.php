@@ -27,7 +27,8 @@ class UpdateProcedureRequest extends FormRequest
             'base_price' => 'sometimes|required|numeric|min:0',
             'procedure_category_id' => 'sometimes|required|exists:procedure_categories,id',
             'recovery_timeline_info' => 'sometimes|nullable|string|max:1000',
-        ];
+            'duration' => 'nullable|integer|min:5',
+            ];
     }
 
     public function messages(): array
@@ -45,6 +46,8 @@ class UpdateProcedureRequest extends FormRequest
             'procedure_category_id.exists' => 'Wybrana kategoria zabiegu nie istnieje.',
             'recovery_timeline_info.string' => 'Informacje o czasie rekonwalescencji muszą być ciągiem znaków.',
             'recovery_timeline_info.max' => 'Informacje o czasie rekonwalescencji nie mogą przekraczać 1000 znaków.',
+            'duration.integer' => 'Czas trwania musi być liczbą całkowitą.',
+            'duration.min' => 'Czas trwania musi wynosić co najmniej 5 minut.',
         ];
     }
 }

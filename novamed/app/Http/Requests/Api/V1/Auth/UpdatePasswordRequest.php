@@ -50,7 +50,13 @@ class UpdatePasswordRequest extends FormRequest
             'current_password.required' => 'Aktualne hasło jest wymagane.',
             'current_password.current_password' => 'Aktualne hasło jest nieprawidłowe.',
             'password.required' => 'Nowe hasło jest wymagane.',
-            'password.confirmed' => 'Potwierdzenie hasła nie zgadza się.',
+            'password.confirmed' => 'Hasła się nie zgadzają.',
+            'password.min' => 'Hasło musi mieć co najmniej 8 znaków.',
+            'password.letters' => 'Hasło musi zawierać litery.',
+            'password.mixed_case' => 'Hasło musi zawierać wielkie i małe litery.',
+            'password.numbers' => 'Hasło musi zawierać co najmniej jedną cyfrę.',
+            'password.symbols' => 'Hasło musi zawierać co najmniej jeden symbol.',
+            'password.uncompromised' => 'Podane hasło zostało ujawnione w wycieku danych. Wybierz inne hasło.',
         ];
     }
 }
