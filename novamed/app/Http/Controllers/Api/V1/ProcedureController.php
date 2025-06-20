@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\ProcedureCategory;
 use App\Http\Resources\Api\V1\ProcedureResource; // <<< --- DODAJ IMPORT
 use Illuminate\Http\JsonResponse; // Dla JsonResponse
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection; // Dla ResourceCollection
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProcedureController extends Controller
 {
@@ -22,12 +22,28 @@ class ProcedureController extends Controller
             $query->where('procedure_category_id', $request->procedure_category_id);
         }
 
+
+        if ($request->filled('min_price')) {
+            $query->where('base_price', '>=', (float)$request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('base_price', '<=', (float)$request->max_price);
+        }
+
+        $sortBy = $request->input('sort_by', 'name');
+        $sortDirection = $request->input('sort_direction', 'asc');
+
         if ($request->boolean('popular')) {
             $query->inRandomOrder();
         } else {
-            $query->orderBy('name');
+            $allowedSortColumns = ['name', 'base_price'];
+            if (in_array($sortBy, $allowedSortColumns)) {
+                $query->orderBy($sortBy, $sortDirection);
+            } else {
+                $query->orderBy('name', 'asc');
+            }
         }
-
 
         if ($request->has('limit')) {
             $limit = (int) $request->input('limit');

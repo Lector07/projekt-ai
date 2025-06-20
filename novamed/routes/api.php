@@ -11,22 +11,18 @@ use App\Http\Controllers\Api\V1\Admin\AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\AdminProcedureCategoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 
-// Trasa do strony informującej o konieczności weryfikacji emaila
 Route::get('/email/verify', function () {
     return redirect('/#/settings/profile?verified=1');
 })->middleware('auth:sanctum')->name('verification.notice');
 
-// Trasa do weryfikacji emaila - poprawiona, bez wymagania zalogowania
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
     ->middleware(['signed'])
     ->name('verification.verify');
 
-// Trasa do ponownego wysyłania linku weryfikacyjnego
 Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
     ->middleware(['auth:sanctum', 'throttle:6,1'])
     ->name('verification.send');
 
-// Trasy API v1
 Route::prefix('v1')->name('v1.')->group(function () {
 
     Route::get('/procedures/categories', [V1\ProcedureController::class, 'categories'])
@@ -126,7 +122,6 @@ Route::prefix('v1')->name('v1.')->group(function () {
     });
 });
 
-// Trasy dla administratora
 Route::prefix('v1/admin')
     ->middleware(['auth:sanctum', 'auth.admin'])
     ->name('admin.')

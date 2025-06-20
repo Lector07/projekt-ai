@@ -10,8 +10,10 @@ import AuthBase from '@/layouts/auth/AuthSplitRsideLogoLayout.vue';
 import { LoaderCircle } from 'lucide-vue-next';
 import { useToast } from "primevue/usetoast";
 import Toast from "primevue/toast";
+import { useRouter } from 'vue-router';
 
 
+const router = useRouter();
 const toast = useToast();
 
 axios.interceptors.response.use(
@@ -51,6 +53,8 @@ async function submit() {
             }
         });
 
+        console.log('Rejestracja udana:', registerResponse);
+
         toast.add({
             severity: 'success',
             summary: 'Sukces',
@@ -58,7 +62,9 @@ async function submit() {
             life: 3000
         });
 
-        console.log('Rejestracja udana:', registerResponse);
+        setTimeout(() => {
+            router.push({ name: 'login' });
+        }, 1500);
 
     } catch (error: any) {
         if (error.response?.status === 422) {

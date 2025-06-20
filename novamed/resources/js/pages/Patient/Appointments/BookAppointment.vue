@@ -74,21 +74,6 @@ async function fetchProcedures() {
     }
 }
 
-function rejectProposedTime() {
-    if (appointmentDate.value && appointmentTime.value) {
-        availabilityStatus.value = {
-            available: false,
-            message: "Wybrany termin koliduje z inną wizytą."
-        };
-
-        toast.add({
-            severity: 'error',
-            summary: 'Termin niedostępny',
-            detail: 'Nie można zarezerwować wizyty w wybranym terminie.',
-            life: 5000,
-        });
-    }
-}
 
 async function fetchDoctorsForProcedure(procedureIdAsString: string) {
     const procedureId = Number(procedureIdAsString);
@@ -223,10 +208,6 @@ const checkAppointmentAvailability = async () => {
     }
 };
 
-function getTimeFromDateString(dateString: string): string {
-    if (!dateString) return '';
-    return dateString.substring(11, 16);
-}
 
 watch([selectedDoctorId, combinedDateTime], () => {
     if (selectedDoctorId.value && combinedDateTime.value) {
