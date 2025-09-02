@@ -42,4 +42,17 @@ class AppointmentResource extends JsonResource
             'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
+
+    private function translateStatus(string $status): string
+    {
+        switch ($status) {
+            case 'scheduled': return 'Zaplanowana';
+            case 'confirmed': return 'Potwierdzona';
+            case 'completed': return 'Zakończona';
+            case 'cancelled_by_patient': return 'Odwołana przez pacjenta';
+            case 'cancelled_by_clinic': return 'Odwołana przez klinikę';
+            case 'no_show': return 'Nieobecność';
+            default: return ucfirst($status);
+        }
+    }
 }

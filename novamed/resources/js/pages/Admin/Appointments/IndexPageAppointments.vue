@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import {ref, onMounted, watch, computed, reactive} from 'vue';
+import {ref, onMounted, reactive} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {Skeleton} from '@/components/ui/skeleton';
-import {parseDate, today, getLocalTimeZone} from '@internationalized/date';
+import {parseDate} from '@internationalized/date';
 import type {DateValue} from '@internationalized/date';
 import Icon from '@/components/Icon.vue';
 import type {BreadcrumbItem} from '@/types';
+import { ClipboardMinus } from 'lucide-vue-next';
 import {
     Table,
     TableBody,
@@ -36,8 +36,6 @@ import {
 } from "@/components/ui/popover";
 import Toast from 'primevue/toast';
 import {useToast} from 'primevue/usetoast';
-
-
 import {
     ScrollArea,
 } from "@/components/ui/scroll-area";
@@ -46,6 +44,15 @@ import {format} from 'date-fns';
 import {pl} from 'date-fns/locale';
 import {TooltipContent} from "@/components/ui/tooltip";
 import {Tooltip, TooltipTrigger} from "@/components/ui/tooltip";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Patient {
     id: number;
@@ -117,15 +124,109 @@ const statuses = [
 
 const allPatients = ref<Patient[]>([]);
 const allDoctors = ref<Doctor[]>([]);
-
-const showPatientResults = ref(false);
-const showDoctorResults = ref(false);
 const patientsLoading = ref(false);
 const doctorsLoading = ref(false);
 const showEditAppointmentForm = ref(false);
 const selectedAppointment = ref<any>(null);
 const appointmentErrors = ref<any>({});
 const appointmentFormLoading = ref(false);
+const procedures = ref<{ id: number, name: string }[]>([]);
+const proceduresLoading = ref(false);
+const dateFrom = ref<DateValue | undefined>(undefined);
+const dateTo = ref<DateValue | undefined>(undefined);
+const selectedDate = ref<DateValue | undefined>(undefined);
+
+// === NOWA SEKCJA DLA KONFIGURACJI RAPORTU ===
+const reportLoading = ref(false);
+const isReportConfigOpen = ref(false);
+
+const availableFields = [
+    { field: 'id', header: 'ID Wizyty', type: 'numeric' },
+    { field: 'appointment_datetime', header: 'Data wizyty', type: 'date' },
+    { field: 'status_translated', header: 'Status', type: 'text' },
+    { field: 'patient_name', header: 'Pacjent', type: 'text' },
+    { field: 'doctor_full_name', header: 'Lekarz', type: 'text' },
+    { field: 'procedure_name', header: 'Zabieg', type: 'text' },
+    { field: 'procedure_base_price', header: 'Cena (PLN)', type: 'numeric' },
+    { field: 'patient_notes', header: 'Notatki pacjenta', type: 'text' },
+];
+
+const reportConfig = reactive({
+    title: 'Zestawienie Wizyt',
+    companyInfo: {
+        name: 'Klinika Chirurgii Plastycznej "Projekt AI"',
+        address: 'ul. Medyczna 1',
+        postalCode: '00-001',
+        city: 'Warszawa',
+        taxId: '123-456-78-90'
+    },
+    columns: availableFields.map(f => ({
+        field: f.field,
+        header: f.header,
+        visible: ['id', 'appointment_datetime', 'status_translated', 'doctor_full_name', 'procedure_name', 'procedure_base_price'].includes(f.field),
+        width: -1, // -1 oznacza auto
+        format: f.type === 'numeric' ? '#,##0.00' : (f.type === 'date' ? 'yyyy-MM-dd HH:mm' : null),
+        groupCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
+        reportCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
+    })),
+    groups: [
+        { field: 'doctor_full_name', label: '"Lekarz: " + $F{doctor_full_name}', showFooter: true },
+    ],
+    useSubreportBorders: false,
+    pageFooterEnabled: true,
+});
+
+const addGroup = () => {
+    reportConfig.groups.push({ field: '', label: '', showFooter: false });
+};
+
+const removeGroup = (index: number) => {
+    reportConfig.groups.splice(index, 1);
+};
+
+const openReportConfig = () => {
+    isReportConfigOpen.value = true;
+};
+
+const generateReport = async () => {
+    reportLoading.value = true;
+    isReportConfigOpen.value = false;
+
+    // Przygotuj konfigurację do wysłania - odfiltruj puste grupy
+    const finalConfig = JSON.parse(JSON.stringify(reportConfig)); // Głęboka kopia
+    finalConfig.groups = finalConfig.groups.filter(g => g.field);
+    finalConfig.columns.forEach(c => {
+        if (c.width === null || c.width === '') c.width = -1;
+    });
+
+    try {
+        const activeFilters = { ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== '')) };
+
+        const response = await axios.post('/api/v1/admin/appointments/report', {
+            config: finalConfig,
+            filters: activeFilters
+        }, {
+            responseType: 'blob',
+        });
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute('download', `${finalConfig.title.replace(/\s/g, '_')}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(link.href);
+        showSuccessToast('Sukces', 'Raport został pomyślnie wygenerowany.');
+
+    } catch (error) {
+        console.error('Błąd podczas generowania raportu:', error);
+        showErrorToast('Błąd', 'Nie udało się wygenerować raportu.');
+    } finally {
+        reportLoading.value = false;
+    }
+};
+// === KONIEC SEKCJI RAPORTU ===
 
 const handleApiResponse = (response: any, entityName: string) => {
     if (response?.data?.data) {
@@ -140,11 +241,9 @@ const loadPatients = async () => {
     try {
         const response = await axios.get('/api/v1/admin/users?role=patient&per_page=1000');
         allPatients.value = response.data?.data || [];
-        console.log('Załadowano pacjentów:', allPatients.value.length);
     } catch (error) {
         console.error('Błąd podczas pobierania pacjentów:', error);
         showErrorToast('Błąd', 'Nie udało się załadować listy pacjentów');
-        allPatients.value = [];
     } finally {
         patientsLoading.value = false;
     }
@@ -155,29 +254,13 @@ const loadDoctors = async () => {
     try {
         const response = await axios.get('/api/v1/admin/doctors');
         allDoctors.value = handleApiResponse(response, 'lekarzy');
-        console.log('Załadowano lekarzy:', allDoctors.value.length);
     } catch (error) {
         console.error('Błąd podczas pobierania lekarzy:', error);
         showErrorToast('Błąd', 'Nie udało się załadować listy lekarzy');
-        allDoctors.value = [];
     } finally {
         doctorsLoading.value = false;
     }
 };
-
-
-const statusOptions = [
-    {value: 'scheduled', label: 'Zarezerwowana'},
-    {value: 'completed', label: 'Zakończona'},
-    {value: 'cancelled', label: 'Anulowana'},
-    {value: 'confirmed', label: 'Potwierdzona'},
-    {value: 'cancelled_by_patient', label: 'Anulowana przez pacjenta'},
-    {value: 'cancelled_by_clinic', label: 'Anulowana przez klinikę'},
-    {value: 'no_show', label: 'Nieobecność'},
-];
-
-const procedures = ref<{ id: number, name: string }[]>([]);
-const proceduresLoading = ref(false);
 
 const loadProcedures = async () => {
     proceduresLoading.value = true;
@@ -197,30 +280,19 @@ const changePage = (page: number) => {
     loadAppointments();
 };
 
-const dateFrom = ref<DateValue | undefined>(undefined);
-const dateTo = ref<DateValue | undefined>(undefined);
-const selectedDate = ref<DateValue | undefined>(undefined);
-
 const onDateFromChange = (date: DateValue | undefined) => {
-    if (date) {
-        filters.date_from = date.toString();
-    } else {
-        filters.date_from = '';
-    }
+    dateFrom.value = date;
+    filters.date_from = date ? date.toString() : '';
 };
 
 const onDateToChange = (date: DateValue | undefined) => {
-    if (date) {
-        filters.date_to = date.toString();
-    } else {
-        filters.date_to = '';
-    }
+    dateTo.value = date;
+    filters.date_to = date ? date.toString() : '';
 };
 
 const formatDisplayDate = (dateString: string) => {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    return format(date, 'd MMMM yyyy', {locale: pl});
+    return format(new Date(dateString), 'd MMMM yyyy', { locale: pl });
 };
 
 const loadAppointments = async () => {
@@ -232,8 +304,7 @@ const loadAppointments = async () => {
                 Object.entries(filters).filter(([_, value]) => value !== '')
             ),
         };
-
-        const response = await axios.get('/api/v1/admin/appointments', {params});
+        const response = await axios.get('/api/v1/admin/appointments', { params });
         appointments.value = response.data.data;
         meta.value = response.data.meta;
     } catch (error) {
@@ -245,16 +316,15 @@ const loadAppointments = async () => {
 };
 
 const resetFilters = () => {
-    Object.keys(filters).forEach((key) => {
-        filters[key] = '';
-    });
+    Object.keys(filters).forEach((key) => { filters[key] = ''; });
+    dateFrom.value = undefined;
+    dateTo.value = undefined;
     meta.value.current_page = 1;
     loadAppointments();
 };
 
 const deleteAppointment = async (id: number) => {
     if (!confirm('Czy na pewno chcesz usunąć tę wizytę?')) return;
-
     try {
         await axios.delete(`/api/v1/admin/appointments/${id}`);
         loadAppointments();
@@ -268,26 +338,17 @@ const deleteAppointment = async (id: number) => {
 const openEditForm = async (appointment: Appointment) => {
     appointmentErrors.value = {};
     appointmentFormLoading.value = true;
-
     try {
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
         selectedAppointment.value = response.data.data;
-
-        await Promise.all([
-            loadProcedures(),
-            loadPatients(),
-            loadDoctors()
-        ]);
-
+        await Promise.all([loadProcedures(), loadPatients(), loadDoctors()]);
         selectedAppointment.value.procedure_id = selectedAppointment.value.procedure.id;
         selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
         selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
-
         if (selectedAppointment.value.appointment_datetime) {
             const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
             selectedDate.value = parseDate(dateStr);
         }
-
         showEditAppointmentForm.value = true;
     } catch (error) {
         console.error('Błąd podczas pobierania danych wizyty:', error);
@@ -296,7 +357,6 @@ const openEditForm = async (appointment: Appointment) => {
         appointmentFormLoading.value = false;
     }
 };
-
 
 const closeEditForm = () => {
     showEditAppointmentForm.value = false;
@@ -314,7 +374,6 @@ const onAppointmentDateChange = (date: DateValue | undefined) => {
 const updateAppointment = async () => {
     appointmentFormLoading.value = true;
     appointmentErrors.value = {};
-
     try {
         await axios.put(`/api/v1/admin/appointments/${selectedAppointment.value.id}`, {
             status: selectedAppointment.value.status,
@@ -325,17 +384,14 @@ const updateAppointment = async () => {
             patient_id: selectedAppointment.value.patient_id,
             doctor_id: selectedAppointment.value.doctor_id
         });
-
         closeEditForm();
         loadAppointments();
         showSuccessToast('Sukces', 'Wizyta została zaktualizowana');
     } catch (error: any) {
         console.error('Błąd podczas aktualizacji wizyty:', error);
-
-        if (error.response && error.response.data && error.response.data.errors) {
+        if (error.response?.data?.errors) {
             appointmentErrors.value = error.response.data.errors;
         }
-
         showErrorToast('Błąd', 'Nie udało się zaktualizować wizyty');
     } finally {
         appointmentFormLoading.value = false;
@@ -343,94 +399,41 @@ const updateAppointment = async () => {
 };
 
 const showSuccessToast = (title: string, content: string) => {
-    toast.add({
-        severity: 'success',
-        summary: title,
-        detail: content,
-        life: 3000,
-    });
+    toast.add({ severity: 'success', summary: title, detail: content, life: 3000 });
 };
 
 const showErrorToast = (title: string, content: string) => {
-    toast.add({
-        severity: 'error',
-        summary: title,
-        detail: content,
-        life: 3000,
-    });
+    toast.add({ severity: 'error', summary: title, detail: content, life: 3000 });
 };
 
 const formatDateTime = (dateTimeStr: string) => {
-    const date = new Date(dateTimeStr);
-    return date.toLocaleString('pl-PL', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    return new Date(dateTimeStr).toLocaleString('pl-PL', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const getStatusLabel = (status: string) => {
-    switch (status) {
-        case 'scheduled':
-            return 'Zarezerwowana';
-        case 'completed':
-            return 'Zakończona';
-        case 'cancelled':
-            return 'Anulowana';
-        case 'confirmed':
-            return 'Potwierdzona';
-        case 'cancelled_by_patient':
-            return 'Anulowano przez pacjenta';
-        case 'cancelled_by_clinic':
-            return 'Anulowano przez klinikę';
-        case 'no_show':
-            return 'Nieobecność';
-        default:
-            return status;
-    }
+    return statuses.find(s => s.value === status)?.label || status;
 };
 
 const getStatusClass = (status: string) => {
     switch (status) {
-        case 'scheduled':
-            return 'bg-blue-100 text-blue-800';
-        case 'completed':
-            return 'bg-green-100 text-green-800';
-        case 'cancelled':
-            return 'bg-red-100 text-red-800';
-        case 'confirmed':
-            return 'bg-purple-100 text-purple-800';
-        case 'cancelled_by_patient':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'no_show':
-            return 'bg-orange-100 text-orange-800';
-        case 'cancelled_by_clinic':
-            return 'bg-red-200 text-red-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
+        case 'scheduled': return 'bg-blue-100 text-blue-800';
+        case 'completed': return 'bg-green-100 text-green-800';
+        case 'cancelled': return 'bg-red-100 text-red-800';
+        case 'confirmed': return 'bg-purple-100 text-purple-800';
+        case 'cancelled_by_patient': return 'bg-yellow-100 text-yellow-800';
+        case 'no_show': return 'bg-orange-100 text-orange-800';
+        case 'cancelled_by_clinic': return 'bg-red-200 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
     }
 };
 
 onMounted(() => {
     loadAppointments();
-
-    document.addEventListener('click', (e: MouseEvent) => {
-        const target = e.target as HTMLElement;
-        if (!target.closest('#edit-patient') && !target.closest('#edit-doctor')) {
-            showPatientResults.value = false;
-            showDoctorResults.value = false;
-        }
-    });
 });
 
 const router = useRouter();
-
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Zarządzanie Wizytami',
-    }
+    { title: 'Zarządzanie Wizytami' }
 ];
 </script>
 
@@ -440,6 +443,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 
         <div class="container mx-auto px-2 py-4">
             <h1 class="text-2xl font-bold mb-1 dark:text-white">Zarządzanie Wizytami</h1>
+
+            <Button @click="openReportConfig"
+                    class="bg-nova-primary hover:bg-nova-accent mt-2 mb-2 dark:bg-green-700 dark:hover:bg-green-800 text-white">
+                <ClipboardMinus />
+                Generuj Raport
+            </Button>
 
             <div class="rounded-lg shadow-sm mb-4 p-4 border dark:border-gray-700">
                 <h2 class="text-lg font-semibold mb-2 dark:text-white">Filtry</h2>
@@ -486,13 +495,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     :class="!filters.date_from && 'text-muted-foreground dark:text-gray-400'"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
-                                    {{
-                                        filters.date_from ? formatDisplayDate(filters.date_from) : "Wybierz datę początkową"
-                                    }}
+                                    <span>{{ filters.date_from ? formatDisplayDate(filters.date_from) : 'Wybierz datę' }}</span>
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent class="w-auto p-0">
-                                <Calendar v-model="dateFrom" initial-focus mode="single"
+                                <Calendar :model-value="dateFrom" initial-focus mode="single"
                                           @update:model-value="onDateFromChange"
                                           class="dark:bg-gray-800 dark:text-white"/>
                             </PopoverContent>
@@ -508,11 +515,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     :class="!filters.date_to && 'text-muted-foreground dark:text-gray-400'"
                                 >
                                     <Icon name="calendar" size="16" class="mr-2"/>
-                                    {{ filters.date_to ? formatDisplayDate(filters.date_to) : "Wybierz datę końcową" }}
+                                    <span>{{ filters.date_to ? formatDisplayDate(filters.date_to) : 'Wybierz datę' }}</span>
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent class="w-auto p-0 ">
-                                <Calendar v-model="dateTo" initial-focus @update:model-value="onDateToChange"
+                                <Calendar :model-value="dateTo" initial-focus @update:model-value="onDateToChange"
                                           class="dark:bg-gray-800 dark:text-white"/>
                             </PopoverContent>
                         </Popover>
@@ -535,7 +542,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <div class="rounded-lg dark:bg-gray-900 shadow-sm overflow-hidden border dark:border-gray-700">
                 <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
                     <Table class="dark:text-gray-200">
-                        <TableCaption v-if="appointments.length === 0" class="dark:text-gray-400">
+                        <TableCaption v-if="!loading && appointments.length === 0" class="dark:text-gray-400">
                             Brak wizyt spełniających kryteria
                         </TableCaption>
                         <TableHeader class="dark:bg-gray-800">
@@ -553,8 +560,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <TableRow v-if="loading" class="dark:border-gray-700">
                                 <TableCell colSpan="7" class="text-center py-4 dark:text-gray-200">
                                     <div class="flex justify-center items-center">
-                                        <Icon name="loader2" class="animate-spin mr-2" size="20"/>
-                                        Ładowanie danych...
+                                        <Icon name="loader-2" class="animate-spin h-8 w-8 text-nova-primary"/>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -567,17 +573,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <TableCell class="dark:text-gray-200">{{ appointment.id }}</TableCell>
                                 <TableCell>
                                     <router-link :to="`/admin/patients/${appointment.patient.id}`"
-                                                 class="text-blue-600 hover:underline dark:text-blue-400">
+                                                 class="text-nova-primary hover:underline">
                                         {{ appointment.patient.name }}
                                     </router-link>
                                 </TableCell>
                                 <TableCell>
                                     <div v-if="appointment.doctor">
-                                        <router-link
-                                            :to="`/admin/doctors/${appointment.doctor.id}`"
-                                            class="text-blue-600 hover:underline dark:text-blue-400">
-                                            {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}
-                                        </router-link>
+                                        {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}
                                     </div>
                                     <div v-else>Brak lekara</div>
                                 </TableCell>
@@ -587,41 +589,29 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 </TableCell>
                                 <TableCell>
                                     <span
-                                        :class="`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(appointment.status)}`">
+                                        class="px-2 py-1 text-xs font-medium rounded-full"
+                                        :class="getStatusClass(appointment.status)"
+                                    >
                                         {{ getStatusLabel(appointment.status) }}
                                     </span>
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex space-x-2">
-                                        <Button variant="outline" size="sm"
-                                                class="flex items-center dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
-                                                @click="openEditForm(appointment)">
-                                            <Icon name="edit" size="14" class="mr-1"/>
-                                            Edytuj
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            class="flex items-center text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-500 dark:hover:bg-red-900/30"
-                                            @click="deleteAppointment(appointment.id)"
-                                        >
-                                            <Icon name="trash-2" size="14" class="mr-1"/>
-                                            Usuń
-                                        </Button>
                                         <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    class="flex items-center text-blue-600 border-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-500 dark:hover:bg-blue-900/30"
-                                                    @click="router.push(`/admin/appointment/${appointment.id}`)"
-                                                >
-                                                    <Icon name="info" size="14" class="mr-1"/>
+                                            <TooltipTrigger as-child>
+                                                <Button variant="ghost" size="sm" @click="openEditForm(appointment)">
+                                                    <Icon name="pencil" size="16"/>
                                                 </Button>
                                             </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Szczegóły wizyty</p>
-                                            </TooltipContent>
+                                            <TooltipContent>Edytuj</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger as-child>
+                                                <Button variant="ghost" size="sm" @click="deleteAppointment(appointment.id)">
+                                                    <Icon name="trash-2" size="16"/>
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Usuń</TooltipContent>
                                         </Tooltip>
                                     </div>
                                 </TableCell>
@@ -649,9 +639,9 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
                                     <Button
-                                        :variant="meta.current_page === item.value ? 'default' : 'outline'"
-                                        :class="meta.current_page === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:bg-gray-700 dark:text-white dark:border-gray-600'"
-                                        size="sm"
+                                        class="w-9 h-9 p-0"
+                                        :variant="item.value === meta.current_page ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'ghost'"
+                                        @click="changePage(item.value)"
                                     >
                                         {{ item.value }}
                                     </Button>
@@ -669,6 +659,89 @@ const breadcrumbs: BreadcrumbItem[] = [
             </div>
         </div>
 
+        <Dialog :open="isReportConfigOpen" @update:open="isReportConfigOpen = $event">
+            <DialogContent class="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Zaawansowana Konfiguracja Raportu</DialogTitle>
+                    <DialogDescription>
+                        Dostosuj każdy aspekt raportu, który zostanie wygenerowany.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="max-h-[70vh] overflow-y-auto p-1 pr-4">
+                    <Accordion type="single" collapsible class="w-full" default-value="'item-1'">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>Opcje Główne</AccordionTrigger>
+                            <AccordionContent class="space-y-4">
+                                <div class="grid grid-cols-4 items-center gap-4">
+                                    <Label for="report-title" class="text-right">Tytuł Raportu</Label>
+                                    <Input id="report-title" v-model="reportConfig.title" class="col-span-3" />
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <Checkbox id="page-footer" v-model:checked="reportConfig.pageFooterEnabled" />
+                                    <label for="page-footer" class="text-sm font-medium">Dołącz stopkę z numeracją stron</label>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="item-2">
+                            <AccordionTrigger>Kolumny</AccordionTrigger>
+                            <AccordionContent>
+                                <div class="grid grid-cols-5 gap-x-4 gap-y-2 items-center font-semibold text-sm">
+                                    <span>Widoczna</span>
+                                    <span class="col-span-2">Nagłówek</span>
+                                    <span>Szerokość (auto: -1)</span>
+                                    <span>Format</span>
+                                </div>
+                                <div v-for="(col, index) in reportConfig.columns" :key="index" class="grid grid-cols-5 gap-x-4 gap-y-2 items-center mt-2">
+                                    <Checkbox v-model:checked="col.visible" />
+                                    <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
+                                    <Input v-model.number="col.width" type="number" class="text-xs h-8"/>
+                                    <Input v-model="col.format" class="text-xs h-8" placeholder="np. #,##0.00"/>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="item-3">
+                            <AccordionTrigger>Grupowanie</AccordionTrigger>
+                            <AccordionContent>
+                                <div v-for="(group, index) in reportConfig.groups" :key="index" class="p-2 border rounded-md mb-2">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Grupuj po polu</Label>
+                                            <select v-model="group.field" class="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                <option v-for="field in availableFields" :key="field.field" :value="field.field">{{ field.header }}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <Label>Wyrażenie nagłówka</Label>
+                                            <Input v-model="group.label" placeholder='"Dział: " + $F{...}' class="mt-1"/>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <div class="flex items-center space-x-2">
+                                            <Checkbox :id="`group-footer-${index}`" v-model:checked="group.showFooter" />
+                                            <label :for="`group-footer-${index}`" class="text-sm">Pokaż podsumowanie w nagłówku</label>
+                                        </div>
+                                        <Button variant="destructive" size="sm" @click="removeGroup(index)">Usuń</Button>
+                                    </div>
+                                </div>
+                                <Button @click="addGroup" class="mt-2 w-full">Dodaj nową grupę</Button>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
+
+                <DialogFooter>
+                    <Button @click="generateReport" :disabled="reportLoading">
+                        <Icon v-if="reportLoading" name="loader-2" class="animate-spin mr-2" size="16"/>
+                        <span v-else>Generuj PDF</span>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Okno dialogowe do edycji wizyty (istniejący kod) -->
         <div v-if="showEditAppointmentForm && selectedAppointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md max-h-[90vh] flex flex-col shadow-lg">
@@ -749,10 +822,11 @@ const breadcrumbs: BreadcrumbItem[] = [
                                 <PopoverTrigger as-child>
                                     <Button
                                         variant="outline"
-                                        class="w-full justify-start text-left font-normal dark:bg-gray-700 dark:text-white dark:border-gray-600 text-xs sm:text-sm"
+                                        class="w-full justify-start text-left font-normal text-xs sm:text-sm"
+                                        :class="!selectedAppointment.appointment_datetime && 'text-muted-foreground'"
                                     >
-                                        <Icon name="calendar" size="16" class="mr-2"/>
-                                        {{ selectedDate ? formatDateTime(selectedDate.toString()) : "Wybierz datę wizyty" }}
+                                        <Icon name="calendar" class="mr-2 h-4 w-4"/>
+                                        <span>{{ selectedAppointment.appointment_datetime ? formatDisplayDate(selectedAppointment.appointment_datetime) : 'Wybierz datę' }}</span>
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent class="w-auto p-0 dark:bg-gray-800 dark:border-gray-700">
@@ -874,15 +948,6 @@ tr:last-child td:first-child {
 
 tr:last-child td:last-child {
     border-bottom-right-radius: 0.5rem;
-}
-
-thead th {
-    background-color: #f9fafb;
-    color: #374151;
-    font-weight: 600;
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
 }
 
 tbody td {

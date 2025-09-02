@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\AdminDoctorController;
 use App\Http\Controllers\Api\V1\Admin\AdminProcedureCategoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\PatientAppointmentController;
 
 Route::get('/email/verify', function () {
     return redirect('/#/settings/profile?verified=1');
@@ -22,6 +23,7 @@ Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify']
 Route::post('/email/verification-notification', [VerifyEmailController::class, 'resend'])
     ->middleware(['auth:sanctum', 'throttle:6,1'])
     ->name('verification.send');
+
 
 Route::prefix('v1')->name('v1.')->group(function () {
 
@@ -126,6 +128,11 @@ Route::prefix('v1/admin')
     ->middleware(['auth:sanctum', 'auth.admin'])
     ->name('admin.')
     ->group(function () {
+        Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport'])
+            ->name('appointments.report');
+        Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport']);
+
+
         Route::put('/user/password', [PasswordController::class, 'update'])
             ->name('password.update');
 

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Events\AppointmentScheduled;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\StoreAppointmentRequest; // Upewnij się, że to jest właściwy FormRequest dla pacjenta
+use App\Http\Requests\Api\V1\StoreAppointmentRequest;
+
+// Upewnij się, że to jest właściwy FormRequest dla pacjenta
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,6 +14,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use App\Http\Resources\Api\V1\AppointmentResource;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 
 class PatientAppointmentController extends Controller
 {
@@ -161,4 +164,5 @@ class PatientAppointmentController extends Controller
             ], 500);
         }
     }
+
 }

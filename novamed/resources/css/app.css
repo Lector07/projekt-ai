@@ -8,8 +8,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-
-
 @theme inline {
   --font-sans:
     Instrument Sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
@@ -66,6 +64,30 @@
     --color-nova-primary: #034078;
     --color-nova-accent: #3d98b2;
     --color-nova-light: #fefcfb;
+    --animate-accordion-down:
+    accordion-down 0.2s ease-out;
+    --animate-accordion-up:
+    accordion-up 0.2s ease-out;
+  @keyframes accordion-down {
+  from {
+    height:
+    0;
+    }
+  to {
+    height:
+    var(--reka-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+  from {
+    height:
+    var(--reka-accordion-content-height);
+    }
+  to {
+    height:
+    0;
+    }
+  }
 }
 
 /*
@@ -152,7 +174,6 @@
     --p-select-overlay-border-radius: 0.375rem;
     --p-select-option-border-radius: 0.25rem;
 
-
     --sx-color-primary: theme('colors.blue.500');
     --sx-color-primary-variant: theme('colors.blue.600');
     --sx-color-secondary: theme('colors.gray.500');
@@ -190,7 +211,6 @@
     --fc-button-active-bg-color: #2563eb;
     --fc-button-active-border-color: #2563eb;
 }
-
 
 .dark {
   --background: hsl(0 0% 3.9%);

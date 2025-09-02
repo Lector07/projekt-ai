@@ -24,7 +24,6 @@ class DoctorFactory extends Factory
             'specialization' => fake()->randomElement(['Chirurg Plastyczny', 'Medycyna Estetyczna', 'Dermatolog', 'Fleobolog']),
             'bio' => fake()->sentence(rand(10, 20)),
             'profile_picture_path' => null,
-            'price_modifier' => fake()->randomElement([1.00, 1.10, 1.20, 0.95]),
             'user_id' => $userId,
         ];
     }
