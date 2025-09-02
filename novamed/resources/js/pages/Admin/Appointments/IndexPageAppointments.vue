@@ -442,10 +442,10 @@ const breadcrumbs: BreadcrumbItem[] = [
         <Toast/>
 
         <div class="container mx-auto px-2 py-4">
-            <h1 class="text-2xl font-bold mb-1 dark:text-white">Zarządzanie Wizytami</h1>
+            <h1 class="text-2xl font-bold mb-1 ml-3 dark:text-white">Zarządzanie Wizytami</h1>
 
             <Button @click="openReportConfig"
-                    class="bg-nova-primary hover:bg-nova-accent mt-2 mb-2 dark:bg-green-700 dark:hover:bg-green-800 text-white">
+                    class="bg-nova-primary hover:bg-nova-accent mt-2 ml-3 mb-2 dark:bg-green-700 dark:hover:bg-green-800 text-white">
                 <ClipboardMinus />
                 Generuj Raport
             </Button>

@@ -125,59 +125,71 @@ class AdminAppointmentController extends Controller
 
     public function generateAppointmentsReport(Request $request)
     {
-        // 1. Walidacja danych wejściowych (konfiguracji i filtrów)
         $validated = $request->validate([
             'config' => 'required|array',
             'filters' => 'nullable|array',
         ]);
 
-        // 2. Pobieranie i filtrowanie danych (logika z Twojej metody index)
-        $query = Appointment::query()->with(['patient', 'doctor', 'procedure']);
-
+        $query = \App\Models\Appointment::query()->with(['patient', 'doctor', 'procedure']);
         $filters = $validated['filters'] ?? [];
 
-        if (!empty($filters['doctor_name'])) {
-            $doctorNameTerm = '%' . $filters['doctor_name'] . '%';
-            $query->whereHas('doctor', function($q) use ($doctorNameTerm) {
-                $q->where('first_name', 'ilike', $doctorNameTerm)
-                    ->orWhere('last_name', 'ilike', $doctorNameTerm);
-            });
-        }
-        if (!empty($filters['patient_name'])) {
-            $patientNameTerm = '%' . $filters['patient_name'] . '%';
-            $query->whereHas('patient', function($q) use ($patientNameTerm) {
-                $q->where('name', 'ilike', $patientNameTerm);
-            });
-        }
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        if (!empty($filters['date_from'])) {
-            $query->where('appointment_datetime', '>=', Carbon::parse($filters['date_from'])->startOfDay());
+
+        if (!empty($filters['patient_name'])) {
+            $query->whereHas('patient', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['patient_name'] . '%');
+            });
         }
+
+        if (!empty($filters['doctor_name'])) {
+            $query->whereHas('doctor', function ($q) use ($filters) {
+                $name = $filters['doctor_name'];
+                $q->where('first_name', 'like', '%' . $name . '%')
+                    ->orWhere('last_name', 'like', '%' . $name . '%');
+            });
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('appointment_datetime', '>=', $filters['date_from']);
+        }
+
         if (!empty($filters['date_to'])) {
-            $query->where('appointment_datetime', '<=', Carbon::parse($filters['date_to'])->endOfDay());
+            $query->whereDate('appointment_datetime', '<=', $filters['date_to']);
         }
 
         $appointments = $query->orderBy('appointment_datetime', 'desc')->get();
 
-        // 3. Użycie AppointmentResource do przygotowania danych dla raportu
-        $dataForReport = \App\Http\Resources\Api\V1\AppointmentResource::collection($appointments)->resolve();
-        $jsonData = json_encode($dataForReport);
+        $dataForReport = $appointments->map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'appointment_datetime' => $appointment->appointment_datetime,
+                'status_translated' => $this->translateStatus($appointment->status),
+                'patient_name' => $appointment->patient ? $appointment->patient->name : '',
+                'doctor_full_name' => $appointment->doctor ? ($appointment->doctor->first_name . ' ' . $appointment->doctor->last_name) : '',
+                'procedure_name' => $appointment->procedure ? $appointment->procedure->name : '',
+                'procedure_base_price' => $appointment->procedure ? $appointment->procedure->base_price : 0,
+                'patient_notes' => $appointment->patient_notes,
+                'admin_notes' => $appointment->clinic_notes ?? '',
+                'created_at' => $appointment->created_at,
+                'updated_at' => $appointment->updated_at,
+            ];
+        });
 
-        // 4. Przygotowanie payloadu dla serwisu Javy
+        $jsonData = $dataForReport->toJson();
+
+        // Przygotowanie payloadu dla serwisu Javy (bez zmian)
         $payload = [
             'config' => $validated['config'],
             'jsonData' => $jsonData
         ];
 
-        // 5. Wysyłka do serwisu raportującego i zwrot odpowiedzi
+        // Wysyłka do serwisu raportującego (bez zmian)
         try {
             $reportServiceUrl = 'http://localhost:8080/api/generate-dynamic-report';
-
             $response = Http::withBody(json_encode($payload), 'application/json')
-                ->timeout(30)
-                ->post($reportServiceUrl);
+                ->timeout(30)->post($reportServiceUrl);
 
             if ($response->successful()) {
                 return response($response->body(), 200, [
@@ -205,6 +217,8 @@ class AdminAppointmentController extends Controller
                 return 'Potwierdzona';
             case 'completed':
                 return 'Zakończona';
+            case 'cancelled':
+                return 'Anulowana';
             case 'cancelled_by_patient':
                 return 'Odwołana przez pacjenta';
             case 'cancelled_by_clinic':
