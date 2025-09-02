@@ -694,7 +694,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <span>Format</span>
                                 </div>
                                 <div v-for="(col, index) in reportConfig.columns" :key="index" class="grid grid-cols-5 gap-x-4 gap-y-2 items-center mt-2">
-                                    <Checkbox v-model:checked="col.visible" />
+                                    <Checkbox v-model="col.visible" />
                                     <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
                                     <Input v-model.number="col.width" type="number" class="text-xs h-8"/>
                                     <Input v-model="col.format" class="text-xs h-8" placeholder="np. #,##0.00"/>
@@ -720,7 +720,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     </div>
                                     <div class="flex justify-between items-center mt-2">
                                         <div class="flex items-center space-x-2">
-                                            <Checkbox :id="`group-footer-${index}`" v-model:checked="group.showFooter" />
+                                            <Checkbox :id="`group-footer-${index}`" v-model="group.showFooter" />
                                             <label :for="`group-footer-${index}`" class="text-sm">Pokaż podsumowanie w nagłówku</label>
                                         </div>
                                         <Button variant="destructive" size="sm" @click="removeGroup(index)">Usuń</Button>
