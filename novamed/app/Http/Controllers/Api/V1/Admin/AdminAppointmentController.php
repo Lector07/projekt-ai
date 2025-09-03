@@ -159,7 +159,7 @@ class AdminAppointmentController extends Controller
             $query->whereDate('appointment_datetime', '<=', $filters['date_to']);
         }
 
-        $appointments = $query->orderBy('appointment_datetime', 'desc')->get();
+        $appointments = $query->get();
 
         $dataForReport = $appointments->map(function ($appointment) {
             return [
@@ -179,13 +179,11 @@ class AdminAppointmentController extends Controller
 
         $jsonData = $dataForReport->toJson();
 
-        // Przygotowanie payloadu dla serwisu Javy (bez zmian)
         $payload = [
             'config' => $validated['config'],
             'jsonData' => $jsonData
         ];
 
-        // Wysyłka do serwisu raportującego (bez zmian)
         try {
             $reportServiceUrl = 'http://localhost:8080/api/generate-dynamic-report';
             $response = Http::withBody(json_encode($payload), 'application/json')

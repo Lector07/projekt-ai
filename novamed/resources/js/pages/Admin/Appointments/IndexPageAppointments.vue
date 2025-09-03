@@ -111,6 +111,7 @@ const filters = reactive<AppointmentFilters>({
     date_to: '',
 });
 
+
 const statuses = [
     {value: '', label: 'Wszystkie statusy'},
     {value: 'scheduled', label: 'Zarezerwowana'},
@@ -164,7 +165,7 @@ const reportConfig = reactive({
         field: f.field,
         header: f.header,
         visible: ['id', 'appointment_datetime', 'status_translated', 'doctor_full_name', 'procedure_name', 'procedure_base_price'].includes(f.field),
-        width: -1, // -1 oznacza auto
+        width: -1,
         format: f.type === 'numeric' ? '#,##0.00' : (f.type === 'date' ? 'yyyy-MM-dd HH:mm' : null),
         groupCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
         reportCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
@@ -192,7 +193,6 @@ const generateReport = async () => {
     reportLoading.value = true;
     isReportConfigOpen.value = false;
 
-    // Przygotuj konfigurację do wysłania - odfiltruj puste grupy
     const finalConfig = JSON.parse(JSON.stringify(reportConfig)); // Głęboka kopia
     finalConfig.groups = finalConfig.groups.filter(g => g.field);
     finalConfig.columns.forEach(c => {
@@ -639,9 +639,13 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
                                     <Button
-                                        class="w-9 h-9 p-0"
-                                        :variant="item.value === meta.current_page ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'ghost'"
-                                        @click="changePage(item.value)"
+                                        :variant="meta.current_page === item.value ? 'default' : 'outline'"
+                                        :class="
+                            meta.current_page === item.value
+                                ? 'bg-nova-primary hover:bg-nova-accent text-white'
+                                : 'dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                        "
+                                        size="sm"
                                     >
                                         {{ item.value }}
                                     </Button>
@@ -678,7 +682,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <Input id="report-title" v-model="reportConfig.title" class="col-span-3" />
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <Checkbox id="page-footer" v-model:checked="reportConfig.pageFooterEnabled" />
+                                    <Checkbox id="page-footer" class="data-[state=checked]:bg-nova-accent data-[state=checked]:border-nova-accent data-[state=checked]:text-white" v-model:checked="reportConfig.pageFooterEnabled" />
                                     <label for="page-footer" class="text-sm font-medium">Dołącz stopkę z numeracją stron</label>
                                 </div>
                             </AccordionContent>
@@ -694,7 +698,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     <span>Format</span>
                                 </div>
                                 <div v-for="(col, index) in reportConfig.columns" :key="index" class="grid grid-cols-5 gap-x-4 gap-y-2 items-center mt-2">
-                                    <Checkbox v-model="col.visible" />
+                                    <Checkbox v-model="col.visible" class="data-[state=checked]:bg-nova-accent data-[state=checked]:border-nova-accent data-[state=checked]:text-white"/>
                                     <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
                                     <Input v-model.number="col.width" type="number" class="text-xs h-8"/>
                                     <Input v-model="col.format" class="text-xs h-8" placeholder="np. #,##0.00"/>
@@ -720,20 +724,20 @@ const breadcrumbs: BreadcrumbItem[] = [
                                     </div>
                                     <div class="flex justify-between items-center mt-2">
                                         <div class="flex items-center space-x-2">
-                                            <Checkbox :id="`group-footer-${index}`" v-model="group.showFooter" />
+                                            <Checkbox :id="`group-footer-${index}`"class="data-[state=checked]:bg-nova-accent data-[state=checked]:border-nova-accent data-[state=checked]:text-white" v-model="group.showFooter" />
                                             <label :for="`group-footer-${index}`" class="text-sm">Pokaż podsumowanie w nagłówku</label>
                                         </div>
                                         <Button variant="destructive" size="sm" @click="removeGroup(index)">Usuń</Button>
                                     </div>
                                 </div>
-                                <Button @click="addGroup" class="mt-2 w-full">Dodaj nową grupę</Button>
+                                <Button @click="addGroup" class="mt-2 w-full bg-nova-primary hover:bg-nova-accent text-white">Dodaj nową grupę</Button>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
                 </div>
 
                 <DialogFooter>
-                    <Button @click="generateReport" :disabled="reportLoading">
+                    <Button @click="generateReport" :disabled="reportLoading" class="bg-nova-primary hover:bg-nova-accent text-white">
                         <Icon v-if="reportLoading" name="loader-2" class="animate-spin mr-2" size="16"/>
                         <span v-else>Generuj PDF</span>
                     </Button>
@@ -741,7 +745,6 @@ const breadcrumbs: BreadcrumbItem[] = [
             </DialogContent>
         </Dialog>
 
-        <!-- Okno dialogowe do edycji wizyty (istniejący kod) -->
         <div v-if="showEditAppointmentForm && selectedAppointment"
              class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md max-h-[90vh] flex flex-col shadow-lg">
@@ -753,7 +756,6 @@ const breadcrumbs: BreadcrumbItem[] = [
                     </Button>
                 </div>
 
-                <!-- Zawartość z przewijaniem -->
                 <div class="overflow-y-auto p-3 sm:p-4 flex-grow">
                     <div class="space-y-3 sm:space-y-4">
                         <div class="space-y-1">
