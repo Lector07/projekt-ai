@@ -123,6 +123,8 @@ const statuses = [
     {value: 'no_show', label: 'Nieobecność'},
 ];
 
+const statusOptions = statuses.filter(s => s.value !== '');
+
 const allPatients = ref<Patient[]>([]);
 const allDoctors = ref<Doctor[]>([]);
 const patientsLoading = ref(false);
@@ -689,7 +691,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </AccordionItem>
 
                         <AccordionItem value="item-2">
-                            <AccordionTrigger>Kolumny</AccordionTrigger>
+                            <AccordionTrigger class="mt-2 mb-2">Kolumny</AccordionTrigger>
                             <AccordionContent>
                                 <div class="grid grid-cols-5 gap-x-4 gap-y-2 items-center font-semibold text-sm">
                                     <span>Widoczna</span>
@@ -707,7 +709,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </AccordionItem>
 
                         <AccordionItem value="item-3">
-                            <AccordionTrigger>Grupowanie</AccordionTrigger>
+                            <AccordionTrigger class="mt-2 mb-2">Grupowanie</AccordionTrigger>
                             <AccordionContent>
                                 <div v-for="(group, index) in reportConfig.groups" :key="index" class="p-2 border rounded-md mb-2">
                                     <div class="grid grid-cols-2 gap-4">
