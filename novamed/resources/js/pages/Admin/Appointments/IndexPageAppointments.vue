@@ -134,14 +134,25 @@ const openEditForm = async (appointment: Appointment) => {
     appointmentFormLoading.value = true;
     try {
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
+        console.log('Odpowiedź z API:', response);
+        if (!response.data || !response.data.data) {
+            showErrorToast('Błąd', 'Nie udało się pobrać szczegółów wizyty');
+            closeEditForm();
+            return;
+        }
         selectedAppointment.value = response.data.data;
-
         selectedAppointment.value.procedure_id = selectedAppointment.value.procedure.id;
         selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
         selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
         if (selectedAppointment.value.appointment_datetime) {
-            const dateStr = selectedAppointment.value.appointment_datetime.split(' ')[0];
-            selectedDate.value = parseDate(dateStr);
+            // Upewnij się, że parsujesz tylko datę bez czasu
+            const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
+            try {
+                selectedDate.value = parseDate(dateStr);
+            } catch (e) {
+                console.error('Błąd parsowania daty:', e, dateStr);
+                selectedDate.value = undefined;
+            }
         }
     } catch (error) {
         console.error("Błąd pobierania szczegółów wizyty:", error);

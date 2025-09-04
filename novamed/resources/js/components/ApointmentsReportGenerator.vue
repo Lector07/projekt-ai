@@ -197,7 +197,7 @@ watch(() => props.modelValue, (newValue) => {
                                                 <template #item="{ element: group, index }">
                                                     <div class="p-2 border rounded-md mb-2 bg-gray-50 dark:bg-gray-800 flex items-start space-x-2">
                                                         <div class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
-                                                            <Icon name="grip-vertical" size="18" />
+                                                            <Icon name="grip" size="18" />
                                                         </div>
                                                         <div class="flex-grow">
                                                             <div class="grid grid-cols-2 gap-4">
