@@ -212,7 +212,7 @@ watch(() => props.modelValue, (newValue) => {
                                 <AccordionItem value="item-3">
                                     <AccordionTrigger>Grupowanie (przeciągnij)</AccordionTrigger>
                                     <AccordionContent class="pt-4">
-                                        <ScrollArea class="max-h-74 overflow-y-auto">
+                                        <ScrollArea class="max-h-64 overflow-y-auto">
                                             <draggable v-model="reportConfig.groups" item-key="index" handle=".drag-handle" ghost-class="ghost-class">
                                                 <template #item="{ element: group, index }">
                                                     <div class="p-2 border rounded-md mb-2 bg-gray-50 dark:bg-gray-800 flex items-start space-x-2">
