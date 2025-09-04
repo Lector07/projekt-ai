@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
-import { reactiveOmit } from '@vueuse/core'
+import { reactiveOmit, useVModel } from '@vueuse/core'
 import {
   SwitchRoot,
   type SwitchRootEmits,
@@ -14,13 +14,19 @@ const props = defineProps<SwitchRootProps & { class?: HTMLAttributes['class'] }>
 
 const emits = defineEmits<SwitchRootEmits>()
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, 'class', 'checked', 'defaultChecked')
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+const modelValue = useVModel(props, 'checked', emits, {
+  passive: true,
+  defaultValue: props.defaultChecked,
+})
 </script>
 
 <template>
   <SwitchRoot
+    v-model:checked="modelValue"
     data-slot="switch"
     v-bind="forwarded"
     :class="cn(

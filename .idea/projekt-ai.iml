@@ -122,6 +122,8 @@
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/webmozart/assert" />
       <excludeFolder url="file://$MODULE_DIR$/novamed/vendor/_laravel_idea" />
+      <excludeFolder url="file://$MODULE_DIR$/novamed/storage/app" />
+      <excludeFolder url="file://$MODULE_DIR$/novamed/storage/framework" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
