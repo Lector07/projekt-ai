@@ -66,6 +66,10 @@ class AdminDoctorController extends Controller
 
             if (isset($validated['user_id']) && !empty($validated['user_id'])) {
                 $user = User::findOrFail($validated['user_id']);
+                if ($user->role !== 'doctor') {
+                    $user->role = 'doctor';
+                    $user->save();
+                }
                 $doctor->user()->associate($user);
             }
             else if (isset($validated['email']) && isset($validated['password'])) {
@@ -121,6 +125,12 @@ class AdminDoctorController extends Controller
     public function destroy(Doctor $doctor): Response
     {
         $this->authorize('delete', $doctor);
+
+        $user = $doctor->user;
+        if ($user) {
+            $user->role = 'patient';
+            $user->save();
+        }
 
         if ($doctor->profile_picture_path) {
             Storage::disk('public')->delete($doctor->profile_picture_path);

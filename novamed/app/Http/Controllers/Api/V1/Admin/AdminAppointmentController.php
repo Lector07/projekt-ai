@@ -28,22 +28,22 @@ class AdminAppointmentController extends Controller
             ->with(['patient', 'doctor.user', 'procedure']);
 
         if ($request->has('doctor_name') && !empty($request->doctor_name)) {
-            $doctorNameTerm = '%' . $request->doctor_name . '%';
+            $doctorNameTerm = '%' . strtolower($request->doctor_name) . '%';
             $query->whereHas('doctor', function($q) use ($doctorNameTerm) {
-                $q->where('first_name', 'ilike', $doctorNameTerm)
-                    ->orWhere('last_name', 'ilike', $doctorNameTerm)
+                $q->whereRaw('LOWER(first_name) LIKE ?', [$doctorNameTerm])
+                    ->orWhereRaw('LOWER(last_name) LIKE ?', [$doctorNameTerm])
                     ->orWhereHas('user', function($userDoctorQuery) use ($doctorNameTerm) {
-                        $userDoctorQuery->where('name', 'ilike', $doctorNameTerm)
-                            ->orWhere('email', 'ilike', $doctorNameTerm);
+                        $userDoctorQuery->whereRaw('LOWER(name) LIKE ?', [$doctorNameTerm])
+                            ->orWhereRaw('LOWER(email) LIKE ?', [$doctorNameTerm]);
                     });
             });
         }
 
         if ($request->has('patient_name') && !empty($request->patient_name)) {
-            $patientNameTerm = '%' . $request->patient_name . '%';
+            $patientNameTerm = '%' . strtolower($request->patient_name) . '%';
             $query->whereHas('patient', function($q) use ($patientNameTerm) {
-                $q->where('name', 'ilike', $patientNameTerm)
-                    ->orWhere('email', 'ilike', $patientNameTerm);
+                $q->whereRaw('LOWER(name) LIKE ?', [$patientNameTerm])
+                    ->orWhereRaw('LOWER(email) LIKE ?', [$patientNameTerm]);
             });
         }
 
@@ -56,7 +56,7 @@ class AdminAppointmentController extends Controller
         }
 
         if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', 'ilike', $request->status);
+            $query->whereRaw('LOWER(status) = ?', [strtolower($request->status)]);
         }
 
         $query->orderBy('id', 'desc');

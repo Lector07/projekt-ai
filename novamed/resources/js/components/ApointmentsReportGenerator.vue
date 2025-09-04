@@ -3,7 +3,6 @@ import { ref, reactive, watch, computed } from 'vue';
 import axios from 'axios';
 import draggable from 'vuedraggable';
 
-// Importy komponentów UI
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,7 +57,7 @@ const reportConfig = reactive({
         format: f.type === 'numeric' ? '#,##0.00' : (f.type === 'date' ? 'yyyy-MM-dd HH:mm' : null),
         groupCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
     })),
-    groups: [],
+    groups: [] as Array<{ field: string; label: string; showFooter: boolean }>,
     pageFooterEnabled: true,
 });
 
@@ -74,7 +73,6 @@ const addGroup = () => {
         const defaultField = availableFields[0];
         reportConfig.groups.push({
             field: defaultField.field,
-            label: `"${defaultField.header}: " + $F{${defaultField.field}}`,
             showFooter: false
         });
     }
@@ -89,7 +87,17 @@ const refreshPreview = async () => {
     if (currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
 
     const finalConfig = JSON.parse(JSON.stringify(reportConfig));
-    finalConfig.groups = finalConfig.groups.filter(g => g.field);
+    finalConfig.groups = finalConfig.groups
+        .filter((g: { field: string }) => g.field)
+        .map((g: { field: string; showFooter: boolean }) => {
+            const fieldDef = availableFields.find(f => f.field === g.field);
+            const header = fieldDef ? fieldDef.header : g.field;
+            return {
+                ...g,
+                label: `"${header}: " + $F{${g.field}}`
+            };
+        });
+
 
     try {
         const response = await axios.post('/api/v1/admin/appointments/report', {
@@ -143,56 +151,68 @@ watch(() => props.modelValue, (newValue) => {
             <div class="flex-grow min-h-0">
                 <ResizablePanelGroup direction="horizontal" class="h-full w-full">
                     <ResizablePanel :default-size="80" :min-size="30">
-                        <div class="flex flex-col h-full p-4 pr-0">
-                            <ScrollArea class="flex-grow pr-4">
-                                <Accordion type="single" collapsible class="w-full" default-value="item-1">
-                                    <AccordionItem value="item-1">
-                                        <AccordionTrigger>Opcje Główne</AccordionTrigger>
-                                        <AccordionContent class="space-y-4 pt-4">
+                        <div class="flex flex-col h-full p-4 pr-2 ">
+                            <Accordion type="single" collapsible class="w-full" default-value="item-1">
+                                <AccordionItem value="item-1">
+                                    <AccordionTrigger>Opcje Główne</AccordionTrigger>
+                                    <AccordionContent class="pt-4">
+                                        <ScrollArea class="max-h-64 overflow-y-auto">
                                             <div class="grid grid-cols-4 items-center gap-4">
                                                 <Label for="report-title" class="text-right">Tytuł Raportu</Label>
                                                 <Input id="report-title" v-model="reportConfig.title" class="col-span-3" />
                                             </div>
-                                            <div class="grid grid-cols-4 items-center gap-4">
+                                            <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
                                                 <Label for="orientation-checkbox" class="text-right">Orientacja</Label>
                                                 <div class="col-span-3 flex items-center space-x-2">
-                                                    <Checkbox id="orientation-checkbox" v-model:checked="isLandscape" />
+                                                    <Checkbox id="orientation-checkbox" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" v-model:checked="isLandscape" />
                                                     <Label for="orientation-checkbox">Pozioma</Label>
                                                 </div>
                                             </div>
-                                            <div class="grid grid-cols-4 items-center gap-4">
+                                            <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
                                                 <Label class="text-right">Stopka</Label>
                                                 <div class="flex items-center space-x-2 col-span-3">
-                                                    <Checkbox id="page-footer" v-model:checked="reportConfig.pageFooterEnabled" />
+                                                    <Checkbox id="page-footer" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" v-model:checked="reportConfig.pageFooterEnabled" />
                                                     <label for="page-footer" class="text-sm font-medium leading-none">Dołącz stopkę</label>
                                                 </div>
                                             </div>
-                                            <div v-if="reportConfig.pageFooterEnabled" class="grid grid-cols-4 items-start gap-4">
+                                            <div v-if="reportConfig.pageFooterEnabled" class="grid grid-cols-4 mt-2 items-start gap-4">
                                                 <Label for="footer-text" class="text-right pt-2">Tekst w stopce</Label>
                                                 <textarea id="footer-text" v-model="reportConfig.footerLeftText" class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" rows="2"></textarea>
                                             </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                    <AccordionItem value="item-2">
-                                        <AccordionTrigger>Kolumny</AccordionTrigger>
-                                        <AccordionContent class="pt-4">
-                                            <div class="grid grid-cols-5 gap-x-4 gap-y-2 items-center font-semibold text-sm mb-2">
+                                        </ScrollArea>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="item-2">
+                                    <AccordionTrigger>Kolumny</AccordionTrigger>
+                                    <AccordionContent class="pt-4">
+                                        <ScrollArea class="max-h-66 overflow-y-auto">
+                                            <div class="grid grid-cols-5 gap-x-4 gap-y-2 items-center font-semibold text-sm mb-2 ml-20">
+
                                                 <span>Widoczna</span>
-                                                <span class="col-span-2">Nagłówek</span>
+                                                <span class="col-span-2 ml-2">Nagłówek</span>
                                                 <span class="text-center">Szer.</span>
-                                                <span>Format</span>
+                                                <span class="text-center">Format</span>
                                             </div>
-                                            <div v-for="(col, index) in reportConfig.columns" :key="index" class="grid grid-cols-5 gap-x-4 gap-y-2 items-center mt-2">
-                                                <Checkbox v-model:checked="col.visible" />
-                                                <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
-                                                <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center" placeholder="auto"/>
-                                                <Input v-model="col.format" class="text-xs h-8" placeholder="np. #,##0.00"/>
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                    <AccordionItem value="item-3">
-                                        <AccordionTrigger>Grupowanie (przeciągnij)</AccordionTrigger>
-                                        <AccordionContent class="pt-4">
+                                            <draggable v-model="reportConfig.columns" item-key="field" handle=".drag-handle" ghost-class="ghost-class">
+                                                <template #item="{ element: col, index }">
+                                                    <div class="grid grid-cols-6 gap-x-1 gap-y-2 items-center mt-2">
+                                                        <div class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                                                            <Icon name="grip" size="18" />
+                                                        </div>
+                                                        <Checkbox v-model:checked="col.visible" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" />
+                                                        <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
+                                                        <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center" placeholder="auto"/>
+                                                        <Input v-model="col.format" class="text-xs h-8" placeholder="np. #,##0.00"/>
+                                                    </div>
+                                                </template>
+                                            </draggable>
+                                        </ScrollArea>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="item-3">
+                                    <AccordionTrigger>Grupowanie (przeciągnij)</AccordionTrigger>
+                                    <AccordionContent class="pt-4">
+                                        <ScrollArea class="max-h-74 overflow-y-auto">
                                             <draggable v-model="reportConfig.groups" item-key="index" handle=".drag-handle" ghost-class="ghost-class">
                                                 <template #item="{ element: group, index }">
                                                     <div class="p-2 border rounded-md mb-2 bg-gray-50 dark:bg-gray-800 flex items-start space-x-2">
@@ -207,10 +227,6 @@ watch(() => props.modelValue, (newValue) => {
                                                                         <option v-for="field in availableFields" :key="field.field" :value="field.field">{{ field.header }}</option>
                                                                     </select>
                                                                 </div>
-                                                                <div>
-                                                                    <Label :for="`group-label-${index}`">Wyrażenie nagłówka</Label>
-                                                                    <Input v-model="group.label" :id="`group-label-${index}`" placeholder='"Nagłówek: " + $F{...}' class="mt-1"/>
-                                                                </div>
                                                             </div>
                                                             <div class="flex justify-between items-center mt-2">
                                                                 <div class="flex items-center space-x-2">
@@ -223,11 +239,11 @@ watch(() => props.modelValue, (newValue) => {
                                                     </div>
                                                 </template>
                                             </draggable>
-                                            <Button @click="addGroup" class="mt-2 w-full">Dodaj nową grupę</Button>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                </Accordion>
-                            </ScrollArea>
+                                            <Button @click="addGroup" class="mt-2 w-full bg-nova-primary hover:bg-nova-accent">Dodaj nową grupę</Button>
+                                        </ScrollArea>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </div>
                     </ResizablePanel>
                     <ResizableHandle with-handle />
