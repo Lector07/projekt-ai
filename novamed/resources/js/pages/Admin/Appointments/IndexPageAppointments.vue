@@ -315,7 +315,7 @@ const getStatusClass = (status: string) => {
 
 onMounted(() => {
     loadAppointments();
-    loadAllDependencies(); // Ładuj dane do edycji w tle, tylko raz
+    loadAllDependencies();
 });
 </script>
 

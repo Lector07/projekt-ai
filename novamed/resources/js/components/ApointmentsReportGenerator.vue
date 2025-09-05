@@ -57,9 +57,31 @@ const reportConfig = reactive({
         format: f.type === 'numeric' ? '#,##0.00' : (f.type === 'date' ? 'yyyy-MM-dd HH:mm' : null),
         groupCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
     })),
-    groups: [] as Array<{ field: string; label: string; showFooter: boolean }>,
+    groups: [] as Array<{ field: string; showFooter: boolean }>,
     pageFooterEnabled: true,
+
+    formattingOptions: {
+        zebraStripes: true,
+        generateBookmarks: false,
+        highlightRules: [
+            {
+                field: 'status_translated',
+                operator: 'EQUALS',
+                value: 'Anulowana',
+                color: '#FFF0F0',
+                id: `rule-${Date.now()}`
+            }
+        ]
+    }
 });
+
+const highlightOperators= [
+    {value: 'EQUALS', label: 'równa się'},
+    {value: 'NOT_EQUALS', label: 'nie równa się'},
+    {value: 'CONTAINS', label: 'zawiera'},
+    {value: 'GREATER_THAN', label: 'większe niż'},
+    {value: 'LESS_THAN', label: 'mniejsze niż'},
+]
 
 const isLandscape = computed({
   get: () => reportConfig.orientation === 'LANDSCAPE',
@@ -82,11 +104,41 @@ const removeGroup = (index: number) => {
     reportConfig.groups.splice(index, 1);
 };
 
+function normalizeColor(color: string): string {
+    if (!color) return '#FFFFFF';
+    if (color.startsWith('#')) color = color.slice(1);
+    if (color.length === 3) {
+        color = color.split('').map(c => c + c).join('');
+    }
+    if (color.length !== 6) return '#FFFFFF';
+    return `#${color.toUpperCase()}`;
+}
+
 const refreshPreview = async () => {
     reportLoading.value = true;
     if (currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
 
+    reportConfig.formattingOptions.highlightRules.forEach(rule => {
+        rule.color = normalizeColor(rule.color);
+    });
+
     const finalConfig = JSON.parse(JSON.stringify(reportConfig));
+
+    if (finalConfig?.formattingOptions?.highlightRules) {
+        finalConfig.formattingOptions.highlightRules = finalConfig.formattingOptions.highlightRules.map((r: any) => {
+            const fieldDef = availableFields.find(f => f.field === r.field);
+            const isNumeric = fieldDef?.type === 'numeric';
+            const isNotContains = r.operator !== 'CONTAINS';
+            if (isNumeric && isNotContains) {
+                const parsed = typeof r.value === 'number'
+                    ? r.value
+                    : parseFloat(String(r.value).replace(/\s/g, '').replace(',', '.'));
+                if (!Number.isNaN(parsed)) return { ...r, value: parsed };
+            }
+            return r;
+        });
+    }
+
     finalConfig.groups = finalConfig.groups
         .filter((g: { field: string }) => g.field)
         .map((g: { field: string; showFooter: boolean }) => {
@@ -129,6 +181,20 @@ const downloadReport = () => {
     document.body.appendChild(link);
     link.click();
     link.remove();
+};
+
+const addHighlightRule = () => {
+    reportConfig.formattingOptions.highlightRules.push({
+        field: 'procedure_base_price',
+        operator: 'GREATER_THAN',
+        value: '1000',
+        color: '#FFF0F0',
+        id: `rule-${Date.now()}`
+    });
+};
+
+const removeHighlightRule = (index: number) => {
+    reportConfig.formattingOptions.highlightRules.splice(index, 1);
 };
 
 watch(() => props.modelValue, (newValue) => {
@@ -240,6 +306,56 @@ watch(() => props.modelValue, (newValue) => {
                                                 </template>
                                             </draggable>
                                             <Button @click="addGroup" class="mt-2 w-full bg-nova-primary hover:bg-nova-accent">Dodaj nową grupę</Button>
+                                        </ScrollArea>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="item-4">
+                                    <AccordionTrigger>Formatowanie i Eksport</AccordionTrigger>
+                                    <AccordionContent class="space-y-4 pt-4">
+                                        <ScrollArea class="max-h-54 overflow-y-auto">
+
+                                        <div class="flex items-center space-x-6">
+                                            <div class="flex items-center space-x-2">
+                                                <Checkbox id="zebra-stripes" v-model:checked="reportConfig.formattingOptions.zebraStripes" />
+                                                <label for="zebra-stripes" class="text-sm font-medium">Paski zebry</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <Checkbox id="generate-bookmarks" v-model:checked="reportConfig.formattingOptions.generateBookmarks" />
+                                                <label for="generate-bookmarks" class="text-sm font-medium">Generuj zakładki PDF</label>
+                                            </div>
+                                        </div>
+                                        <div class="pt-4 border-t dark:border-gray-700">
+                                            <Label class="font-semibold">Reguły podświetlania wierszy</Label>
+                                            <div v-for="(rule, index) in reportConfig.formattingOptions.highlightRules" :key="rule.id" class="p-2 border rounded-md mt-2 space-y-2 bg-gray-50 dark:bg-gray-800">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-sm font-bold">JEŚLI</span>
+                                                    <select v-model="rule.field" class="flex-1 rounded-md border-input bg-background px-2 py-1 text-sm">
+                                                        <option v-for="field in availableFields" :key="field.field" :value="field.field">{{ field.header }}</option>
+                                                    </select>
+                                                    <select v-model="rule.operator" class="rounded-md border-input bg-background px-2 py-1 text-sm">
+                                                        <option v-for="op in highlightOperators" :key="op.value" :value="op.value">{{ op.label }}</option>
+                                                    </select>
+                                                    <template v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
+                                                        <Input v-model.number="rule.value" type="number" step="any" placeholder="Wartość liczbowa" class="flex-1 text-sm h-8" />
+                                                    </template>
+                                                    <template v-else>
+                                                        <Input v-model="rule.value" placeholder="Wartość" class="flex-1 text-sm h-8" />
+                                                    </template>
+                                                </div>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-sm font-bold">WTEDY</span>
+                                                    <Label for="color-picker" class="text-sm">kolor tła:</Label>
+                                                    <Input v-model="rule.color" type="color" id="color-picker" class="h-8 w-12 p-1"/>
+                                                    <div class="flex-grow"></div>
+                                                    <Button variant="destructive" size="icon" @click="removeHighlightRule(index)">
+                                                        <Icon name="trash" size="14"/>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <Button @click="addHighlightRule" class="mt-2 w-full" variant="outline">
+                                                <Icon name="plus" class="mr-2" size="8"/> Dodaj regułę podświetlania
+                                            </Button>
+                                        </div>
                                         </ScrollArea>
                                     </AccordionContent>
                                 </AccordionItem>
