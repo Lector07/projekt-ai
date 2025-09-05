@@ -373,7 +373,7 @@ watch(() => props.modelValue, (newValue) => {
                         </div>
                     </ResizablePanel>
                     <ResizableHandle with-handle />
-                    <ResizablePanel :default-size="70" min-size="30">
+                    <ResizablePanel :default-size="70" :min-size="30">
                         <div class="flex flex-col h-full items-center justify-center bg-gray-200 dark:bg-gray-800">
                             <div v-if="reportLoading" class="flex flex-col items-center text-gray-500">
                                 <Icon name="loader-2" class="animate-spin h-12 w-12"/>
