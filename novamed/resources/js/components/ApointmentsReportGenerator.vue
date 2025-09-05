@@ -326,11 +326,11 @@ watch(() => props.modelValue, (newValue) => {
 
                                         <div class="flex items-center space-x-6">
                                             <div class="flex items-center space-x-2">
-                                                <Checkbox id="zebra-stripes" v-model:checked="reportConfig.formattingOptions.zebraStripes" />
+                                                <Checkbox id="zebra-stripes" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" v-model:checked="reportConfig.formattingOptions.zebraStripes" />
                                                 <label for="zebra-stripes" class="text-sm font-medium">Paski zebry</label>
                                             </div>
                                             <div class="flex items-center space-x-2">
-                                                <Checkbox id="generate-bookmarks" v-model:checked="reportConfig.formattingOptions.generateBookmarks" />
+                                                <Checkbox id="generate-bookmarks" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" v-model:checked="reportConfig.formattingOptions.generateBookmarks" />
                                                 <label for="generate-bookmarks" class="text-sm font-medium">Generuj zakładki PDF</label>
                                             </div>
                                         </div>
