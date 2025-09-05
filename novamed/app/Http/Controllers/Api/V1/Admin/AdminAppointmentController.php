@@ -169,7 +169,8 @@ class AdminAppointmentController extends Controller
                 'patient_name' => $appointment->patient ? $appointment->patient->name : '',
                 'doctor_full_name' => $appointment->doctor ? ($appointment->doctor->first_name . ' ' . $appointment->doctor->last_name) : '',
                 'procedure_name' => $appointment->procedure ? $appointment->procedure->name : '',
-                'procedure_base_price' => $appointment->procedure ? $appointment->procedure->base_price : 0,
+                // rzutowanie na float w JSON, by uniknąć porównań leksykalnych po stronie Javy
+                'procedure_base_price' => $appointment->procedure ? (float) str_replace(',', '.', (string) $appointment->procedure->base_price) : 0.0,
                 'patient_notes' => $appointment->patient_notes,
                 'admin_notes' => $appointment->clinic_notes ?? '',
                 'created_at' => $appointment->created_at,
@@ -179,8 +180,34 @@ class AdminAppointmentController extends Controller
 
         $jsonData = $dataForReport->toJson();
 
+        // Kopia konfigu i konwersja wartości reguł na liczby dla pól numerycznych
+        $config = $validated['config'];
+        $fieldTypes = $config['fieldTypes'] ?? [];
+        if (isset($config['formattingOptions']['highlightRules']) && is_array($config['formattingOptions']['highlightRules'])) {
+            foreach ($config['formattingOptions']['highlightRules'] as &$rule) {
+                $field = $rule['field'] ?? null;
+                $operator = strtoupper((string)($rule['operator'] ?? ''));
+                $isNumericField = ($field && (($fieldTypes[$field] ?? null) === 'numeric' || in_array($field, ['id', 'procedure_base_price'], true)));
+                if ($isNumericField && $operator !== 'CONTAINS') {
+                    if (array_key_exists('value', $rule) && $rule['value'] !== null && $rule['value'] !== '') {
+                        $value = $rule['value'];
+                        if (is_string($value)) {
+                            $normalized = str_replace(["\xC2\xA0", ' '], '', $value);
+                            $normalized = str_replace(',', '.', $normalized);
+                            if (is_numeric($normalized)) {
+                                $rule['value'] = (float) $normalized;
+                            }
+                        } elseif (is_int($value) || is_float($value)) {
+                            // już liczba – pozostaw bez zmian
+                        }
+                    }
+                }
+            }
+            unset($rule);
+        }
+
         $payload = [
-            'config' => $validated['config'],
+            'config' => $config,
             'jsonData' => $jsonData
         ];
 

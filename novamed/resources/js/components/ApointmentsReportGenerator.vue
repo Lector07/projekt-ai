@@ -61,7 +61,7 @@ const reportConfig = reactive({
     pageFooterEnabled: true,
 
     formattingOptions: {
-        zebraStripes: true,
+        zebraStripes: false,
         generateBookmarks: false,
         highlightRules: [
             {
@@ -114,6 +114,16 @@ function normalizeColor(color: string): string {
     return `#${color.toUpperCase()}`;
 }
 
+function coerceNumericRuleValue(value: unknown): number | unknown {
+    if (typeof value === 'number') return value;
+    if (value == null) return value;
+    const str = String(value).trim();
+    if (str === '') return value;
+    const normalized = str.replace(/\s/g, '').replace(',', '.');
+    const parsed = Number(normalized);
+    return Number.isNaN(parsed) ? value : parsed;
+}
+
 const refreshPreview = async () => {
     reportLoading.value = true;
     if (currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
@@ -122,7 +132,9 @@ const refreshPreview = async () => {
         rule.color = normalizeColor(rule.color);
     });
 
-    const finalConfig = JSON.parse(JSON.stringify(reportConfig));
+    const finalConfig: any = JSON.parse(JSON.stringify(reportConfig));
+
+    finalConfig.fieldTypes = Object.fromEntries(availableFields.map(f => [f.field, f.type]));
 
     if (finalConfig?.formattingOptions?.highlightRules) {
         finalConfig.formattingOptions.highlightRules = finalConfig.formattingOptions.highlightRules.map((r: any) => {
@@ -130,10 +142,8 @@ const refreshPreview = async () => {
             const isNumeric = fieldDef?.type === 'numeric';
             const isNotContains = r.operator !== 'CONTAINS';
             if (isNumeric && isNotContains) {
-                const parsed = typeof r.value === 'number'
-                    ? r.value
-                    : parseFloat(String(r.value).replace(/\s/g, '').replace(',', '.'));
-                if (!Number.isNaN(parsed)) return { ...r, value: parsed };
+                const coerced = coerceNumericRuleValue(r.value);
+                return { ...r, value: coerced };
             }
             return r;
         });
@@ -324,7 +334,7 @@ watch(() => props.modelValue, (newValue) => {
                                                 <label for="generate-bookmarks" class="text-sm font-medium">Generuj zakładki PDF</label>
                                             </div>
                                         </div>
-                                        <div class="pt-4 border-t dark:border-gray-700">
+                                        <div class="pt-4 mt-2 border-t dark:border-gray-700">
                                             <Label class="font-semibold">Reguły podświetlania wierszy</Label>
                                             <div v-for="(rule, index) in reportConfig.formattingOptions.highlightRules" :key="rule.id" class="p-2 border rounded-md mt-2 space-y-2 bg-gray-50 dark:bg-gray-800">
                                                 <div class="flex items-center space-x-2">
@@ -336,10 +346,10 @@ watch(() => props.modelValue, (newValue) => {
                                                         <option v-for="op in highlightOperators" :key="op.value" :value="op.value">{{ op.label }}</option>
                                                     </select>
                                                     <template v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
-                                                        <Input v-model.number="rule.value" type="number" step="any" placeholder="Wartość liczbowa" class="flex-1 text-sm h-8" />
+                                                        <Input v-model="(rule as any).value" placeholder="Wartość liczbowa" class="flex-1 text-sm h-8" />
                                                     </template>
                                                     <template v-else>
-                                                        <Input v-model="rule.value" placeholder="Wartość" class="flex-1 text-sm h-8" />
+                                                        <Input v-model="(rule as any).value" placeholder="Wartość" class="flex-1 text-sm h-8" />
                                                     </template>
                                                 </div>
                                                 <div class="flex items-center space-x-2">
