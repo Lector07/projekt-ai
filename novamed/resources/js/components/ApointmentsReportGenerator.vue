@@ -226,7 +226,7 @@ watch(() => props.modelValue, (newValue) => {
 
             <div class="flex-grow min-h-0">
                 <ResizablePanelGroup direction="horizontal" class="h-full w-full">
-                    <ResizablePanel :default-size="80" :min-size="30">
+                    <ResizablePanel :default-size="90" :min-size="30">
                         <div class="flex flex-col h-full p-4 pr-2 ">
                             <Accordion type="single" collapsible class="w-full" default-value="item-1">
                                 <AccordionItem value="item-1">
@@ -346,7 +346,7 @@ watch(() => props.modelValue, (newValue) => {
                                                         <option v-for="op in highlightOperators" :key="op.value" :value="op.value">{{ op.label }}</option>
                                                     </select>
                                                     <template v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
-                                                        <Input v-model="(rule as any).value" placeholder="Wartość liczbowa" class="flex-1 text-sm h-8" />
+                                                        <Input v-model="(rule as any).value" type="number" placeholder="Wartość liczbowa" class="flex-1 text-sm h-8" />
                                                     </template>
                                                     <template v-else>
                                                         <Input v-model="(rule as any).value" placeholder="Wartość" class="flex-1 text-sm h-8" />
@@ -373,7 +373,7 @@ watch(() => props.modelValue, (newValue) => {
                         </div>
                     </ResizablePanel>
                     <ResizableHandle with-handle />
-                    <ResizablePanel :default-size="80">
+                    <ResizablePanel :default-size="70" min-size="30">
                         <div class="flex flex-col h-full items-center justify-center bg-gray-200 dark:bg-gray-800">
                             <div v-if="reportLoading" class="flex flex-col items-center text-gray-500">
                                 <Icon name="loader-2" class="animate-spin h-12 w-12"/>
