@@ -384,7 +384,7 @@ watch(() => props.modelValue, (newValue) => {
                                                             </div>
                                                             <div class="flex justify-between items-center mt-2">
                                                                 <div class="flex items-center space-x-2">
-                                                                    <Checkbox :id="`group-footer-${index}`" v-model:checked="group.showFooter" />
+                                                                    <Checkbox :id="`group-footer-${index}`" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" v-model:checked="group.showFooter" />
                                                                     <label :for="`group-footer-${index}`" class="text-sm">Pokaż podsumowanie</label>
                                                                 </div>
                                                                 <Button variant="destructive" size="sm" @click="removeGroup(index)">Usuń</Button>
