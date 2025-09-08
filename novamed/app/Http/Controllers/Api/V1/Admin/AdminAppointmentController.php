@@ -130,6 +130,9 @@ class AdminAppointmentController extends Controller
             'filters' => 'nullable|array',
         ]);
 
+        Log::info('--- KONTROLER LARAVELA - OTRZYMANA KONFIGURACJA ---');
+        Log::info(json_encode($validated['config'], JSON_PRETTY_PRINT));
+
         $query = \App\Models\Appointment::query()->with(['patient', 'doctor', 'procedure']);
         $filters = $validated['filters'] ?? [];
 
@@ -169,7 +172,6 @@ class AdminAppointmentController extends Controller
                 'patient_name' => $appointment->patient ? $appointment->patient->name : '',
                 'doctor_full_name' => $appointment->doctor ? ($appointment->doctor->first_name . ' ' . $appointment->doctor->last_name) : '',
                 'procedure_name' => $appointment->procedure ? $appointment->procedure->name : '',
-                // rzutowanie na float w JSON, by uniknąć porównań leksykalnych po stronie Javy
                 'procedure_base_price' => $appointment->procedure ? (float) str_replace(',', '.', (string) $appointment->procedure->base_price) : 0.0,
                 'patient_notes' => $appointment->patient_notes,
                 'admin_notes' => $appointment->clinic_notes ?? '',
@@ -178,38 +180,43 @@ class AdminAppointmentController extends Controller
             ];
         });
 
+        $dataForReport = $appointments->map(function ($appointment) {
+            $billing_details = [
+                ['item' => 'Konsultacja medyczna', 'quantity' => 1, 'price' => 250.00],
+                ['item' => 'Materiały opatrunkowe', 'quantity' => 5, 'price' => 75.50],
+                ['item' => 'Podane leki', 'quantity' => 2, 'price' => 45.00],
+            ];
+
+            return [
+                'id' => $appointment->id,
+                'appointment_datetime' => $appointment->appointment_datetime,
+                'status_translated' => $this->translateStatus($appointment->status),
+                'patient_name' => $appointment->patient ? $appointment->patient->name : '',
+                'doctor_full_name' => $appointment->doctor ? ($appointment->doctor->first_name . ' ' . $appointment->doctor->last_name) : '',
+                'procedure_name' => $appointment->procedure ? $appointment->procedure->name : '',
+                'procedure_base_price' => $appointment->procedure ? (float) $appointment->procedure->base_price : 0.0,
+                'patient_notes' => $appointment->patient_notes,
+
+                'billing_details' => $billing_details
+            ];
+        });
+
         $jsonData = $dataForReport->toJson();
 
-        // Kopia konfigu i konwersja wartości reguł na liczby dla pól numerycznych
-        $config = $validated['config'];
-        $fieldTypes = $config['fieldTypes'] ?? [];
-        if (isset($config['formattingOptions']['highlightRules']) && is_array($config['formattingOptions']['highlightRules'])) {
-            foreach ($config['formattingOptions']['highlightRules'] as &$rule) {
-                $field = $rule['field'] ?? null;
-                $operator = strtoupper((string)($rule['operator'] ?? ''));
-                $isNumericField = ($field && (($fieldTypes[$field] ?? null) === 'numeric' || in_array($field, ['id', 'procedure_base_price'], true)));
-                if ($isNumericField && $operator !== 'CONTAINS') {
-                    if (array_key_exists('value', $rule) && $rule['value'] !== null && $rule['value'] !== '') {
-                        $value = $rule['value'];
-                        if (is_string($value)) {
-                            $normalized = str_replace(["\xC2\xA0", ' '], '', $value);
-                            $normalized = str_replace(',', '.', $normalized);
-                            if (is_numeric($normalized)) {
-                                $rule['value'] = (float) $normalized;
-                            }
-                        } elseif (is_int($value) || is_float($value)) {
-                            // już liczba – pozostaw bez zmian
-                        }
-                    }
-                }
-            }
-            unset($rule);
+        if (isset($validated['config']['subreportConfigs']) && is_array($validated['config']['subreportConfigs'])) {
+            $validated['config']['subreportConfigs'] = (object) $validated['config']['subreportConfigs'];
         }
 
+        unset($validated['config']['fieldTypes']);
+
+
         $payload = [
-            'config' => $config,
+            'config' => $validated['config'],
             'jsonData' => $jsonData
         ];
+
+        Log::info('--- KONTROLER LARAVELA - PAYLOAD WYSYŁANY DO JAVY ---');
+        Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
         try {
             $reportServiceUrl = 'http://localhost:8080/api/generate-dynamic-report';

@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/Icon.vue';
 import { useToast } from 'primevue/usetoast';
+import { Separator } from "@/components/ui/separator"
 
 const toast = useToast();
 
@@ -26,6 +27,31 @@ const emit = defineEmits(['update:modelValue']);
 const reportLoading = ref(false);
 const pdfUrl = ref<string | null>(null);
 let currentPdfBlobUrl: string | null = null;
+const subreportEditorVisible = ref(false);
+const editingSubreportField = ref('');
+
+interface ColumnConfig {
+    field: string;
+    header: string;
+    visible: boolean;
+    width: number | null | undefined;
+    format: string | null | undefined;
+    groupCalculation: string;
+}
+
+interface ReportConfig {
+    title: string;
+    orientation: 'PORTRAIT' | 'LANDSCAPE';
+    companyInfo: object | null;
+    footerLeftText: string | null;
+    columns: ColumnConfig[];
+    groups: Array<{ field: string; showFooter: boolean }>;
+    pageFooterEnabled: boolean;
+    formattingOptions: object;
+    subreportConfigs: {
+        [key: string]: Omit<ReportConfig, 'subreportConfigs'>;
+    };
+}
 
 const availableFields = [
     { field: 'id', header: 'ID Wizyty', type: 'numeric' },
@@ -38,7 +64,7 @@ const availableFields = [
     { field: 'patient_notes', header: 'Notatki pacjenta', type: 'text' },
 ];
 
-const reportConfig = reactive({
+const reportConfig = reactive<ReportConfig>({
     title: 'Zestawienie Wizyt',
     orientation: 'PORTRAIT',
     companyInfo: {
@@ -52,7 +78,7 @@ const reportConfig = reactive({
     columns: availableFields.map(f => ({
         field: f.field,
         header: f.header,
-        visible: !['id', 'patient_notes'].includes(f.field),
+        visible: !['id', 'patient_notes', 'billing_details'].includes(f.field),
         width: -1,
         format: f.type === 'numeric' ? '#,##0.00' : (f.type === 'date' ? 'yyyy-MM-dd HH:mm' : null),
         groupCalculation: f.type === 'numeric' ? 'SUM' : 'NONE',
@@ -69,10 +95,11 @@ const reportConfig = reactive({
                 operator: 'EQUALS',
                 value: 'Anulowana',
                 color: '#FFF0F0',
-                id: `rule-${Date.now()}`
             }
         ]
-    }
+    },
+
+    subreportConfigs: {}
 });
 
 const highlightOperators= [
@@ -124,42 +151,70 @@ function coerceNumericRuleValue(value: unknown): number | unknown {
     return Number.isNaN(parsed) ? value : parsed;
 }
 
-const refreshPreview = async () => {
-    reportLoading.value = true;
-    if (currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
-
-    reportConfig.formattingOptions.highlightRules.forEach(rule => {
-        rule.color = normalizeColor(rule.color);
-    });
-
-    const finalConfig: any = JSON.parse(JSON.stringify(reportConfig));
-
-    finalConfig.fieldTypes = Object.fromEntries(availableFields.map(f => [f.field, f.type]));
-
-    if (finalConfig?.formattingOptions?.highlightRules) {
-        finalConfig.formattingOptions.highlightRules = finalConfig.formattingOptions.highlightRules.map((r: any) => {
-            const fieldDef = availableFields.find(f => f.field === r.field);
-            const isNumeric = fieldDef?.type === 'numeric';
-            const isNotContains = r.operator !== 'CONTAINS';
-            if (isNumeric && isNotContains) {
-                const coerced = coerceNumericRuleValue(r.value);
-                return { ...r, value: coerced };
-            }
-            return r;
-        });
+const configureSubreport = (fieldName: string) => {
+    if (!reportConfig.subreportConfigs[fieldName]) {
+        reportConfig.subreportConfigs[fieldName] = {
+            title: "",
+            orientation: 'PORTRAIT',
+            companyInfo: null,
+            footerLeftText: null,
+            columns: [
+                { field: 'item', header: 'Pozycja', visible: true, width: -1, format: null, groupCalculation: 'NONE' },
+                { field: 'quantity', header: 'Ilość', visible: true, width: 80, format: null, groupCalculation: 'NONE' },
+                { field: 'price', header: 'Cena', visible: true, width: 100, format: '#,##0.00', groupCalculation: 'SUM' }
+            ],
+            groups: [],
+            pageFooterEnabled: false,
+            formattingOptions: { zebraStripes: true, generateBookmarks: false, highlightRules: [] },
+        };
     }
 
-    finalConfig.groups = finalConfig.groups
-        .filter((g: { field: string }) => g.field)
-        .map((g: { field: string; showFooter: boolean }) => {
-            const fieldDef = availableFields.find(f => f.field === g.field);
-            const header = fieldDef ? fieldDef.header : g.field;
-            return {
-                ...g,
-                label: `"${header}: " + $F{${g.field}}`
-            };
-        });
+    editingSubreportField.value = fieldName;
+    subreportEditorVisible.value = true;
+};
 
+const refreshPreview = async () => {
+    reportLoading.value = true;
+    if (currentPdfBlobUrl) {
+        URL.revokeObjectURL(currentPdfBlobUrl);
+    }
+
+    // Stwórz głęboką kopię konfiguracji, aby bezpiecznie ją modyfikować
+    const finalConfig = JSON.parse(JSON.stringify(reportConfig));
+
+    // --- OSTATECZNA, NIEZAWODNA POPRAWKA ---
+    // Jeśli istnieją jakiekolwiek konfiguracje subraportów...
+    if (finalConfig.subreportConfigs) {
+        // ...przejdź przez każdą z nich (np. "billing_details")...
+        for (const key in finalConfig.subreportConfigs) {
+            // ...i bezwarunkowo USUŃ z niej klucz "subreportConfigs".
+            // To gwarantuje, że zagnieżdżone, puste pole nigdy nie zostanie wysłane.
+            delete finalConfig.subreportConfigs[key].subreportConfigs;
+        }
+    }
+    // Upewnij się również, że główny obiekt jest poprawny
+    if (!finalConfig.subreportConfigs || Array.isArray(finalConfig.subreportConfigs)) {
+        finalConfig.subreportConfigs = {};
+    }
+
+    // Pozostałe operacje normalizacyjne
+    if (finalConfig.groups) {
+        finalConfig.groups = finalConfig.groups
+            .filter((g: { field: string }) => g.field)
+            .map((g: { field: string; showFooter: boolean }) => {
+                const fieldDef = availableFields.find(f => f.field === g.field);
+                const header = fieldDef ? fieldDef.header : g.field;
+                return { ...g, label: `"${header}: " + $F{${g.field}}` };
+            });
+    }
+    if (finalConfig.formattingOptions && finalConfig.formattingOptions.highlightRules) {
+        finalConfig.formattingOptions.highlightRules.forEach((rule: any) => {
+            rule.color = normalizeColor(rule.color);
+        });
+    }
+    finalConfig.fieldTypes = Object.fromEntries(availableFields.map(f => [f.field, f.type]));
+
+    console.log("OSTATECZNY PAYLOAD WYSYŁANY Z FRONTENDU:", JSON.stringify({ config: finalConfig, filters: props.activeFilters }, null, 2));
 
     try {
         const response = await axios.post('/api/v1/admin/appointments/report', {
@@ -173,12 +228,35 @@ const refreshPreview = async () => {
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Podgląd odświeżony.', life: 2000 });
     } catch (error) {
         console.error('Błąd podglądu:', error);
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się odświeżyć podglądu.', life: 3000 });
+        let errorText = 'Wystąpił nieznany błąd.';
+        if ((error as any).response?.data) {
+            try {
+                // Próba odczytania błędu jako tekst (może być JSON lub zwykły tekst)
+                const errorData = (error as any).response.data;
+                if (errorData instanceof Blob) {
+                    const text = await errorData.text();
+                    try {
+                        const jsonError = JSON.parse(text);
+                        errorText = jsonError.details || jsonError.error || text;
+                    } catch {
+                        errorText = text;
+                    }
+                } else if (typeof errorData === 'object') {
+                    errorText = errorData.details || errorData.error || JSON.stringify(errorData);
+                } else {
+                    errorText = errorData.toString();
+                }
+            } catch (e) {
+                console.error('Nie udało się sparsować odpowiedzi błędu:', e);
+            }
+        }
+        toast.add({ severity: 'error', summary: 'Błąd generowania raportu', detail: errorText, life: 7000 });
         pdfUrl.value = null;
     } finally {
         reportLoading.value = false;
     }
 };
+
 
 const downloadReport = () => {
     if (!pdfUrl.value) {
@@ -315,7 +393,7 @@ watch(() => props.modelValue, (newValue) => {
                                                     </div>
                                                 </template>
                                             </draggable>
-                                            <Button @click="addGroup" class="mt-2 w-full bg-nova-primary hover:bg-nova-accent">Dodaj nową grupę</Button>
+                                            <Button @click="addGroup" class="mt-2 w-full" variant="outline">Dodaj nową grupę</Button>
                                         </ScrollArea>
                                     </AccordionContent>
                                 </AccordionItem>
@@ -369,6 +447,19 @@ watch(() => props.modelValue, (newValue) => {
                                         </ScrollArea>
                                     </AccordionContent>
                                 </AccordionItem>
+                                <AccordionItem value="item-5">
+                                    <AccordionTrigger>Podraporty</AccordionTrigger>
+                                    <AccordionContent class="space-y-4 pt-4">
+                                        <div class="p-2 border-t-1">
+                                            <h4 class="font-semibold mt-2">Podraport dla: </h4>
+                                            <div class="mt-2 ">
+                                                <Button @click="configureSubreport('billing_details')" size="sm" variant="outline">
+                                                    Konfiguruj kolumny podraportu
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
                             </Accordion>
                         </div>
                     </ResizablePanel>
@@ -400,6 +491,47 @@ watch(() => props.modelValue, (newValue) => {
                     <Icon name="download" class="mr-2" size="16"/>
                     Pobierz PDF
                 </Button>
+            </div>
+        </DialogContent>
+    </Dialog>
+    <Dialog :open="subreportEditorVisible" @update:open="subreportEditorVisible = $event">
+        <DialogContent class="w-[40vw] max-w-none h-[70vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>Edytor Kolumn Subraportu: {{ editingSubreportField }}</DialogTitle>
+                <DialogDescription>
+                    Przeciągnij, aby zmienić kolejność. Ustaw widoczność, nagłówki i szerokości kolumn.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div v-if="editingSubreportField && reportConfig.subreportConfigs[editingSubreportField]" class="flex-grow min-h-0 py-4">
+                <ScrollArea class="h-full">
+                    <div class="grid grid-cols-5 gap-8 items-center font-semibold text-sm mb-2 ml-20">
+                        <span class="text-center">Widoczna</span>
+                        <span class="col-span-2 text-center ">Nagłówek</span>
+                        <span class="text-center ml-18">Szer.</span>
+                    </div>
+                    <draggable
+                        v-model="reportConfig.subreportConfigs[editingSubreportField].columns"
+                        item-key="field"
+                        handle=".drag-handle"
+                        ghost-class="ghost-class"
+                    >
+                        <template #item="{ element: col }">
+                            <div class="grid grid-cols-5 gap-x-2 gap-y-2 items-center mt-2 ml-4">
+                                <div class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                                    <Icon name="grip" size="18" />
+                                </div>
+                                <Checkbox v-model:checked="col.visible" class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent" />
+                                <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
+                                <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center" placeholder="auto"/>
+                            </div>
+                        </template>
+                    </draggable>
+                </ScrollArea>
+            </div>
+
+            <div class="mt-4 pt-4 border-t flex justify-end">
+                <Button @click="subreportEditorVisible = false" variant="secondary">Zamknij</Button>
             </div>
         </DialogContent>
     </Dialog>

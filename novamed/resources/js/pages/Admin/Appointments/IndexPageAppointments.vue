@@ -84,7 +84,6 @@ interface AppointmentFilters {
 const toast = useToast();
 const router = useRouter();
 
-// --- STAN DANYCH DLA LISTY WIZYT ---
 const appointments = ref<Appointment[]>([]);
 const loading = ref(true);
 const meta = ref({current_page: 1, from: 1, last_page: 1, per_page: 8, to: 8, total: 0});
@@ -98,14 +97,12 @@ const filters = reactive<AppointmentFilters>({
 const dateFrom = ref<DateValue | undefined>(undefined);
 const dateTo = ref<DateValue | undefined>(undefined);
 
-// --- STAN DANYCH DLA FORMULARZA EDYCJI WIZYTY ---
 const showEditAppointmentForm = ref(false);
 const selectedAppointment = ref<any>(null);
 const appointmentErrors = ref<any>({});
 const appointmentFormLoading = ref(false);
 const selectedDate = ref<DateValue | undefined>(undefined);
 
-// Dane pomocnicze - teraz ładowane tylko raz!
 const allPatients = ref<Patient[]>([]);
 const allDoctors = ref<Doctor[]>([]);
 const procedures = ref<{ id: number, name: string }[]>([]);
@@ -124,14 +121,13 @@ const statuses = [
 const statusOptions = statuses.filter(s => s.value !== '');
 const breadcrumbs: BreadcrumbItem[] = [{title: 'Zarządzanie Wizytami'}];
 
-// --- LOGIKA DO OBSŁUGI KOMPONENTU RAPORTU ---
+
 const isReportGeneratorOpen = ref(false);
 const activeFilters = computed(() => Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== null && v !== '')));
 const openReportGenerator = () => {
     isReportGeneratorOpen.value = true;
 };
 
-// --- FUNKCJE OBSŁUGUJĄCE WIZYTY ---
 const showSuccessToast = (title: string, content: string) => toast.add({
     severity: 'success',
     summary: title,
@@ -193,7 +189,7 @@ const openEditForm = async (appointment: Appointment) => {
         selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
         selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
         if (selectedAppointment.value.appointment_datetime) {
-            // Upewnij się, że parsujesz tylko datę bez czasu
+
             const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
             try {
                 selectedDate.value = parseDate(dateStr);
@@ -323,7 +319,7 @@ onMounted(() => {
     <AppLayout :breadcrumbs="breadcrumbs">
         <Toast/>
 
-        <div class="container mx-auto px-4 py-6">
+        <div class="container mx-auto px-4 py-6 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-3xl font-bold dark:text-white">Zarządzanie Wizytami</h1>
                 <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent">
@@ -403,9 +399,8 @@ onMounted(() => {
                 </div>
             </div>
 
-            <!-- TABELA WIZYT -->
-            <div class="rounded-lg dark:bg-gray-800 shadow-sm overflow-hidden border dark:border-gray-700">
-                <ScrollArea class="w-full h-[clamp(300px,calc(100vh-450px),600px)]">
+            <div class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
+                <ScrollArea class="w-full h-[60vh]">
                     <Table>
                         <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria
                         </TableCaption>
