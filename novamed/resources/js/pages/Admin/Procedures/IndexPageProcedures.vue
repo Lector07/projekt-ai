@@ -256,63 +256,59 @@ Miesiąc 3-6: ...`;
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="container mx-auto py-6 px-2 sm:px-4 lg:px-6">
-            <div class="rounded-lg border border-border  shadow-sm bg-card mb-3 md:mb-4 overflow-hidden">
-                <div class="p-2 sm:p-4 border-b">
-                    <div class="flex flex-col  sm:flex-row justify-between items-start sm:items-center">
-                        <div>
-                            <h2 class="text-2xl font-bold leading-7 text-foreground">Zabiegi Medyczne</h2>
-                            <p class="text-sm text-muted-foreground mt-1">Zarządzaj dostępnymi zabiegami</p>
+        <div class="flex flex-col gap-5 p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 class="text-nova-darkest dark:text-nova-light text-2xl font-bold">Zabiegi Medyczne</h1>
+                    <p class="text-sm text-muted-foreground mt-1">Zarządzaj dostępnymi zabiegami</p>
+                </div>
+                <Button @click="showAddForm = true"
+                        class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
+                    <Icon name="plus" size="16" class="mr-2" />
+                    Dodaj Zabieg
+                </Button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 rounded-xl border p-4 md:grid-cols-2 lg:grid-cols-3">
+                <div class="space-y-2">
+                    <Label for="search">Wyszukaj</Label>
+                    <div class="relative">
+                        <Input
+                            id="search"
+                            v-model="searchQuery"
+                            placeholder="Wpisz nazwę zabiegu..."
+                            @keyup.enter="currentPage = 1; loadProcedures()"
+                            class="pr-10"
+                        />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                             @click="currentPage = 1; loadProcedures()">
+                            <Search class="h-4 w-4 text-gray-400" />
                         </div>
-                        <Button @click="showAddForm = true"
-                                class="mt-2 sm:mt-0 bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
-                            <Icon name="plus" size="16" class="mr-2" />
-                            Dodaj Zabieg
-                        </Button>
                     </div>
                 </div>
-                <div class="p-4 sm:p-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="relative">
-                            <Label for="search" class="mb-1">Wyszukaj</Label>
-                            <div class="relative">
-                                <Input
-                                    id="search"
-                                    v-model="searchQuery"
-                                    placeholder="Wpisz nazwę zabiegu..."
-                                    @keyup.enter="currentPage = 1; loadProcedures()"
-                                    class="pr-10"
-                                />
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
-                                     @click="currentPage = 1; loadProcedures()">
-                                    <Search class="h-4 w-4 text-gray-400" />
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <Label for="category" class="mb-1 w-full sm:w-1/2">Kategoria</Label>
-                            <Select v-model="selectedCategory"
-                                    @update:modelValue="() => { currentPage = 1; loadProcedures() }">
-                                <SelectTrigger id="category" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
-                                        {{ category.name }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Button
-                                v-if="selectedCategory"
-                                variant="outline"
-                                size="sm"
-                                @click="resetFilters"
-                                class="mt-2">
-                                <Icon name="x-circle" size="14" class="mr-1" />
-                                Wyczyść filtry
-                            </Button>
-                        </div>
-                    </div>
+                <div class="space-y-2">
+                    <Label for="category">Kategoria</Label>
+                    <Select v-model="selectedCategory"
+                            @update:modelValue="() => { currentPage = 1; loadProcedures() }">
+                        <SelectTrigger id="category" class="w-full">
+                            <SelectValue :placeholder="'Wybierz kategorię'" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
+                                {{ category.name }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div class="flex items-end">
+                    <Button
+                        v-if="selectedCategory || searchQuery"
+                        variant="outline"
+                        @click="resetFilters"
+                        class="w-full">
+                        <Icon name="x-circle" size="14" class="mr-1" />
+                        Wyczyść filtry
+                    </Button>
                 </div>
             </div>
 

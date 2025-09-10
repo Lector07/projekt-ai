@@ -413,6 +413,7 @@ onMounted(() => {
                                 <TableHead>Data i godzina</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead class="text-center">Akcje</TableHead>
+                                <TableHead class="text-center">Sczeóły</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -457,6 +458,17 @@ onMounted(() => {
                                             <TooltipContent>Usuń</TooltipContent>
                                         </Tooltip>
                                     </div>
+                                </TableCell>
+                                <TableCell class="text-center">
+                                    <Tooltip>
+                                        <TooltipTrigger as-child>
+                                            <Button variant="ghost" size="icon-sm"
+                                                    @click="router.push({ name: 'admin-appointment-details', params: { id: appointment.id } })">
+                                                <Icon name="info" size="16"/>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Szczegóły</TooltipContent>
+                                    </Tooltip>
                                 </TableCell>
                             </TableRow>
                         </TableBody>
