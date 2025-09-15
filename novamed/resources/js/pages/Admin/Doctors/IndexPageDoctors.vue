@@ -21,6 +21,8 @@ import Checkbox from 'primevue/checkbox';
 
 import { Separator } from '@/components/ui/separator';
 
+import ReportGenerator from '@/components/ReportGenerator.vue';
+
 const InputError = (props: { message?: string }) => {
     return props.message ? h('p', { class: 'text-xs text-red-500 mt-1' }, props.message) : null;
 };
@@ -57,7 +59,7 @@ interface DoctorForm {
     user_id?: number | null;
     user?: {
         id: number;
-        name: string;
+        name: number;
         email: string;
     } | null;
     email?: string;
@@ -229,11 +231,26 @@ const resetDoctorForm = () => {
         last_name: '',
         specialization: '',
         bio: null,
-        price_modifier: 1.0,
         user_id: undefined,
         procedure_ids: [],
     };
     doctorFormErrors.value = {};
+};
+
+
+const isReportGeneratorOpen = ref(false);
+const reportConfig = ref(null);
+const reportData = ref([]);
+const reportFilters = ref({});
+
+const generateReport = () => {
+    // Przekazujemy aktualne filtry do komponentu ReportGenerator
+    reportFilters.value = {
+        search: query.value.search,
+        specialization: query.value.specialization,
+    };
+    // Otwieramy bezpośrednio komponent ReportGenerator
+    isReportGeneratorOpen.value = true;
 };
 
 
@@ -434,6 +451,10 @@ const deleteAvatar = async (doctorId: number) => {
     }
 };
 
+const openReportGenerator = () => {
+    generateReport();
+};
+
 watch(
     () => newDoctor.value.user_id,
     (newValue) => {
@@ -501,6 +522,12 @@ onMounted(() => {
                         <option value="">Wszystkie specjalizacje</option>
                         <option v-for="spec in specializations" :key="spec" :value="spec">{{ spec }}</option>
                     </select>
+                </div>
+                <div>
+                    <Button @click="generateReport" class="bg-nova-primary hover:bg-nova-accent">
+                        <Icon name="clipboard" class="mr-2 h-4 w-4"/>
+                        Generuj Raport
+                    </Button>
                 </div>
             </div>
 
@@ -961,6 +988,13 @@ onMounted(() => {
                 </CardContent>
             </Card>
         </div>
+        <ReportGenerator
+            v-model="isReportGeneratorOpen"
+            :activeFilters="reportFilters"
+            reportType="doctors"
+            :config="reportConfig"
+        />
+
     </AppLayout>
 </template>
 

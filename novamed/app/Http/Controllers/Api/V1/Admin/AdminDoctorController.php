@@ -14,8 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\Api\V1\Admin\UpdateDoctorAvatarRequest;
 
 class AdminDoctorController extends Controller
 {
@@ -137,48 +138,133 @@ class AdminDoctorController extends Controller
         }
 
         $doctor->delete();
+
         return response()->noContent();
     }
 
-    public function updateAvatar(UpdateDoctorAvatarRequest $request, Doctor $doctor): DoctorResource
+    public function generateDoctorsReport(Request $request)
     {
-        $this->authorize('update', $doctor);
+        $this->authorize('viewAny', Doctor::class);
 
-        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
-            if ($doctor->profile_picture_path) {
-                Storage::disk('public')->delete($doctor->profile_picture_path);
+        $query = Doctor::query()->with(['user', 'procedures.category'])->orderBy('id', 'asc');
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                        $userQuery->where('email', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        if ($request->filled('specialization')) {
+            $query->where('specialization', $request->input('specialization'));
+        }
+
+        $doctors = $query->get();
+
+        // Jeśli żądanie zawiera parametr 'config', generuj PDF (nowy uniwersalny komponent)
+        if ($request->has('config')) {
+            try {
+                $config = json_decode($request->input('config'), true);
+
+                Log::info('--- KONTROLER LEKARZY - OTRZYMANA KONFIGURACJA ---');
+                Log::info(json_encode($config, JSON_PRETTY_PRINT));
+
+                $dataForReport = $doctors->map(function ($doctor) {
+                    $doctorData = [
+                        'id' => $doctor->id,
+                        'first_name' => $doctor->first_name,
+                        'last_name' => $doctor->last_name,
+                        'specialization' => $doctor->specialization,
+                        'bio' => $doctor->bio ?: 'Brak opisu',
+                        'created_at' => $doctor->created_at,
+                    ];
+
+                    $doctorData['user'] = [
+                        'email' => $doctor->user ? $doctor->user->email : 'Brak emaila'
+                    ];
+
+                    if ($doctor->procedures && $doctor->procedures->count() > 0) {
+                        $doctorData['procedures'] = $doctor->procedures->map(function ($procedure) {
+                            return [
+                                'item' => $procedure->name,
+                                'quantity' => 1,
+                                'price' => $procedure->base_price ?? 0,
+                                'category' => $procedure->category->name ?? 'Bez kategorii'
+                            ];
+                        })->toArray();
+                    } else {
+                        $doctorData['procedures'] = [];
+                    }
+
+                    return $doctorData;
+                });
+
+                $payload = [
+                    'config' => $config,
+                    'jsonData' => json_encode($dataForReport->toArray()),
+                ];
+
+                Log::info('--- DANE WYSYŁANE DO SERWISU RAPORTÓW ---');
+                Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+
+                $response = Http::withBody(json_encode($payload), 'application/json')
+                    ->timeout(30)->post('http://localhost:8080/api/generate-dynamic-report');
+
+                if ($response->successful()) {
+                    return response($response->body(), 200, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => $response->header('Content-Disposition') ?: 'attachment; filename="raport_lekarzy.pdf"',
+                    ]);
+                } else {
+                    Log::error('Błąd serwisu raportów: ' . $response->body());
+                    return response()->json([
+                        'error' => 'Nie udało się wygenerować raportu',
+                        'details' => $response->json() ?? $response->body()
+                    ], $response->status());
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                Log::error('Błąd połączenia z serwisem raportującym: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'Nie można połączyć się z serwisem raportującym.',
+                    'details' => $e->getMessage()
+                ], 503);
+            } catch (\Exception $e) {
+                Log::error('Błąd generowania raportu lekarzy: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'Błąd podczas generowania raportu',
+                    'details' => $e->getMessage()
+                ], 500);
             }
-
-            $path = $request->file('avatar')->store('avatars/doctors', 'public');
-            $doctor->profile_picture_path = $path;
-            $doctor->save();
         }
 
-        return new DoctorResource($doctor->fresh()->load(['user', 'procedures']));
-    }
+        $reportConfig = [
+            'title' => 'Raport Lekarzy',
+            'companyInfo' => [
+                'name' => 'NovaMed',
+                'address' => 'ul. Zdrowotna 1, 00-001 Miasto',
+                'phone' => '123-456-789',
+                'email' => 'kontakt@novamed.pl',
+            ],
+            'columns' => [
+                ['field' => 'id', 'label' => 'ID'],
+                ['field' => 'first_name', 'label' => 'Imię'],
+                ['field' => 'last_name', 'label' => 'Nazwisko'],
+                ['field' => 'specialization', 'label' => 'Specjalizacja'],
+                ['field' => 'user_email', 'label' => 'Email'],
+            ],
+        ];
 
-    public function deleteAvatar(Doctor $doctor): DoctorResource
-    {
-        $this->authorize('update', $doctor);
+        $jsonData = $doctors->toJson();
 
-        if ($doctor->profile_picture_path) {
-            Storage::disk('public')->delete($doctor->profile_picture_path);
-            $doctor->profile_picture_path = null;
-            $doctor->save();
-        }
+        $payload = [
+            'config' => $reportConfig,
+            'data' => $jsonData,
+        ];
 
-        return new DoctorResource($doctor->fresh()->load(['user', 'procedures']));
-    }
-
-    public function list(): JsonResponse
-    {
-        $doctors = Doctor::all()->map(function ($doctor) {
-            return [
-                'id' => $doctor->id,
-                'name' => $doctor->first_name . ' ' . $doctor->last_name
-            ];
-        });
-
-        return response()->json(['data' => $doctors]);
+        return response()->json($payload);
     }
 }

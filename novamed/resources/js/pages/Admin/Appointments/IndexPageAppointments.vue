@@ -42,7 +42,7 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 
 // Importujemy nasz komponent generatora
-import AppointmentsReportGenerator from '@/components/ApointmentsReportGenerator.vue';
+import ReportGenerator from '@/components/ReportGenerator.vue';
 
 // Definicje interfejsów
 interface Patient {
@@ -323,7 +323,7 @@ onMounted(() => {
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-3xl font-bold dark:text-white">Zarządzanie Wizytami</h1>
                 <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent">
-                    <Icon name="clipboard-minus" class="mr-2 h-4 w-4"/>
+                    <Icon name="clipboard" class="mr-2 h-4 w-4"/>
                     Generuj Raport
                 </Button>
             </div>
@@ -503,7 +503,7 @@ onMounted(() => {
         </div>
 
         <!-- Użycie komponentu generatora -->
-        <AppointmentsReportGenerator
+        <ReportGenerator
             v-model="isReportGeneratorOpen"
             :active-filters="activeFilters"
         />

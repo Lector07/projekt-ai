@@ -135,4 +135,5 @@ class AdminUserController extends Controller
 
         return new UserResource($user->fresh());
     }
+
 }

@@ -132,6 +132,8 @@ Route::prefix('v1/admin')
             ->name('appointments.report');
         Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport']);
 
+        Route::get('/doctors/report', [Admin\AdminDoctorController::class, 'generateDoctorsReport'])
+            ->name('doctors.report');
 
         Route::put('/user/password', [PasswordController::class, 'update'])
             ->name('password.update');
