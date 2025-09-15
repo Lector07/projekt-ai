@@ -42,7 +42,7 @@ interface ColumnConfig {
 interface ReportConfig {
     title: string;
     orientation: 'PORTRAIT' | 'LANDSCAPE';
-    theme: 'CLASSIC' | 'MODERN' | 'MINIMAL';
+    theme: 'DEFAULT' | 'CLASSIC' | 'MODERN' | 'CORPORATE' | 'MINIMAL';
     companyInfo: object | null;
     footerLeftText: string | null;
     columns: ColumnConfig[];
@@ -180,6 +180,7 @@ const configureSubreport = (fieldName: string) => {
 const availableThemes = [
     {value: 'CLASSIC', label: 'Klasyczny'},
     {value: 'MODERN', label: 'Nowoczesny'},
+    {value: 'CORPORATE', label: 'Korporacyjny'},
     {value: 'MINIMAL', label: 'Minimalistyczny'}
 ];
 
@@ -189,7 +190,6 @@ const refreshPreview = async () => {
         URL.revokeObjectURL(currentPdfBlobUrl);
     }
 
-    // Stwórz głęboką kopię konfiguracji, aby bezpiecznie ją modyfikować
     const finalConfig = JSON.parse(JSON.stringify(reportConfig));
 
     if (finalConfig.subreportConfigs) {
@@ -197,12 +197,10 @@ const refreshPreview = async () => {
             delete finalConfig.subreportConfigs[key].subreportConfigs;
         }
     }
-    // Upewnij się również, że główny obiekt jest poprawny
     if (!finalConfig.subreportConfigs || Array.isArray(finalConfig.subreportConfigs)) {
         finalConfig.subreportConfigs = {};
     }
 
-    // Pozostałe operacje normalizacyjne
     if (finalConfig.groups) {
         finalConfig.groups = finalConfig.groups
             .filter((g: { field: string }) => g.field)
@@ -239,7 +237,6 @@ const refreshPreview = async () => {
         let errorText = 'Wystąpił nieznany błąd.';
         if ((error as any).response?.data) {
             try {
-                // Próba odczytania błędu jako tekst (może być JSON lub zwykły tekst)
                 const errorData = (error as any).response.data;
                 if (errorData instanceof Blob) {
                     const text = await errorData.text();
@@ -407,16 +404,6 @@ watch(() => props.modelValue, (newValue) => {
                                                               rows="2"></textarea>
                                                 </div>
 
-                                                <div class="grid grid-cols-4 items-center gap-4 mt-2">
-                                                    <Label for="report-theme" class="text-right">Motyw wizualny</Label>
-                                                    <select v-model="reportConfig.theme" id="report-theme"
-                                                            class="col-span-2 w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                        <option v-for="theme in availableThemes" :key="theme.value"
-                                                                :value="theme.value">
-                                                            {{ theme.label }}
-                                                        </option>
-                                                    </select>
-                                                </div>
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
@@ -520,11 +507,14 @@ watch(() => props.modelValue, (newValue) => {
                                                             zebry</label>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
-                                                        <Checkbox id="generate-bookmarks"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
-                                                                  v-model:checked="reportConfig.formattingOptions.generateBookmarks"/>
-                                                        <label for="generate-bookmarks" class="text-sm font-medium">Generuj
-                                                            zakładki PDF</label>
+                                                        <Label for="report-theme" class="text-right">Motyw wizualny</Label>
+                                                        <select v-model="reportConfig.theme" id="report-theme"
+                                                                class="col-span-2 w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                                            <option v-for="theme in availableThemes" :key="theme.value"
+                                                                    :value="theme.value">
+                                                                {{ theme.label }}
+                                                            </option>
+                                                        </select>
                                                     </div>
                                                 </div>
                                                 <div class="pt-4 mt-2 border-t dark:border-gray-700">
@@ -581,14 +571,19 @@ watch(() => props.modelValue, (newValue) => {
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
-                                    <AccordionItem value="item-5">
+                                    <AccordionItem value="item-5"
+                                                   v-if="reportConfig.subreportConfigs.billing_details">
                                         <AccordionTrigger>Podraporty</AccordionTrigger>
                                         <AccordionContent class="space-y-4 pt-4">
                                             <div class="p-2 ">
 
-                                                <Button @click="configureSubreport('billing_details')"
-                                                        class="bg-nova-primary text-nova-light hover:bg-nova-accent hover:text-nova-light"
-                                                        size="sm" variant="outline">
+                                                <Button
+                                                    v-if="reportConfig.subreportConfigs.billing_details"
+                                                    @click="configureSubreport('billing_details')"
+                                                    class="bg-nova-primary text-nova-light hover:bg-nova-accent hover:text-nova-light"
+                                                    size="sm"
+                                                    variant="outline"
+                                                >
                                                     Konfiguruj kolumny podraportu
                                                 </Button>
                                             </div>
