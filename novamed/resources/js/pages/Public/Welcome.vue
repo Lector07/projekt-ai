@@ -14,6 +14,8 @@ import {
 import {PaginationList, PaginationListItem} from 'reka-ui';
 import {Skeleton} from '@/components/ui/skeleton';
 import Card from 'primevue/card';
+import Carousel from 'primevue/carousel';
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from '@/components/ui/accordion';
 
 
 
@@ -136,6 +138,21 @@ const changeProceduresPage = (page: number) => {
         fetchData();
     }
 };
+
+// Konfiguracja responsywna dla carousel
+const responsiveOptions = ref([
+    {
+        breakpoint: '1024px',
+        numVisible: 2,
+        numScroll: 1
+    },
+    {
+        breakpoint: '768px',
+        numVisible: 1,
+        numScroll: 1
+    }
+]);
+
 onMounted(() => {
     fetchData();
 });
@@ -427,35 +444,33 @@ onMounted(() => {
             </div>
 
             <div v-else class="relative">
+                <!-- === NAWIGACJA ZAKŁADEK (bez zmian) === -->
                 <div class="flex flex-wrap justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
                     <button
-                        v-for="(tab, index) in ['Zabieg Medyczne', 'Nasi Specjaliści']"
+                        v-for="(tab, index) in ['Zabiegi Medyczne', 'Nasi Specjaliści']"
                         :key="index"
                         @click="changeTab(index)"
                         class="px-6 py-3 text-base font-medium transition-all duration-200 border-b-2 focus:outline-none"
                         :class="[
-        activeTab === index
-            ? 'border-nova-primary text-nova-primary'
-            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-    ]"
+                activeTab === index
+                    ? 'border-nova-primary text-nova-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            ]"
                         :disabled="loading"
                     >
                         {{ tab }}
                     </button>
                 </div>
 
+                <!-- === ZAKŁADKA 1: ZABIEGI MEDYCZNE (Nowy, ulepszony układ) === -->
                 <div v-show="activeTab === 0" class="transition-opacity duration-300">
-                    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="i in 9" :key="i"
-                             class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
-                            <div class="p-5">
-                                <div class="flex justify-between items-start mb-3">
-                                    <Skeleton class="h-6 w-2/3"/>
-                                    <Skeleton class="h-8 w-20 rounded-full"/>
-                                </div>
-                                <Skeleton class="h-4 w-full mb-2"/>
-                                <Skeleton class="h-4 w-5/6 mb-2"/>
-                                <Skeleton class="h-4 w-3/4"/>
+                    <div v-if="loading" class="space-y-4">
+                        <!-- Szkielet ładowania dla listy zabiegów -->
+                        <div v-for="i in 5" :key="i"
+                             class="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-neutral-700">
+                            <div class="flex justify-between items-center">
+                                <Skeleton class="h-6 w-1/3"/>
+                                <Skeleton class="h-8 w-24 rounded-full"/>
                             </div>
                         </div>
                     </div>
@@ -465,27 +480,37 @@ onMounted(() => {
                         <div class="text-gray-500 dark:text-gray-400">Brak dostępnych procedur</div>
                     </div>
 
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div
-                            v-for="procedure in procedures"
-                            :key="procedure.id"
-                            class="bg-white dark:bg-neutral-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-neutral-700"
-                        >
-                            <div class="p-5">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{
-                                            procedure.name
-                                        }}</h3>
+                    <div v-else>
+                        <Accordion type="single" collapsible class="w-full space-y-4">
+                            <AccordionItem
+                                v-for="procedure in procedures"
+                                :key="procedure.id"
+                                :value="`item-${procedure.id}`"
+                                class="bg-white dark:bg-neutral-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-neutral-700"
+                            >
+                                <AccordionTrigger
+                                    class="p-5 w-full flex justify-between items-center hover:no-underline">
+                                    <div class="text-left">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                            {{ procedure.name }}</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {{ procedure.category || 'Ogólne' }}</p>
+                                    </div>
                                     <span
-                                        class="bg-nova-primary/10 text-nova-primary px-6 py-2 rounded-full text-sm font-medium">
-                                {{ procedure.base_price }} zł
-                            </span>
-                                </div>
-                                <p class="mt-3 text-gray-600 dark:text-gray-300">{{ procedure.description }}</p>
-                            </div>
-                        </div>
+                                        class="bg-nova-primary/10 text-nova-primary ml-4 px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                            od {{ procedure.base_price }} zł
+                        </span>
+                                </AccordionTrigger>
+                                <AccordionContent class="p-5 pt-0">
+                                    <p class="text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-neutral-700 pt-4">
+                                        {{ procedure.description }}
+                                    </p>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
 
+                    <!-- Paginacja dla zabiegów (bez zmian) -->
                     <div v-if="!loading && procedures.length > 0 && proceduresMeta && proceduresMeta.last_page > 1"
                          class="mt-8 flex justify-center">
                         <Pagination
@@ -529,21 +554,19 @@ onMounted(() => {
                     </div>
                 </div>
 
+                <!-- === ZAKŁADKA 2: NASI SPECJALIŚCI (Z POPRAWIONĄ LOGIKĄ WIDOCZNOŚCI) === -->
                 <div v-show="activeTab === 1" class="transition-opacity duration-300">
-                    <div v-if="loading" class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
-                        <div v-for="i in 6" :key="i" class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm w-full h-auto flex flex-col">
-                            <div class="flex h-full">
-                                <div class="w-1/3" style="min-height: 250px;">
-                                    <Skeleton class="w-full h-full" />
+                    <div v-if="loading" class="p-4">
+                        <!-- Szkielet ładowania dla karuzeli -->
+                        <div class="flex space-x-4">
+                            <div v-for="i in 3" :key="i"
+                                 class="w-1/3 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                <div class="w-full" style="padding-bottom: 75%; position: relative;">
+                                    <Skeleton class="absolute top-0 left-0 w-full h-full"/>
                                 </div>
-
-                                <div class="w-2/3 flex flex-col p-4 h-full">
-                                    <div class="flex-grow">
-                                        <Skeleton class="h-6 w-3/4 mb-2" />
-                                        <Skeleton class="h-4 w-1/2 mb-4" />
-                                        <Skeleton class="h-16 w-full mb-2" />
-                                    </div>
-
+                                <div class="p-4">
+                                    <Skeleton class="h-6 w-3/4 mb-2"/>
+                                    <Skeleton class="h-4 w-1/2"/>
                                 </div>
                             </div>
                         </div>
@@ -554,83 +577,51 @@ onMounted(() => {
                         <div class="text-gray-500 dark:text-gray-400">Brak dostępnych specjalistów</div>
                     </div>
 
-                    <div v-else class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12 auto-rows-max place-items-center">
-                        <Card
-                            v-for="doctor in doctors"
-                            :key="doctor.id"
-                            style="--p-card-border-radius: 0.75rem; overflow: hidden;"
-                            class="mx-auto border border-gray-200 dark:border-gray-700 shadow-sm w-full h-auto flex flex-col"
+                    <div v-else>
+                        <Carousel
+                            :value="doctors"
+                            :numVisible="3"
+                            :numScroll="1"
+                            :responsiveOptions="responsiveOptions"
+                            circular
+                            :autoplayInterval="5000"
                         >
-                            <template #content>
-                                <div class="flex h-full">
-                                    <div class="w-1/3" style="min-height: 250px;">
-                                        <img
-                                            :src="doctor.profile_picture_url || doctor.profile_picture_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(doctor))}&background=random&size=250`"
-                                            :alt="`Dr. ${getDoctorName(doctor)}`"
-                                            class="w-full h-full object-cover object-center"
-                                        />
-                                    </div>
-
-                                    <div class="w-2/3 flex flex-col p-4 h-full">
-                                        <div class="flex-grow">
-                                            <h3 class="text-xl font-semibold mb-2">{{ getDoctorName(doctor) }}</h3>
-                                            <div class="dark:text-gray-300 mb-4">
-                                                {{ doctor.specialization || 'Brak określonej specjalizacji' }}
+                            <template #item="slotProps">
+                                <div class="p-4">
+                                    <Card
+                                        style="--p-card-border-radius: 0.75rem; overflow: hidden;"
+                                        class="mx-auto border border-gray-200 dark:border-gray-700 shadow-sm w-full h-full flex flex-col hover:shadow-xl transition-shadow duration-300"
+                                    >
+                                        <template #header>
+                                            <img
+                                                :src="slotProps.data.profile_picture_url || slotProps.data.profile_picture_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(getDoctorName(slotProps.data))}&background=random&size=400`"
+                                                :alt="`Dr. ${getDoctorName(slotProps.data)}`"
+                                                class="w-full h-64 object-cover object-center"
+                                            />
+                                        </template>
+                                        <template #title>
+                                            <h3 class="text-xl font-semibold">{{ getDoctorName(slotProps.data) }}</h3>
+                                        </template>
+                                        <template #subtitle>
+                                            <div class="dark:text-gray-300">
+                                                {{ slotProps.data.specialization || 'Brak określonej specjalizacji' }}
                                             </div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400" v-if="doctor.bio">
-                                                {{ doctor.bio.substring(0, 100) }}{{ doctor.bio.length > 100 ? '...' : '' }}
+                                        </template>
+                                        <template #content>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400 min-h-[60px]"
+                                                 v-if="slotProps.data.bio">
+                                                {{
+                                                    slotProps.data.bio.substring(0, 100)
+                                                }}{{ slotProps.data.bio.length > 100 ? '...' : '' }}
                                             </div>
-                                        </div>
-
-                                    </div>
+                                        </template>
+                                    </Card>
                                 </div>
                             </template>
-                        </Card>
-                    </div>
-
-                    <div v-if="!loading && doctors.length > 0 && doctorsMeta && doctorsMeta.last_page > 1"
-                         class="mt-6 flex justify-center">
-                        <Pagination
-                            :items-per-page="doctorsMeta.per_page"
-                            :total="doctorsMeta.total"
-                            :sibling-count="1"
-                            show-edges
-                            :default-page="doctorsMeta.current_page"
-                            @update:page="changeDoctorsPage"
-                        >
-                            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                                <PaginationFirst @click="changeDoctorsPage(1)"
-                                                 class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                                 :disabled="loading"/>
-                                <PaginationPrevious
-                                    @click="changeDoctorsPage(Math.max(1, doctorsMeta.current_page - 1))"
-                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
-
-                                <template v-for="(item, index) in items" :key="index">
-                                    <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
-                                        <Button
-                                            :variant="doctorsMeta.current_page === item.value ? 'default' : 'outline'"
-                                            :class="doctorsMeta.current_page === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:bg-gray-700 dark:text-white dark:border-gray-600'"
-                                            size="sm"
-                                            :disabled="loading"
-                                        >
-                                            {{ item.value }}
-                                        </Button>
-                                    </PaginationListItem>
-                                    <PaginationEllipsis v-else :index="index" class="dark:text-gray-400"/>
-                                </template>
-
-                                <PaginationNext
-                                    @click="changeDoctorsPage(Math.min(doctorsMeta.last_page, doctorsMeta.current_page + 1))"
-                                    class="dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading"/>
-                                <PaginationLast @click="changeDoctorsPage(doctorsMeta.last_page)"
-                                                class="dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                                :disabled="loading"/>
-                            </PaginationList>
-                        </Pagination>
+                        </Carousel>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 </template>
