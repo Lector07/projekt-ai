@@ -400,7 +400,7 @@ onMounted(() => {
             </div>
 
             <div class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
-                <ScrollArea class="w-full h-[60vh]">
+                <ScrollArea class="w-full h-[auto]">
                     <Table>
                         <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria
                         </TableCaption>

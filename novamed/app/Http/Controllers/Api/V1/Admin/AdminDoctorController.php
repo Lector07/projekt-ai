@@ -179,6 +179,7 @@ class AdminDoctorController extends Controller
                         'first_name' => $doctor->first_name,
                         'last_name' => $doctor->last_name,
                         'specialization' => $doctor->specialization,
+                        'user_email' => $doctor->user ? $doctor->user->email : 'Brak',
                         'bio' => $doctor->bio ?: 'Brak opisu',
                         'created_at' => $doctor->created_at,
                     ];
@@ -258,13 +259,12 @@ class AdminDoctorController extends Controller
             ],
         ];
 
-        $jsonData = $doctors->toJson();
+        $jsonData = DoctorResource::collection($doctors)->toJson();
 
         $payload = [
-            'config' => $reportConfig,
-            'data' => $jsonData,
+            'config' => $config,
+            'jsonData' => $jsonData,
         ];
-
         return response()->json($payload);
     }
 }

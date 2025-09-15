@@ -424,7 +424,7 @@ onMounted(() => {
                 Nie znaleziono użytkowników.
             </div>
             <div v-else class="overflow-hidden rounded-xl shadow-sm dark:border-gray-600 dark:bg-gray-900">
-                <ScrollArea class="h-[clamp(250px,calc(100vh-400px),500px)] w-full dark:border-gray-600">
+                <ScrollArea class="h-[auto] w-full dark:border-gray-600">
                     <Table>
                         <TableHeader>
                             <TableRow>

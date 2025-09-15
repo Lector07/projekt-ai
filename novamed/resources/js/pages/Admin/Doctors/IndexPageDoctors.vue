@@ -523,7 +523,7 @@ onMounted(() => {
                         <option v-for="spec in specializations" :key="spec" :value="spec">{{ spec }}</option>
                     </select>
                 </div>
-                <div>
+                <div class="space-y-2 flex items-end" >
                     <Button @click="generateReport" class="bg-nova-primary hover:bg-nova-accent">
                         <Icon name="clipboard" class="mr-2 h-4 w-4"/>
                         Generuj Raport
@@ -548,7 +548,7 @@ onMounted(() => {
             </div>
 
             <div v-else-if="!loading && !error" class="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-gray-900">
-                <ScrollArea class="h-[clamp(250px,calc(100vh-400px),500px)] w-full">
+                <ScrollArea class="h-[auto] w-full">
                     <Table>
                         <TableHeader class="dark:bg-gray-800">
                             <TableRow class="dark:border-gray-700">

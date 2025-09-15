@@ -327,7 +327,7 @@ Miesiąc 3-6: ...`;
                 </div>
 
                 <div v-else class="w-full overflow-x-auto dark:bg-gray-900">
-                    <ScrollArea class="w-full h-[clamp(250px,calc(100vh-400px),500px)]">
+                    <ScrollArea class="w-full h-[auto]">
                         <Table class="w-full">
                             <TableHeader class="sticky top-0 bg-card z-10">
                                 <TableRow class="border-b border-border">

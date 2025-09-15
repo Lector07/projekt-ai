@@ -190,8 +190,8 @@ onMounted(() => {
                 <Button @click="fetchCategories">Spróbuj ponownie</Button>
             </div>
 
-            <div v-else class="bg-white mt-2 dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden">
-                <div class="overflow-x-auto ">
+            <div v-else class="bg-white mt-2 dark:bg-gray-900 w-full rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto h-[auto] w-full">
                     <Table class="w-full p-2">
                         <TableHeader class="bg-[#f9fafb]">
                             <TableRow>
