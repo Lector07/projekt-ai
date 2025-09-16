@@ -16,6 +16,7 @@ import {useToast} from 'primevue/usetoast';
 import {Separator} from "@/components/ui/separator"
 import {LoaderCircle} from "lucide-vue-next";
 
+
 const toast = useToast();
 
 const props = defineProps<{
@@ -758,8 +759,7 @@ watch(() => props.reportType, () => {
                     <ResizablePanel :default-size="70" :min-size="30">
                         <div class="flex flex-col h-full items-center justify-center bg-gray-200 dark:bg-gray-800">
                             <div v-if="reportLoading" class="flex flex-col items-center text-gray-500">
-                                <Icon name="loader-2" class="animate-spin h-12 w-12"/>
-                                <p class="mt-2">Generowanie podglądu...</p>
+                                <LoaderCircle class="h-8 w-8 animate-spin mb-2"/>
                             </div>
                             <div v-else-if="pdfUrl" class="w-full h-full">
                                 <iframe :src="pdfUrl" class="w-full h-full border-0" title="Podgląd Raportu"></iframe>

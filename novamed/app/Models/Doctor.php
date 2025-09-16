@@ -44,6 +44,6 @@ class Doctor extends Model
         if ($this->profile_picture_path) {
             return Storage::disk('public')->url($this->profile_picture_path);
         }
-        return null; // Lub domyślny URL avatara
+        return null;
     }
 }

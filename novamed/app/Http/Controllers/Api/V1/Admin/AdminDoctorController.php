@@ -72,8 +72,7 @@ class AdminDoctorController extends Controller
                     $user->save();
                 }
                 $doctor->user()->associate($user);
-            }
-            else if (isset($validated['email']) && isset($validated['password'])) {
+            } else if (isset($validated['email']) && isset($validated['password'])) {
                 $user = new User();
                 $user->name = $validated['first_name'] . ' ' . $validated['last_name'];
                 $user->email = $validated['email'];
@@ -140,6 +139,58 @@ class AdminDoctorController extends Controller
         $doctor->delete();
 
         return response()->noContent();
+
+    }
+
+    public function updateAvatar(Request $request, Doctor $doctor): JsonResponse
+    {
+        $this->authorize('update', $doctor);
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        try {
+            if ($doctor->profile_picture_path) {
+                Storage::disk('public')->delete($doctor->profile_picture_path);
+            }
+
+            $path = $request->file('avatar')->store('avatars', 'public');
+
+            $doctor->profile_picture_path = $path;
+            $doctor->save();
+
+            return response()->json(new DoctorResource($doctor));
+
+        } catch (\Exception $e) {
+            Log::error('Błąd podczas przesyłania awatara: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Wystąpił nieoczekiwany błąd podczas przesyłania pliku.',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Usuń avatar lekarza
+     */
+    public function deleteAvatar(Doctor $doctor): Response|JsonResponse
+    {
+        $this->authorize('update', $doctor);
+        try {
+            if ($doctor->profile_picture_path) {
+                Storage::disk('public')->delete($doctor->profile_picture_path);
+            }
+            $doctor->profile_picture_path = null;
+            $doctor->save();
+            return response()->noContent();
+        } catch (\Exception $e) {
+            Log::error('Błąd podczas usuwania awatara: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Wystąpił błąd podczas usuwania awatara.',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function generateDoctorsReport(Request $request)
@@ -190,7 +241,7 @@ class AdminDoctorController extends Controller
                             return [
                                 'item' => $procedure->name,
                                 'quantity' => 1,
-                                'price' => is_null($procedure->base_price) ? 0.0 : (float) $procedure->base_price,
+                                'price' => is_null($procedure->base_price) ? 0.0 : (float)$procedure->base_price,
                                 'category' => $procedure->category->name ?? 'Bez kategorii'
                             ];
                         })->toArray();
@@ -263,3 +314,4 @@ class AdminDoctorController extends Controller
         return response()->json($payload);
     }
 }
+

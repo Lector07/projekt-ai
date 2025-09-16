@@ -167,7 +167,6 @@ Route::prefix('v1/admin')
 
         Route::post('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'updateAvatar'])
             ->name('doctors.avatar.update');
-
         Route::delete('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'deleteAvatar'])
             ->name('doctors.avatar.delete');
     });

@@ -9,6 +9,7 @@ import {Label} from '@/components/ui/label';
 import {parseDate, type DateValue} from '@internationalized/date';
 import Icon from '@/components/Icon.vue';
 import type {BreadcrumbItem} from '@/types';
+import { PrinterCheck } from 'lucide-vue-next';
 import {
     Table,
     TableBody,
@@ -390,15 +391,20 @@ onMounted(() => {
                             <Icon name="x" class="mr-2 h-4 w-4"/>
                             Wyczyść
                         </Button>
-                        <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent">
-                            <Icon name="clipboard" class="ml-4 h-4 w-4"/>
-                            Generuj Raport
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger as-child>
+                                <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent" aria-label="Generator raportów">
+                                    <PrinterCheck />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent align="center" side="bottom">Generator raportów</TooltipContent>
+                        </Tooltip>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
+            <div
+                class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
                 <ScrollArea class="w-full h-[auto]">
                     <Table>
                         <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria
@@ -412,7 +418,7 @@ onMounted(() => {
                                 <TableHead>Data i godzina</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead class="text-center">Akcje</TableHead>
-                                <TableHead class="text-center">Sczeóły</TableHead>
+                                <TableHead class="text-center">Szczegóły</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -501,13 +507,11 @@ onMounted(() => {
             </div>
         </div>
 
-        <!-- Użycie komponentu generatora -->
         <ReportGenerator
             v-model="isReportGeneratorOpen"
             :active-filters="activeFilters"
         />
 
-        <!-- Okno edycji wizyty -->
         <Dialog :open="showEditAppointmentForm" @update:open="showEditAppointmentForm = $event">
             <DialogContent class="max-w-md">
                 <DialogHeader>
