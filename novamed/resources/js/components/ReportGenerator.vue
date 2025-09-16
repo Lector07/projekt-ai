@@ -14,6 +14,7 @@ import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} fro
 import Icon from '@/components/Icon.vue';
 import {useToast} from 'primevue/usetoast';
 import {Separator} from "@/components/ui/separator"
+import {LoaderCircle} from "lucide-vue-next";
 
 const toast = useToast();
 
@@ -26,6 +27,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:modelValue']);
+const isLoading = ref(false);
+
 
 const reportLoading = ref(false);
 const pdfUrl = ref<string | null>(null);
@@ -130,7 +133,8 @@ const reportConfig = reactive<ReportConfig>({
         generateBookmarks: false,
         highlightRules: []
     },
-    subreportConfigs: {}
+    subreportConfigs: {
+    }
 });
 
 const isSubreportColumn = (fieldDame: string): boolean => {
@@ -161,12 +165,34 @@ const initializeConfig = () => {
                 companyInfo: null,
                 footerLeftText: null,
                 columns: [
-                    {field: 'item', header: 'Nazwa procedury', visible: true, width: -1, format: null, groupCalculation: 'NONE'},
-                    {field: 'category', header: 'Kategoria', visible: true, width: -1, format: null, groupCalculation: 'NONE'},
-                    {field: 'price', header: 'Cena bazowa (PLN)', visible: true, width: -1, format: '#,##0.00', groupCalculation: 'SUM'}
+                    {
+                        field: 'item',
+                        header: 'Nazwa procedury',
+                        visible: true,
+                        width: -1,
+                        format: null,
+                        groupCalculation: 'NONE'
+                    },
+                    {
+                        field: 'category',
+                        header: 'Kategoria',
+                        visible: true,
+                        width: -1,
+                        format: null,
+                        groupCalculation: 'NONE'
+                    },
+                    {
+                        field: 'price',
+                        header: 'Cena bazowa (PLN)',
+                        visible: true,
+                        width: -1,
+                        format: '#,##0.00',
+                        groupCalculation: 'SUM'
+                    }
                 ],
                 groups: [],
                 pageFooterEnabled: false,
+                summaryBandEnabled: false,
                 formattingOptions: {zebraStripes: true, generateBookmarks: false, highlightRules: []},
             };
         } else {
@@ -245,6 +271,7 @@ const configureSubreport = (fieldName: string) => {
             ],
             groups: [],
             pageFooterEnabled: false,
+            summaryBandEnabled: false,
             formattingOptions: {zebraStripes: true, generateBookmarks: false, highlightRules: []},
         };
     }
@@ -478,6 +505,17 @@ watch(() => props.reportType, () => {
                                                             podsumowanie na końcu</label>
                                                     </div>
                                                 </div>
+                                                <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
+                                                    <Label class="text-right">Podsumowanie dla podraportu</Label>
+                                                    <div class="flex items-center space-x-2 col-span-3">
+                                                        <Checkbox id="subreport-summary"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  v-model:checked="reportConfig.subreportConfigs.procedures.summaryBandEnabled"/>
+                                                        <label for="subreport-summary"
+                                                               class="text-sm font-medium leading-none">Pokaż
+                                                            podsumowanie podraportu</label>
+                                                    </div>
+                                                </div>
 
                                                 <Separator class="my-4"/>
 
@@ -553,7 +591,8 @@ watch(() => props.reportType, () => {
                                                             <Checkbox v-model:checked="col.visible"
                                                                       class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"/>
                                                             <div class="col-span-2 flex items-center space-x-2">
-                                                                <Input v-if="!isSubreportColumn(col.field)" v-model="col.header" class="flex-1 text-xs h-8"/>
+                                                                <Input v-if="!isSubreportColumn(col.field)"
+                                                                       v-model="col.header" class="flex-1 text-xs h-8"/>
                                                                 <Button
                                                                     v-if="availableFields.find(f => f.field === col.field)?.type === 'subreport' && col.visible"
                                                                     @click="configureSubreport(col.field)"
@@ -622,7 +661,9 @@ watch(() => props.reportType, () => {
                                                         </div>
                                                     </template>
                                                 </draggable>
-                                                <Button @click="addGroup" class="mt-2 w-full" variant="outline">Dodaj
+                                                <Button @click="addGroup" class="mt-2 w-full" variant="outline">
+                                                    <Icon name="plus" class="mr-2" size="8"/>
+                                                    Dodaj
                                                     nową
                                                     grupę
                                                 </Button>
@@ -643,7 +684,8 @@ watch(() => props.reportType, () => {
                                                             zebry</label>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
-                                                        <Label for="report-theme" class="text-right">Motyw wizualny</Label>
+                                                        <Label for="report-theme" class="text-right">Motyw
+                                                            wizualny</Label>
                                                         <select v-model="reportConfig.theme" id="report-theme"
                                                                 class="col-span-2 w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
                                                             <option v-for="theme in availableThemes" :key="theme.value"
@@ -732,9 +774,8 @@ watch(() => props.reportType, () => {
             </div>
             <div class="mt-4 pt-4 border-t dark:border-gray-700 flex items-center justify-between">
                 <Button @click="refreshPreview" :disabled="reportLoading" variant="outline">
-                    <Icon v-if="reportLoading" name="loader-2" class="animate-spin mr-2" size="16"/>
-                    <Icon v-else name="refresh-cw" class="mr-2" size="16"/>
-                    Odśwież podgląd
+                    <LoaderCircle v-if="reportLoading" class="h-4 w-4 animate-spin" />
+                    {{ reportLoading ? 'Odświeżanie...' : 'Odśwież' }}
                 </Button>
                 <Button @click="downloadReport" :disabled="!pdfUrl || reportLoading"
                         class="bg-green-600 hover:bg-green-700 text-white">

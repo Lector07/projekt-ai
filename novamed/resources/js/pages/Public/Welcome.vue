@@ -462,10 +462,8 @@ onMounted(() => {
                     </button>
                 </div>
 
-                <!-- === ZAKŁADKA 1: ZABIEGI MEDYCZNE (Nowy, ulepszony układ) === -->
                 <div v-show="activeTab === 0" class="transition-opacity duration-300">
                     <div v-if="loading" class="space-y-4">
-                        <!-- Szkielet ładowania dla listy zabiegów -->
                         <div v-for="i in 5" :key="i"
                              class="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-neutral-700">
                             <div class="flex justify-between items-center">
@@ -489,17 +487,22 @@ onMounted(() => {
                                 class="bg-white dark:bg-neutral-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-neutral-700"
                             >
                                 <AccordionTrigger
-                                    class="p-5 w-full flex justify-between items-center hover:no-underline">
+                                    class="p-5 w-full grid grid-cols-[1fr_auto] items-center gap-4 hover:no-underline"
+                                >
                                     <div class="text-left">
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {{ procedure.name }}</h3>
+                                            {{ procedure.name }}
+                                        </h3>
                                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            {{ procedure.category || 'Ogólne' }}</p>
+                                            {{ procedure.description || 'Ogólne' }}
+                                        </p>
                                     </div>
-                                    <span
-                                        class="bg-nova-primary/10 text-nova-primary ml-4 px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap">
-                            od {{ procedure.base_price }} zł
-                        </span>
+
+                                    <div
+                                        class="justify-self-end bg-nova-primary/10 text-nova-primary px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap"
+                                    >
+                                        od {{ procedure.base_price }} zł
+                                    </div>
                                 </AccordionTrigger>
                                 <AccordionContent class="p-5 pt-0">
                                     <p class="text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-neutral-700 pt-4">
@@ -510,7 +513,6 @@ onMounted(() => {
                         </Accordion>
                     </div>
 
-                    <!-- Paginacja dla zabiegów (bez zmian) -->
                     <div v-if="!loading && procedures.length > 0 && proceduresMeta && proceduresMeta.last_page > 1"
                          class="mt-8 flex justify-center">
                         <Pagination

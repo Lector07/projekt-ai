@@ -322,13 +322,8 @@ onMounted(() => {
         <div class="container mx-auto px-4 py-6 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-3xl font-bold dark:text-white">Zarządzanie Wizytami</h1>
-                <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent">
-                    <Icon name="clipboard" class="mr-2 h-4 w-4"/>
-                    Generuj Raport
-                </Button>
             </div>
 
-            <!-- FILTRY -->
             <div class="rounded-lg shadow-sm mb-6 p-4 border dark:border-gray-700 bg-white dark:bg-gray-800">
                 <h2 class="text-lg font-semibold mb-3 dark:text-white">Filtry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -394,6 +389,10 @@ onMounted(() => {
                         <Button variant="outline" @click="resetFilters">
                             <Icon name="x" class="mr-2 h-4 w-4"/>
                             Wyczyść
+                        </Button>
+                        <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent">
+                            <Icon name="clipboard" class="ml-4 h-4 w-4"/>
+                            Generuj Raport
                         </Button>
                     </div>
                 </div>

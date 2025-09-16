@@ -165,13 +165,10 @@ class AdminDoctorController extends Controller
 
         $doctors = $query->get();
 
-        // Jeśli żądanie zawiera parametr 'config', generuj PDF (nowy uniwersalny komponent)
         if ($request->has('config')) {
             try {
                 $config = json_decode($request->input('config'), true);
 
-                Log::info('--- KONTROLER LEKARZY - OTRZYMANA KONFIGURACJA ---');
-                Log::info(json_encode($config, JSON_PRETTY_PRINT));
 
                 $dataForReport = $doctors->map(function ($doctor) {
                     $doctorData = [
@@ -193,7 +190,7 @@ class AdminDoctorController extends Controller
                             return [
                                 'item' => $procedure->name,
                                 'quantity' => 1,
-                                'price' => $procedure->base_price ?? 0,
+                                'price' => is_null($procedure->base_price) ? 0.0 : (float) $procedure->base_price,
                                 'category' => $procedure->category->name ?? 'Bez kategorii'
                             ];
                         })->toArray();
@@ -209,8 +206,6 @@ class AdminDoctorController extends Controller
                     'jsonData' => json_encode($dataForReport->toArray()),
                 ];
 
-                Log::info('--- DANE WYSYŁANE DO SERWISU RAPORTÓW ---');
-                Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
                 $response = Http::withBody(json_encode($payload), 'application/json')
                     ->timeout(30)->post('http://localhost:8080/api/generate-dynamic-report');
@@ -262,7 +257,7 @@ class AdminDoctorController extends Controller
         $jsonData = DoctorResource::collection($doctors)->toJson();
 
         $payload = [
-            'config' => $config,
+            'config' => $reportConfig,
             'jsonData' => $jsonData,
         ];
         return response()->json($payload);
