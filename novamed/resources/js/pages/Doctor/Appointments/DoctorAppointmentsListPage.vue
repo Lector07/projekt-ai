@@ -13,6 +13,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {Pagination } from '@/components/ui/pagination';
 import axios from 'axios';
+import { PrinterCheck } from 'lucide-vue-next';
+
+import ReportGenerator from '@/components/ReportGenerator.vue';
 
 const router = useRouter();
 const appointments = ref<Appointment[]>([]);
@@ -22,6 +25,7 @@ const currentPage = ref(1);
 const lastPage = ref(1);
 const total = ref(0);
 const perPage = ref(10);
+const isReportGeneratorOpen = ref(false);
 
 interface Appointment {
     id: number;
@@ -43,9 +47,36 @@ const filters = ref({
     sortBy: 'newest',
 });
 
+// Computed property dla aktywnych filtrów w generatorze raportów
+const activeFilters = computed(() => {
+    const active: any = {};
+
+    if (filters.value.status && filters.value.status !== 'all') {
+        active.status = filters.value.status;
+    }
+
+    if (filters.value.searchQuery) {
+        active.search = filters.value.searchQuery;
+    }
+
+    if (filters.value.dateFrom) {
+        active.date_from = filters.value.dateFrom;
+    }
+
+    if (filters.value.dateTo) {
+        active.date_to = filters.value.dateTo;
+    }
+
+    if (filters.value.sortBy) {
+        active.sort_by = filters.value.sortBy;
+    }
+
+    return active;
+});
+
 const resetFilters = () => {
     filters.value = {
-        status: '',
+        status: 'all',
         searchQuery: '',
         dateFrom: '',
         dateTo: '',
@@ -148,6 +179,10 @@ const navigateToAppointmentDetails = (id: number) => {
     router.push({ name: 'doctor.appointments.show', params: { id } });
 };
 
+const openReportGenerating = () => {
+    isReportGeneratorOpen.value = true;
+};
+
 onMounted(() => {
     fetchAppointments();
 });
@@ -160,6 +195,14 @@ onMounted(() => {
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Moje wizyty</h1>
                     <p class="text-gray-600 dark:text-gray-400">Zarządzaj wizytami pacjentów i swoim grafikiem</p>
+                </div>
+                <div class="mt-4 flex space-x-2 md:mt-0">
+                    <Button
+                        @click="openReportGenerating"
+                        class="bg-nova-primary hover:bg-nova-accent text-white"
+                    >
+                        <PrinterCheck/>
+                    </Button>
                 </div>
             </div>
 
@@ -315,6 +358,58 @@ onMounted(() => {
                     />
                 </CardFooter>
             </Card>
+
+            <ReportGenerator
+                :userRole="'doctor'"
+                v-model="isReportGeneratorOpen"
+                :active-filters="activeFilters"
+                report-type="appointments"
+                report-title="Raport wizyt lekarskich"
+                :report-config="{
+                    endpoint: '/api/v1/doctor/appointments/generate',
+                    filename: 'raport-wizyt-lekarskich',
+                    filters: {
+                        status: {
+                            label: 'Status wizyty',
+                            type: 'select',
+                            options: statusOptions
+                        },
+                        search: {
+                            label: 'Wyszukaj pacjenta',
+                            type: 'text',
+                            placeholder: 'Nazwisko pacjenta...'
+                        },
+                        date_from: {
+                            label: 'Od daty',
+                            type: 'date'
+                        },
+                        date_to: {
+                            label: 'Do daty',
+                            type: 'date'
+                        },
+                        sort_by: {
+                            label: 'Sortowanie',
+                            type: 'select',
+                            options: sortOptions
+                        }
+                    },
+                    columns: {
+                        appointment_datetime: 'Data i godzina',
+                        patient_name: 'Pacjent',
+                        procedure_name: 'Zabieg',
+                        status: 'Status'
+                    }
+                }"
+            />
         </div>
     </AppLayout>
 </template>
+
+<style>
+/* Definicje zmiennych CSS dla motywu Nova */
+:root {
+    --nova-primary: #034078;
+    --nova-accent: #3d98b2;
+    --nova-light: #5bc0de;
+}
+</style>

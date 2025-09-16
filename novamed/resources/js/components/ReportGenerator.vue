@@ -22,6 +22,7 @@ const toast = useToast();
 const props = defineProps<{
     modelValue: boolean;
     activeFilters: ActiveFilters;
+    userRole: 'admin' | 'doctor';
     reportType?: 'appointments' | 'doctors';
     config?: any;
     data?: any[];
@@ -289,11 +290,15 @@ const availableThemes = [
 ];
 
 const apiEndpoint = computed(() => {
+    const rolePrefix = props.userRole === 'doctor' ? 'doctor' : 'admin';
+
     if (props.reportType === 'doctors') {
-        return '/api/v1/admin/doctors/report';
-    } else {
-        return '/api/v1/admin/appointments/report';
+        return `/api/v1/admin/doctors/report`;
     }
+    else if (props.reportType === 'appointments') {
+        return `/api/v1/${rolePrefix}/appointments/report`;
+    }
+    return `/api/v1/admin/appointments/report`;
 });
 
 const refreshPreview = async () => {

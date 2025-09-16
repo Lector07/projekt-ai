@@ -322,166 +322,182 @@ watch(allProcedures, () => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <h1 class="mb-8 text-3xl font-bold text-gray-900 dark:text-gray-100">Ustawienia Profilu Lekarza</h1>
+        <div class="container mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <h1 class="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100 sm:mb-8 sm:text-3xl">Ustawienia Profilu Lekarza</h1>
 
-            <div v-if="loadingProfile || loadingProcedures" class="space-y-6">
-                <Skeleton class="h-48 w-full dark:bg-gray-700" />
-                <Skeleton class="h-64 w-full dark:bg-gray-700" />
+            <div v-if="loadingProfile || loadingProcedures" class="space-y-4 sm:space-y-6">
+                <Skeleton class="h-40 w-full dark:bg-gray-700 sm:h-48" />
+                <Skeleton class="h-48 w-full dark:bg-gray-700 sm:h-64" />
             </div>
-            <div v-else-if="!doctorProfile.id && !loadingProfile" class="py-10 text-center text-gray-500 dark:text-gray-400">
-                <p>Nie udało się załadować profilu lekarza lub profil nie istnieje.</p>
+            <div v-else-if="!doctorProfile.id && !loadingProfile" class="py-8 text-center text-gray-500 dark:text-gray-400 sm:py-10">
+                <p class="text-sm sm:text-base">Nie udało się załadować profilu lekarza lub profil nie istnieje.</p>
                 <Button @click="fetchDoctorProfile" variant="link" class="mt-2">Spróbuj ponownie</Button>
             </div>
-            <form v-else @submit.prevent="submitProfileChanges" class="grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div class="space-y-6 md:col-span-1">
-                    <Card class="border dark:border-gray-700 dark:bg-gray-800">
-                        <CardHeader>
-                            <CardTitle class="dark:text-gray-200">Zdjęcie Profilu Lekarza</CardTitle>
-                            <CardDescription class="dark:text-gray-400">Twoje zdjęcie widoczne dla pacjentów. </CardDescription>
-                        </CardHeader>
-                        <CardContent class="flex flex-col items-center gap-4">
-                            <img
-                                :src="
-                                    avatarPreview ||
-                                    doctorProfile.profile_picture_url ||
-                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(doctorProfile.first_name || 'L')}+${encodeURIComponent(doctorProfile.last_name || 'P')}&background=random&color=fff&size=128`
-                                "
-                                alt="Avatar lekarza"
-                                class="h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg dark:border-gray-700"
-                            />
-                            <input
-                                type="file"
-                                ref="avatarInputRef"
-                                @change="handleAvatarInputChange"
-                                accept="image/jpeg,image/png,image/webp"
-                                class="hidden"
-                                id="doctor-avatar-input"
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                @click="avatarInputRef?.click()"
-                                class="w-full dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                            >
-                                <Icon name="upload-cloud" class="mr-2 h-4 w-4" />
-                                Zmień zdjęcie
-                            </Button>
-                            <InputError :message="avatarErrors.avatar?.[0]" />
-                            <p class="text-center text-xs text-gray-500 dark:text-gray-400">Maks. 2MB. JPG, PNG, WEBP.</p>
-                            <div class="w-full space-y-2">
-                                <Button
-                                    v-if="avatarFile"
-                                    type="button"
-                                    @click="submitAvatar"
-                                    :disabled="savingAvatar"
-                                    class="w-full bg-green-600 text-white hover:bg-green-700"
-                                >
-                                    <Icon v-if="savingAvatar" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
-                                    Zapisz nowy avatar
-                                </Button>
-                                <Button
-                                    v-if="doctorProfile.profile_picture_url && !avatarFile"
-                                    type="button"
-                                    @click="deleteAvatar"
-                                    :disabled="deletingAvatar"
-                                    variant="destructive"
-                                    class="w-full"
-                                >
-                                    <Icon v-if="deletingAvatar" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
-                                    <Icon v-else name="trash-2" class="mr-2 h-4 w-4" />
-                                    Usuń zdjęcie
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div class="space-y-8 md:col-span-2">
-                    <Card class="border dark:border-gray-700 dark:bg-gray-800">
-                        <CardHeader>
-                            <CardTitle class="dark:text-gray-200">Informacje Podstawowe</CardTitle>
-                        </CardHeader>
-                        <CardContent class="space-y-4">
-                            <div>
-                                <Label for="docSpec" class="dark:text-gray-300">Specjalizacja</Label>
-                                <Input id="docSpec" v-model="formSpecialization" placeholder="np. Kardiolog" class="modal-input mt-1" />
-                                <InputError v-if="profileErrors.specialization" :message="profileErrors.specialization[0]" class="mt-1" />
-                            </div>
-                            <div>
-                                <Label for="docBio" class="dark:text-gray-300">O mnie (Bio)</Label>
-                                <Textarea
-                                    id="docBio"
-                                    v-model="formBio"
-                                    placeholder="Opisz swoje doświadczenie, podejście do pacjenta itp."
-                                    rows="5"
-                                    class="modal-input mt-1 min-h-[100px]"
+            <div v-else class="space-y-6 lg:space-y-8">
+                <!-- Główny layout - na dużych ekranach grid, na małych stack -->
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+                    <!-- Sekcja avatara - na małych ekranach na górze -->
+                    <div class="lg:col-span-1">
+                        <Card class="border dark:border-gray-700 dark:bg-gray-800">
+                            <CardHeader class="pb-4 sm:pb-6">
+                                <CardTitle class="text-lg dark:text-gray-200 sm:text-xl">Zdjęcie Profilu Lekarza</CardTitle>
+                                <CardDescription class="text-sm dark:text-gray-400 sm:text-base">Twoje zdjęcie widoczne dla pacjentów.</CardDescription>
+                            </CardHeader>
+                            <CardContent class="flex flex-col items-center gap-4 pb-6">
+                                <img
+                                    :src="
+                                        avatarPreview ||
+                                        doctorProfile.profile_picture_url ||
+                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(doctorProfile.first_name || 'L')}+${encodeURIComponent(doctorProfile.last_name || 'P')}&background=random&color=fff&size=128`
+                                    "
+                                    alt="Avatar lekarza"
+                                    class="h-28 w-28 rounded-full border-4 border-white object-cover shadow-lg dark:border-gray-700 sm:h-32 sm:w-32 lg:h-36 lg:w-36"
                                 />
-                                <InputError v-if="profileErrors.bio" :message="profileErrors.bio[0]" class="mt-1" />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card class="border dark:border-gray-700 dark:bg-gray-800">
-                        <CardHeader>
-                            <CardTitle class="dark:text-gray-200">Wykonywane Zabiegi</CardTitle>
-                            <CardDescription class="dark:text-gray-400">Zaznacz zabiegi, które wykonujesz. </CardDescription>
-                        </CardHeader>
-                        <CardContent class="space-y-4">
-                            <div v-if="loadingProcedures && !allProcedures.length" class="p-3 text-sm text-gray-500 dark:text-gray-400">
-                                Ładowanie listy zabiegów...
-                            </div>
-                            <div v-else-if="allProcedures.length === 0" class="p-3 text-sm text-gray-500 dark:text-gray-400">
-                                Brak zdefiniowanych zabiegów w systemie. Możesz je dodać w panelu administratora.
-                            </div>
-                            <div v-else class="max-h-80 space-y-1 overflow-y-auto pr-2">
-                                <div
-                                    v-for="procedure in allProcedures"
-                                    :key="`prof-proc-switch-${procedure.id}`"
-                                    class="flex-row items-center space-x-3 rounded-md border bg-white p-3 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-700/30 dark:hover:bg-gray-700/50"
+                                <input
+                                    type="file"
+                                    ref="avatarInputRef"
+                                    @change="handleAvatarInputChange"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    class="hidden"
+                                    id="doctor-avatar-input"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    @click="avatarInputRef?.click()"
+                                    class="w-full text-sm dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 sm:text-base"
                                 >
-                                    <div class="flex items-center space-x-2">
-                                        <Checkbox
-                                            :id="`checkbox-proc-${procedure.id}`"
-                                            v-model="procedureSelections[procedure.id]"
-                                            class="data-[state=checked]:bg-nova-primary dark:data-[state=checked]:bg-nova-accent"
-                                        />
-                                        <Label
-                                            :for="`checkbox-proc-${procedure.id}`"
-                                            class="ml-2 cursor-pointer font-medium text-gray-800 dark:text-gray-100"
-                                        >
-                                            {{ procedure.name }}
-                                        </Label>
-                                    </div>
-                                    <Separator class="my-3" />
-                                    <div class="flex-1 text-sm text-gray-600 dark:text-gray-400">
-                                        {{ procedure.description || 'Brak opisu dla tego zabiegu.' }}
+                                    <Icon name="upload-cloud" class="mr-2 h-4 w-4" />
+                                    Zmień zdjęcie
+                                </Button>
+                                <InputError :message="avatarErrors.avatar?.[0]" />
+                                <p class="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">Maks. 2MB. JPG, PNG, WEBP.</p>
+                                <div class="w-full space-y-2">
+                                    <Button
+                                        v-if="avatarFile"
+                                        type="button"
+                                        @click="submitAvatar"
+                                        :disabled="savingAvatar"
+                                        class="w-full bg-green-600 text-sm text-white hover:bg-green-700 sm:text-base"
+                                    >
+                                        <Icon v-if="savingAvatar" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                                        Zapisz nowy avatar
+                                    </Button>
+                                    <Button
+                                        v-if="doctorProfile.profile_picture_url && !avatarFile"
+                                        type="button"
+                                        @click="deleteAvatar"
+                                        :disabled="deletingAvatar"
+                                        variant="destructive"
+                                        class="w-full text-sm sm:text-base"
+                                    >
+                                        <Icon v-if="deletingAvatar" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                                        <Icon v-else name="trash-2" class="mr-2 h-4 w-4" />
+                                        Usuń zdjęcie
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <!-- Główna zawartość formularza -->
+                    <div class="space-y-6 lg:col-span-2 lg:space-y-8">
+                        <!-- Informacje podstawowe -->
+                        <Card class="border dark:border-gray-700 dark:bg-gray-800">
+                            <CardHeader class="pb-4 sm:pb-6">
+                                <CardTitle class="text-lg dark:text-gray-200 sm:text-xl">Informacje Podstawowe</CardTitle>
+                            </CardHeader>
+                            <CardContent class="space-y-4 sm:space-y-6">
+                                <div>
+                                    <Label for="docSpec" class="text-sm font-medium dark:text-gray-300 sm:text-base">Specjalizacja</Label>
+                                    <Input
+                                        id="docSpec"
+                                        v-model="formSpecialization"
+                                        placeholder="np. Kardiolog"
+                                        class="modal-input mt-1 text-sm sm:text-base"
+                                    />
+                                    <InputError v-if="profileErrors.specialization" :message="profileErrors.specialization[0]" class="mt-1" />
+                                </div>
+                                <div>
+                                    <Label for="docBio" class="text-sm font-medium dark:text-gray-300 sm:text-base">O mnie (Bio)</Label>
+                                    <Textarea
+                                        id="docBio"
+                                        v-model="formBio"
+                                        placeholder="Opisz swoje doświadczenie, podejście do pacjenta itp."
+                                        rows="4"
+                                        class="modal-input mt-1 min-h-[80px] text-sm sm:min-h-[100px] sm:text-base"
+                                    />
+                                    <InputError v-if="profileErrors.bio" :message="profileErrors.bio[0]" class="mt-1" />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <!-- Wykonywane zabiegi -->
+                        <Card class="border dark:border-gray-700 dark:bg-gray-800">
+                            <CardHeader class="pb-4 sm:pb-6">
+                                <CardTitle class="text-lg dark:text-gray-200 sm:text-xl">Wykonywane Zabiegi</CardTitle>
+                                <CardDescription class="text-sm dark:text-gray-400 sm:text-base">Zaznacz zabiegi, które wykonujesz.</CardDescription>
+                            </CardHeader>
+                            <CardContent class="space-y-4">
+                                <div v-if="loadingProcedures && !allProcedures.length" class="p-3 text-sm text-gray-500 dark:text-gray-400">
+                                    Ładowanie listy zabiegów...
+                                </div>
+                                <div v-else-if="allProcedures.length === 0" class="p-3 text-sm text-gray-500 dark:text-gray-400">
+                                    Brak zdefiniowanych zabiegów w systemie. Możesz je dodać w panelu administratora.
+                                </div>
+                                <div v-else class="max-h-64 space-y-1 overflow-y-auto pr-2 sm:max-h-80">
+                                    <div
+                                        v-for="procedure in allProcedures"
+                                        :key="`prof-proc-switch-${procedure.id}`"
+                                        class="rounded-md border bg-white p-3 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-700/30 dark:hover:bg-gray-700/50 sm:p-4"
+                                    >
+                                        <div class="flex items-start space-x-3">
+                                            <Checkbox
+                                                :id="`checkbox-proc-${procedure.id}`"
+                                                v-model="procedureSelections[procedure.id]"
+                                                class="mt-0.5 data-[state=checked]:bg-nova-primary dark:data-[state=checked]:bg-nova-accent"
+                                            />
+                                            <div class="flex-1 min-w-0">
+                                                <Label
+                                                    :for="`checkbox-proc-${procedure.id}`"
+                                                    class="cursor-pointer font-medium text-gray-800 dark:text-gray-100 text-sm sm:text-base"
+                                                >
+                                                    {{ procedure.name }}
+                                                </Label>
+                                                <Separator class="my-2 sm:my-3" />
+                                                <div class="text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
+                                                    {{ procedure.description || 'Brak opisu dla tego zabiegu.' }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <InputError v-if="profileErrors.procedure_ids" :message="profileErrors.procedure_ids[0]" class="mt-2 text-sm" />
-                        </CardContent>
-                    </Card>
+                                <InputError v-if="profileErrors.procedure_ids" :message="profileErrors.procedure_ids[0]" class="mt-2 text-sm" />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
-            </form>
-            <div class="mt-6 flex justify-end">
-                <Button
-                    type="submit"
-                    :disabled="savingProfile"
-                    @click="submitProfileChanges"
-                    class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent"
-                >
-                    <Icon v-if="savingProfile" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
-                    Zapisz zmiany profilu
-                </Button>
+
+                <!-- Przycisk zapisu - responsywny -->
+                <div class="flex flex-col items-stretch space-y-3 sm:flex-row sm:items-center sm:justify-end sm:space-x-4 sm:space-y-0">
+                    <Button
+                        type="submit"
+                        :disabled="savingProfile"
+                        @click="submitProfileChanges"
+                        class="w-full bg-nova-primary text-sm hover:bg-nova-accent dark:bg-nova-light dark:hover:bg-nova-accent sm:w-auto sm:text-base"
+                    >
+                        <Icon v-if="savingProfile" name="loader-2" class="mr-2 h-4 w-4 animate-spin" />
+                        Zapisz zmiany profilu
+                    </Button>
+                </div>
             </div>
         </div>
         <Toast />
         <ConfirmPopup>
             <template #message="slotProps">
-                <div class="flex flex-col items-center w-full gap-4 border-b border-surface-200 dark:border-surface-700 p-4 mb-4">
-                    <i :class="slotProps.message.icon" class="text-6xl text-primary-500"></i>
-                    <p>{{ slotProps.message.message }}</p>
+                <div class="flex flex-col items-center w-full gap-3 border-b border-surface-200 dark:border-surface-700 p-3 mb-3 sm:gap-4 sm:p-4 sm:mb-4">
+                    <i :class="slotProps.message.icon" class="text-4xl text-primary-500 sm:text-6xl"></i>
+                    <p class="text-sm text-center sm:text-base">{{ slotProps.message.message }}</p>
                 </div>
             </template>
         </ConfirmPopup>
@@ -489,6 +505,14 @@ watch(allProcedures, () => {
 </template>
 
 <style>
+/* Definicje zmiennych CSS dla motywu Nova */
+:root {
+    --nova-primary: #034078;
+    --nova-accent: #3d98b2;
+    --nova-light: #5bc0de;
+}
+
+/* Responsywne style dla ConfirmPopup */
 .p-confirmpopup {
     background: white !important;
     color: #333 !important;
@@ -497,6 +521,16 @@ watch(allProcedures, () => {
     padding: 0 !important;
     overflow: hidden !important;
     border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    max-width: calc(100vw - 2rem) !important;
+    width: 100% !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup {
+        width: auto !important;
+        min-width: 320px !important;
+        max-width: 500px !important;
+    }
 }
 
 .dark .p-confirmpopup {
@@ -506,13 +540,26 @@ watch(allProcedures, () => {
 }
 
 .p-confirmpopup-content {
-    padding: 1rem !important;
+    padding: 0.75rem !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-content {
+        padding: 1rem !important;
+    }
 }
 
 .p-confirmpopup-icon {
     color: var(--nova-primary) !important;
-    font-size: 1.5rem !important;
-    margin-right: 0.75rem !important;
+    font-size: 1.25rem !important;
+    margin-right: 0.5rem !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-icon {
+        font-size: 1.5rem !important;
+        margin-right: 0.75rem !important;
+    }
 }
 
 .dark .p-confirmpopup-icon {
@@ -520,9 +567,15 @@ watch(allProcedures, () => {
 }
 
 .p-confirmpopup-message {
-    font-size: 1rem !important;
+    font-size: 0.875rem !important;
     line-height: 1.5 !important;
     color: #374151 !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-message {
+        font-size: 1rem !important;
+    }
 }
 
 .dark .p-confirmpopup-message {
@@ -531,11 +584,19 @@ watch(allProcedures, () => {
 
 .p-confirmpopup-footer {
     display: flex !important;
-    justify-content: flex-end !important;
+    flex-direction: column !important;
     gap: 0.5rem !important;
-    padding: 0.75rem 1rem !important;
+    padding: 0.75rem !important;
     background: #f9fafb !important;
     border-top: 1px solid #e5e7eb !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-footer {
+        flex-direction: row !important;
+        justify-content: flex-end !important;
+        padding: 0.75rem 1rem !important;
+    }
 }
 
 .dark .p-confirmpopup-footer {
@@ -544,28 +605,37 @@ watch(allProcedures, () => {
 }
 
 .p-confirmpopup-accept-button {
-    background: var(--nova-primary, #034078) !important;
-    border-color: var(--nova-primary,#034078) !important;
+    background: var(--nova-primary) !important;
+    border-color: var(--nova-primary) !important;
     color: white !important;
     padding: 0.5rem 1rem !important;
     border-radius: 0.25rem !important;
     font-weight: 500 !important;
     transition: background-color 0.2s !important;
+    width: 100% !important;
+    font-size: 0.875rem !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-accept-button {
+        width: auto !important;
+        font-size: 1rem !important;
+    }
 }
 
 .p-confirmpopup-accept-button:hover {
-    background: var(--nova-accent, #3d98b2) !important;
-    border-color: var(--nova-accent, #034078) !important;
+    background: var(--nova-accent) !important;
+    border-color: var(--nova-accent) !important;
 }
 
 .dark .p-confirmpopup-accept-button {
-    background: var(--nova-light, #034078) !important;
-    border-color: var(--nova-light, #034078) !important;
+    background: var(--nova-light) !important;
+    border-color: var(--nova-light) !important;
 }
 
 .dark .p-confirmpopup-accept-button:hover {
-    background: var(--nova-accent, #3d98b2) !important;
-    border-color: var(--nova-accent, #034078) !important;
+    background: var(--nova-accent) !important;
+    border-color: var(--nova-accent) !important;
 }
 
 .p-confirmpopup-reject-button {
@@ -576,6 +646,15 @@ watch(allProcedures, () => {
     border-radius: 0.25rem !important;
     font-weight: 500 !important;
     transition: background-color 0.2s, border-color 0.2s !important;
+    width: 100% !important;
+    font-size: 0.875rem !important;
+}
+
+@media (min-width: 640px) {
+    .p-confirmpopup-reject-button {
+        width: auto !important;
+        font-size: 1rem !important;
+    }
 }
 
 .p-confirmpopup-reject-button:hover {
@@ -593,5 +672,40 @@ watch(allProcedures, () => {
     background: #1f2937 !important;
     border-color: #4b5563 !important;
     color: #e5e7eb !important;
+}
+
+/* Dodatkowe style responsywne dla inputów */
+@media (max-width: 640px) {
+    .modal-input {
+        font-size: 16px !important; /* Zapobiega zoom na iOS */
+    }
+}
+
+/* Responsywne klasy utility */
+@media (max-width: 640px) {
+    .responsive-grid {
+        display: block !important;
+    }
+
+    .responsive-card {
+        margin-bottom: 1.5rem !important;
+    }
+}
+
+/* Dodatkowe media queries dla bardzo małych ekranów */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .card-padding {
+        padding: 1rem !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+        line-height: 2rem !important;
+    }
 }
 </style>

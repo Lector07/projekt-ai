@@ -115,6 +115,8 @@ Route::prefix('v1')->name('v1.')->group(function () {
                 Route::put('/appointments/{appointment}', [V1\Doctor\DoctorAppointmentController::class, 'update'])
                     ->name('appointments.update');
 
+                Route::post('/appointments/report', [V1\Doctor\DoctorAppointmentController::class, 'generateReport']);
+
                 Route::get('/schedule/events', [V1\Doctor\DoctorAppointmentController::class, 'getScheduleEvents'])
                     ->name('schedule.events');
 
@@ -170,3 +172,4 @@ Route::prefix('v1/admin')
         Route::delete('/doctors/{doctor}/avatar', [Admin\AdminDoctorController::class, 'deleteAvatar'])
             ->name('doctors.avatar.delete');
     });
+

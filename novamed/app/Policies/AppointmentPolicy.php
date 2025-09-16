@@ -10,6 +10,10 @@ class AppointmentPolicy
 {
     public function viewAny(User $user): bool
     {
+        if ($user->role === 'doctor') {
+            return true;
+        }
+
         return true;
     }
     public function viewByDoctor(User $user, Appointment $appointment): bool
