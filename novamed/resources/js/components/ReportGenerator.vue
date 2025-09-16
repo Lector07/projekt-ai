@@ -505,7 +505,7 @@ watch(() => props.reportType, () => {
                                                             podsumowanie na końcu</label>
                                                     </div>
                                                 </div>
-                                                <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
+                                                <div v-if="reportConfig.subreportConfigs.procedures" class=" grid grid-cols-4 mt-2 mb-2 items-center gap-4">
                                                     <Label class="text-right">Podsumowanie dla podraportu</Label>
                                                     <div class="flex items-center space-x-2 col-span-3">
                                                         <Checkbox id="subreport-summary"
@@ -532,7 +532,7 @@ watch(() => props.reportType, () => {
                                                     <Input id="company-address"
                                                            v-model="reportConfig.companyInfo.address"
                                                            class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                           rows="2"></Input>
+                                                           rows="2"/>
                                                 </div>
                                                 <div class="grid grid-cols-4 mt-2 items-start gap-4">
                                                     <Label for="company-postalcode" class="text-right pt-2">Kod

@@ -55,14 +55,6 @@ const getDoctorName = (doctor: Doctor): string => {
     return 'Brak danych';
 };
 
-const doctorsCurrentPage = ref(1);
-const doctorsMeta = ref({
-    current_page: 1,
-    last_page: 1,
-    total: 0,
-    per_page: 6
-});
-
 const proceduresCurrentPage = ref(1);
 const proceduresMeta = ref({
     current_page: 1,
@@ -93,17 +85,11 @@ const fetchData = async () => {
         } else {
             const doctorsResponse = await axios.get('/api/v1/doctors', {
                 params: {
-                    page: doctorsCurrentPage.value,
-                    per_page: doctorsMeta.value.per_page
+                    page: 1,
+                    per_page: 1000
                 }
             });
-            doctors.value = doctorsResponse.data.data;
-            doctorsMeta.value = {
-                current_page: doctorsResponse.data.meta.current_page,
-                last_page: doctorsResponse.data.meta.last_page,
-                total: doctorsResponse.data.meta.total,
-                per_page: doctorsResponse.data.meta.per_page
-            };
+            doctors.value = doctorsResponse.data?.data ?? doctorsResponse.data ?? [];
         }
     } catch (e) {
         console.error('Błąd podczas pobierania danych:', e);
@@ -123,14 +109,6 @@ const changeTab = (index: number) => {
     }
 };
 
-const changeDoctorsPage = (page: number) => {
-    if (loading.value) return;
-    if (doctorsCurrentPage.value !== page) {
-        doctorsCurrentPage.value = page;
-        fetchData();
-    }
-};
-
 const changeProceduresPage = (page: number) => {
     if (loading.value) return;
     if (proceduresCurrentPage.value !== page) {
@@ -139,7 +117,6 @@ const changeProceduresPage = (page: number) => {
     }
 };
 
-// Konfiguracja responsywna dla carousel
 const responsiveOptions = ref([
     {
         breakpoint: '1024px',
@@ -444,7 +421,6 @@ onMounted(() => {
             </div>
 
             <div v-else class="relative">
-                <!-- === NAWIGACJA ZAKŁADEK (bez zmian) === -->
                 <div class="flex flex-wrap justify-center mb-8 border-b border-gray-200 dark:border-gray-700">
                     <button
                         v-for="(tab, index) in ['Zabiegi Medyczne', 'Nasi Specjaliści']"
@@ -479,7 +455,11 @@ onMounted(() => {
                     </div>
 
                     <div v-else>
-                        <Accordion type="single" collapsible class="w-full space-y-4">
+                        <Accordion
+                            type="single"
+                            collapsible
+                            class="w-full max-w-5xl mx-auto space-y-3 sm:space-y-4 px-2 sm:px-0"
+                        >
                             <AccordionItem
                                 v-for="procedure in procedures"
                                 :key="procedure.id"
@@ -487,25 +467,28 @@ onMounted(() => {
                                 class="bg-white dark:bg-neutral-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-neutral-700"
                             >
                                 <AccordionTrigger
-                                    class="p-5 w-full grid grid-cols-[1fr_auto] items-center gap-4 hover:no-underline"
+                                    class="p-4 sm:p-5 w-full grid grid-cols-1 md:grid-cols-[1fr_auto] md:items-center gap-3 sm:gap-4 hover:no-underline"
                                 >
                                     <div class="text-left">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                        <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                                             {{ procedure.name }}
                                         </h3>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                                             {{ procedure.description || 'Ogólne' }}
                                         </p>
                                     </div>
 
                                     <div
-                                        class="justify-self-end bg-nova-primary/10 text-nova-primary px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap"
+                                        class="justify-self-start md:justify-self-end bg-nova-primary/10 text-nova-primary px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap mt-2 md:mt-0"
                                     >
                                         od {{ procedure.base_price }} zł
                                     </div>
                                 </AccordionTrigger>
-                                <AccordionContent class="p-5 pt-0">
-                                    <p class="text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-neutral-700 pt-4">
+
+                                <AccordionContent class="p-4 sm:p-5 pt-0">
+                                    <p
+                                        class="text-sm sm:text-base text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-neutral-700 pt-4"
+                                    >
                                         {{ procedure.description }}
                                     </p>
                                 </AccordionContent>
@@ -556,10 +539,8 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- === ZAKŁADKA 2: NASI SPECJALIŚCI (Z POPRAWIONĄ LOGIKĄ WIDOCZNOŚCI) === -->
                 <div v-show="activeTab === 1" class="transition-opacity duration-300">
                     <div v-if="loading" class="p-4">
-                        <!-- Szkielet ładowania dla karuzeli -->
                         <div class="flex space-x-4">
                             <div v-for="i in 3" :key="i"
                                  class="w-1/3 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
@@ -582,7 +563,7 @@ onMounted(() => {
                     <div v-else>
                         <Carousel
                             :value="doctors"
-                            :numVisible="3"
+                            :numVisible="4"
                             :numScroll="1"
                             :responsiveOptions="responsiveOptions"
                             circular
@@ -602,15 +583,15 @@ onMounted(() => {
                                             />
                                         </template>
                                         <template #title>
-                                            <h3 class="text-xl font-semibold">{{ getDoctorName(slotProps.data) }}</h3>
+                                            <h3 class="text-xl ml-2 font-semibold">{{ getDoctorName(slotProps.data) }}</h3>
                                         </template>
                                         <template #subtitle>
-                                            <div class="dark:text-gray-300">
+                                            <div class="dark:text-gray-300 ml-2">
                                                 {{ slotProps.data.specialization || 'Brak określonej specjalizacji' }}
                                             </div>
                                         </template>
                                         <template #content>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400 min-h-[60px]"
+                                            <div class="text-sm text-gray-500 ml-2 dark:text-gray-400 min-h-[60px]"
                                                  v-if="slotProps.data.bio">
                                                 {{
                                                     slotProps.data.bio.substring(0, 100)
