@@ -15,7 +15,7 @@ import Icon from '@/components/Icon.vue';
 import {useToast} from 'primevue/usetoast';
 import {Separator} from "@/components/ui/separator"
 import {LoaderCircle} from "lucide-vue-next";
-
+import { ComboboxAnchor, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxLabel, ComboboxRoot, ComboboxSeparator, ComboboxTrigger, ComboboxViewport } from 'reka-ui'
 
 const toast = useToast();
 
@@ -47,6 +47,18 @@ interface ColumnConfig {
     groupCalculation: string;
 }
 
+interface ColorSettings {
+    titleBackgroundColor: string;
+    titleFontColor: string;
+    columnHeaderBackgroundColor: string;
+    columnHeaderFontColor: string;
+    detailBackgroundColor: string;
+    detailFontColor: string;
+    groupHeaderBackgroundColor: string;
+    groupHeaderFontColor: string;
+    borderColor: string;
+}
+
 interface CompanyInfo {
     name: string;
     address: string;
@@ -75,6 +87,7 @@ interface ActiveFilters {
 interface ReportConfig {
     title: string;
     orientation: 'PORTRAIT' | 'LANDSCAPE';
+    pageFormat: 'A4' | 'A3' | 'LETTER' | 'LEGAL';
     theme: 'DEFAULT' | 'CLASSIC' | 'MODERN' | 'CORPORATE' | 'MINIMAL';
     companyInfo: CompanyInfo | null;
     footerLeftText: string | null;
@@ -86,6 +99,7 @@ interface ReportConfig {
     subreportConfigs: {
         [key: string]: Omit<ReportConfig, 'subreportConfigs'>;
     };
+    colorSettings: ColorSettings;
 }
 
 const availableFields = computed(() => {
@@ -114,9 +128,14 @@ const availableFields = computed(() => {
     }
 });
 
+const avaliablePageFormat = computed(() => {
+    return ['A4', 'A3', 'LETTER', 'LEGAL'];
+});
+
 const reportConfig = reactive<ReportConfig>({
     title: 'Zestawienie Wizyt',
     orientation: 'PORTRAIT',
+    pageFormat: 'A4',
     theme: 'CLASSIC',
     companyInfo: {
         name: 'Klinika Chirurgii Plastycznej "Projekt AI"',
@@ -136,7 +155,18 @@ const reportConfig = reactive<ReportConfig>({
         highlightRules: []
     },
     subreportConfigs: {
-    }
+    },
+    colorSettings: {
+        titleBackgroundColor: '#2A3F54',
+        titleFontColor: '#FFFFFF',
+        columnHeaderBackgroundColor: '#C6D8E4',
+        columnHeaderFontColor: '#000000',
+        detailBackgroundColor: '#FFFFFF',
+        detailFontColor: '#000000',
+        groupHeaderBackgroundColor: '#D0D8E0',
+        groupHeaderFontColor: '#000000',
+        borderColor: '#CCCCCC',
+    },
 });
 
 const isSubreportColumn = (fieldDame: string): boolean => {
@@ -165,6 +195,7 @@ const initializeConfig = () => {
             reportConfig.subreportConfigs.procedures = {
                 orientation: 'PORTRAIT',
                 companyInfo: null,
+                pageFormat: "A4",
                 footerLeftText: null,
                 columns: [
                     {
@@ -196,6 +227,17 @@ const initializeConfig = () => {
                 pageFooterEnabled: false,
                 summaryBandEnabled: false,
                 formattingOptions: {zebraStripes: true, generateBookmarks: false, highlightRules: []},
+                colorSettings: {
+                    titleBackgroundColor: '#2A3F54',
+                    titleFontColor: '#FFFFFF',
+                    columnHeaderBackgroundColor: '#C6D8E4',
+                    columnHeaderFontColor: '#000000',
+                    detailBackgroundColor: '#FFFFFF',
+                    detailFontColor: '#000000',
+                    groupHeaderBackgroundColor: '#D0D8E0',
+                    groupHeaderFontColor: '#000000',
+                    borderColor: '#CCCCCC',
+                },
             };
         } else {
             reportConfig.formattingOptions.highlightRules = [
@@ -265,6 +307,7 @@ const configureSubreport = (fieldName: string) => {
             title: "",
             orientation: 'PORTRAIT',
             companyInfo: null,
+            pageFormat: 'A4',
             footerLeftText: null,
             columns: [
                 {field: 'item', header: 'Pozycja', visible: true, width: -1, format: null, groupCalculation: 'NONE'},
@@ -275,6 +318,17 @@ const configureSubreport = (fieldName: string) => {
             pageFooterEnabled: false,
             summaryBandEnabled: false,
             formattingOptions: {zebraStripes: true, generateBookmarks: false, highlightRules: []},
+            colorSettings: {
+                titleBackgroundColor: '#2A3F54',
+                titleFontColor: '#FFFFFF',
+                columnHeaderBackgroundColor: '#C6D8E4',
+                columnHeaderFontColor: '#000000',
+                detailBackgroundColor: '#FFFFFF',
+                detailFontColor: '#000000',
+                groupHeaderBackgroundColor: '#D0D8E0',
+                groupHeaderFontColor: '#000000',
+                borderColor: '#CCCCCC',
+            },
         };
     }
 
@@ -451,6 +505,22 @@ watch(() => props.reportType, () => {
         }
     });
 });
+
+watch(() => reportConfig.pageFormat, (newPageFormat) => {
+    if (reportConfig.subreportConfigs) {
+
+        for (const key in reportConfig.subreportConfigs) {
+            const subreport = reportConfig.subreportConfigs[key];
+            if (subreport) {
+                subreport.pageFormat = newPageFormat;
+            }
+        }
+    }
+});
+
+watch(() => reportConfig.colorSettings, (newColorSettings) => {
+    console.log('Ustawienia kolorów zmienione:', newColorSettings);
+}, { deep: true });
 </script>
 
 <template>
@@ -468,10 +538,10 @@ watch(() => props.reportType, () => {
                 <ResizablePanelGroup direction="horizontal" class="h-full w-full">
                     <ResizablePanel :default-size="90" :min-size="30">
                         <div class="flex flex-col h-full p-4 pr-2 ">
-                            <ScrollArea class="h-[100vh] overflow-y-auto pr-2">
+                            <ScrollArea class="md:h-[100vh] overflow-y-auto pr-2">
                                 <Accordion type="single" collapsible class="w-full" default-value="item-1">
                                     <AccordionItem value="item-1">
-                                        <AccordionTrigger>Opcje Główne</AccordionTrigger>
+                                        <AccordionTrigger class="text-lg">Opcje Główne</AccordionTrigger>
                                         <AccordionContent class="pt-4">
                                             <ScrollArea class="max-h-64 overflow-y-auto">
                                                 <div class="grid grid-cols-4 items-center gap-4">
@@ -479,6 +549,15 @@ watch(() => props.reportType, () => {
                                                     <Input id="report-title" v-model="reportConfig.title"
                                                            class="col-span-3"/>
                                                 </div>
+                                                <div class="grid grid-cols-4 mt-2 items-center gap-4">
+                                                    <Label for="report-format" class="text-right">Format raportu</Label>
+                                                    <select id="report-format" v-model="reportConfig.pageFormat" class="col-span-3 rounded-md border border-input bg-background px-3 py-2 text-sm w-full">
+                                                        <option v-for="format in avaliablePageFormat" :key="format" :value="format">
+                                                            {{ format }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+
                                                 <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
                                                     <Label for="orientation-checkbox"
                                                            class="text-right">Orientacja</Label>
@@ -511,8 +590,8 @@ watch(() => props.reportType, () => {
                                                             podsumowanie na końcu</label>
                                                     </div>
                                                 </div>
-                                                <div v-if="reportConfig.subreportConfigs.procedures" class=" grid grid-cols-4 mt-2 mb-2 items-center gap-4">
-                                                    <Label class="text-right">Podsumowanie dla podraportu</Label>
+                                                <div v-if="reportConfig.subreportConfigs.procedures" class=" grid grid-cols-4 mt-2 items-center gap-4">
+                                                    <Label class="text-left">Podsumowanie dla podraportu</Label>
                                                     <div class="flex items-center space-x-2 col-span-3">
                                                         <Checkbox id="subreport-summary"
                                                                   class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
@@ -574,7 +653,7 @@ watch(() => props.reportType, () => {
                                         </AccordionContent>
                                     </AccordionItem>
                                     <AccordionItem value="item-2">
-                                        <AccordionTrigger>Kolumny</AccordionTrigger>
+                                        <AccordionTrigger class="text-lg">Kolumny</AccordionTrigger>
                                         <AccordionContent class="pt-4">
                                             <ScrollArea class="max-h-66 overflow-y-auto">
                                                 <div
@@ -622,7 +701,7 @@ watch(() => props.reportType, () => {
                                         </AccordionContent>
                                     </AccordionItem>
                                     <AccordionItem value="item-3">
-                                        <AccordionTrigger>Grupowane</AccordionTrigger>
+                                        <AccordionTrigger class="text-lg">Grupowane</AccordionTrigger>
                                         <AccordionContent class="pt-4">
                                             <ScrollArea class="max-h-64 overflow-y-auto">
                                                 <draggable v-model="reportConfig.groups" item-key="index"
@@ -677,7 +756,7 @@ watch(() => props.reportType, () => {
                                         </AccordionContent>
                                     </AccordionItem>
                                     <AccordionItem value="item-4">
-                                        <AccordionTrigger>Formatowanie</AccordionTrigger>
+                                        <AccordionTrigger class="text-lg">Formatowanie</AccordionTrigger>
                                         <AccordionContent class="space-y-4 pt-4">
                                             <ScrollArea class="max-h-54 overflow-y-auto">
 
@@ -746,11 +825,43 @@ watch(() => props.reportType, () => {
                                                             </Button>
                                                         </div>
                                                     </div>
-                                                    <Button @click="addHighlightRule" class="mt-2 w-full"
-                                                            variant="outline">
+                                                    <Button @click="addHighlightRule" class="mt-2 w-full border-color-nova-accent" variant="outline"
+                                                    >
                                                         <Icon name="plus" class="mr-2" size="8"/>
                                                         Dodaj regułę podświetlania
                                                     </Button>
+
+                                                    <Separator class="my-4"/>
+                                                    <Label class="font-semibold">Niestandardowe kolory</Label>
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Tło Tytułu</Label>
+                                                            <Input v.model="reportConfig.colorSettings.titleBackgroundColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Tekst Tytułu</Label>
+                                                            <Input v.model="reportConfig.colorSettings.titleFontColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Tło Nagłówków</Label>
+                                                            <Input v.model="reportConfig.colorSettings.columnHeaderBackgroundColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Tekst Nagłówków</Label>
+                                                            <Input v.model="reportConfig.colorSettings.columnHeaderFontColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Tło Grupy</Label>
+                                                            <Input v.model="reportConfig.colorSettings.groupHeaderBackgroundColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+                                                        <div class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-right text-sm">Obramowanie</Label>
+                                                            <Input v.model="reportConfig.colorSettings.borderColor" type="color" class="h-8 w-12 p-1"/>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </ScrollArea>
                                         </AccordionContent>
