@@ -15,7 +15,8 @@ import Icon from '@/components/Icon.vue';
 import {useToast} from 'primevue/usetoast';
 import {Separator} from "@/components/ui/separator"
 import {LoaderCircle} from "lucide-vue-next";
-import { ComboboxAnchor, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxItemIndicator, ComboboxLabel, ComboboxRoot, ComboboxSeparator, ComboboxTrigger, ComboboxViewport } from 'reka-ui'
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
+import PickList from 'primevue/picklist';
 
 const toast = useToast();
 
@@ -187,12 +188,14 @@ const initializeConfig = () => {
                     field: 'specialization',
                     operator: 'EQUALS',
                     value: 'Chirurg Plastyczny',
-                    color: '#FFFFF',
+                    color: '#FFFFFF',
                     id: `rule-${Date.now()}`
                 }
             ];
 
             reportConfig.subreportConfigs.procedures = {
+                title: 'Procedury',
+                theme: reportConfig.theme,
                 orientation: 'PORTRAIT',
                 companyInfo: null,
                 pageFormat: "A4",
@@ -304,7 +307,8 @@ function normalizeColor(color: string): string {
 const configureSubreport = (fieldName: string) => {
     if (!reportConfig.subreportConfigs[fieldName]) {
         reportConfig.subreportConfigs[fieldName] = {
-            title: "",
+            title: 'Podraport',
+            theme: reportConfig.theme,
             orientation: 'PORTRAIT',
             companyInfo: null,
             pageFormat: 'A4',
@@ -361,47 +365,66 @@ const refreshPreview = async () => {
         URL.revokeObjectURL(currentPdfBlobUrl);
     }
 
-    const finalConfig = JSON.parse(JSON.stringify(reportConfig));
-
-    if (finalConfig.subreportConfigs) {
-        for (const key in finalConfig.subreportConfigs) {
-            delete finalConfig.subreportConfigs[key].subreportConfigs;
-        }
-    }
-    if (!finalConfig.subreportConfigs || Array.isArray(finalConfig.subreportConfigs)) {
-        finalConfig.subreportConfigs = {};
-    }
-
-    if (finalConfig.groups) {
-        finalConfig.groups = finalConfig.groups
-            .filter((g: { field: string }) => g.field)
-            .map((g: { field: string; showFooter: boolean }) => {
-                const fieldDef = availableFields.value.find(f => f.field === g.field);
-                const header = fieldDef ? fieldDef.header : g.field;
-                return {...g, label: `"${header}: " + $F{${g.field}}`};
-            });
-    }
-    if (finalConfig.formattingOptions && finalConfig.formattingOptions.highlightRules) {
-        finalConfig.formattingOptions.highlightRules.forEach((rule: any) => {
-            rule.color = normalizeColor(rule.color);
-        });
-    }
-
     try {
+        const payloadConfig = JSON.parse(JSON.stringify(reportConfig));
+
+        if (payloadConfig.subreportConfigs) {
+            for (const key in payloadConfig.subreportConfigs) {
+                delete payloadConfig.subreportConfigs[key].subreportConfigs;
+            }
+        }
+        if (!payloadConfig.subreportConfigs || Array.isArray(payloadConfig.subreportConfigs)) {
+            payloadConfig.subreportConfigs = {};
+        }
+
+        if (payloadConfig.groups) {
+            payloadConfig.groups = payloadConfig.groups
+                .filter((g: { field: string }) => g.field)
+                .map((g: { field: string; showFooter: boolean }) => {
+                    const fieldDef = availableFields.value.find(f => f.field === g.field);
+                    const header = fieldDef ? fieldDef.header : g.field;
+                    return {...g, label: `"${header}: " + $F{${g.field}}`};
+                });
+        }
+
+        if (payloadConfig.formattingOptions && payloadConfig.formattingOptions.highlightRules) {
+            payloadConfig.formattingOptions.highlightRules.forEach((rule: any) => {
+                rule.color = normalizeColor(rule.color);
+            });
+        }
+        if (payloadConfig.colorSettings) {
+            for (const key in payloadConfig.colorSettings) {
+                if (Object.prototype.hasOwnProperty.call(payloadConfig.colorSettings, key) && payloadConfig.colorSettings[key]) {
+                    payloadConfig.colorSettings[key] = normalizeColor(payloadConfig.colorSettings[key]);
+                }
+            }
+        }
+        if (payloadConfig.subreportConfigs) {
+            for (const reportKey in payloadConfig.subreportConfigs) {
+                const subreport = payloadConfig.subreportConfigs[reportKey];
+                if (subreport.colorSettings) {
+                    for (const key in subreport.colorSettings) {
+                        subreport.colorSettings[key] = normalizeColor(subreport.colorSettings[key]);
+                    }
+                }
+            }
+        }
+
         let response;
 
         if (props.reportType === 'doctors') {
             const params = new URLSearchParams();
             if (props.activeFilters.search) params.append('search', props.activeFilters.search);
             if (props.activeFilters.specialization) params.append('specialization', props.activeFilters.specialization);
-            params.append('config', JSON.stringify(finalConfig));
+
+            params.append('config', JSON.stringify(payloadConfig));
 
             response = await axios.get(`${apiEndpoint.value}?${params.toString()}`, {
                 responseType: 'blob'
             });
         } else {
             response = await axios.post(apiEndpoint.value, {
-                config: finalConfig,
+                config: payloadConfig,
                 filters: props.activeFilters
             }, {responseType: 'blob'});
         }
@@ -518,9 +541,21 @@ watch(() => reportConfig.pageFormat, (newPageFormat) => {
     }
 });
 
+
 watch(() => reportConfig.colorSettings, (newColorSettings) => {
-    console.log('Ustawienia kolorów zmienione:', newColorSettings);
 }, { deep: true });
+
+const customColors = [
+    { key: 'titleBackgroundColor', label: 'Tło tytułu' },
+    { key: 'titleFontColor', label: 'Tekst tytułu' },
+    { key: 'columnHeaderBackgroundColor', label: 'Tło nagłówków' },
+    { key: 'columnHeaderFontColor', label: 'Tekst nagłówków' },
+    { key: 'detailBackgroundColor', label: 'Tło szczegółów' },
+    { key: 'detailFontColor', label: 'Tekst szczegółów' },
+    { key: 'groupHeaderBackgroundColor', label: 'Tło grupy' },
+    { key: 'groupHeaderFontColor', label: 'Tekst grupy' },
+    { key: 'borderColor', label: 'Obramowanie' },
+];
 </script>
 
 <template>
@@ -604,39 +639,38 @@ watch(() => reportConfig.colorSettings, (newColorSettings) => {
 
                                                 <Separator class="my-4"/>
 
-                                                <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="company-info" class="text-right pt-2">Nazwa
-                                                        jednostki</Label>
-                                                    <Input id="company-info" v-model="reportConfig.companyInfo.name"
-                                                           class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                           rows="2"></Input>
-                                                </div>
-                                                <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="company-address" class="text-right pt-2">Adres
-                                                        jednostki</Label>
-                                                    <Input id="company-address"
-                                                           v-model="reportConfig.companyInfo.address"
-                                                           class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                           rows="2"/>
-                                                </div>
-                                                <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="company-postalcode" class="text-right pt-2">Kod
-                                                        pocztowy</Label>
-                                                    <Input id="company-postalcode"
-                                                           v-model="reportConfig.companyInfo.postalCode" class="col-span-3 w-full rounded-md border border-input
+                                                <div v-if="reportConfig.companyInfo">
+                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
+                                                        <Label for="company-info" class="text-right pt-2">Nazwa jednostki</Label>
+                                                        <Input id="company-info" v-model="reportConfig.companyInfo.name"
+                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
+                                                               rows="2"></Input>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
+                                                        <Label for="company-address" class="text-right pt-2">Adres jednostki</Label>
+                                                        <Input id="company-address"
+                                                               v-model="reportConfig.companyInfo.address"
+                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
+                                                               rows="2"/>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
+                                                        <Label for="company-postalcode" class="text-right pt-2">Kod pocztowy</Label>
+                                                        <Input id="company-postalcode"
+                                                               v-model="reportConfig.companyInfo.postalCode" class="col-span-3 w-full rounded-md border border-input
     bg-background px-3 py-2 text-sm " rows="2"></Input>
-                                                </div>
-                                                <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="company-city" class="text-right pt-2">Miasto</Label>
-                                                    <Input id="company-city" v-model="reportConfig.companyInfo.city"
-                                                           class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                           rows="2"></Input>
-                                                </div>
-                                                <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="company-taxid" class="text-right pt-2">NIP</Label>
-                                                    <Input id="company-taxid" v-model="reportConfig.companyInfo.taxId"
-                                                           class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                           rows="2"></Input>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
+                                                        <Label for="company-city" class="text-right pt-2">Miasto</Label>
+                                                        <Input id="company-city" v-model="reportConfig.companyInfo.city"
+                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
+                                                               rows="2"></Input>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
+                                                        <Label for="company-taxid" class="text-right pt-2">NIP</Label>
+                                                        <Input id="company-taxid" v-model="reportConfig.companyInfo.taxId"
+                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                               rows="2"></Input>
+                                                    </div>
                                                 </div>
 
                                                 <Separator class="my-4"/>
@@ -656,14 +690,6 @@ watch(() => reportConfig.colorSettings, (newColorSettings) => {
                                         <AccordionTrigger class="text-lg">Kolumny</AccordionTrigger>
                                         <AccordionContent class="pt-4">
                                             <ScrollArea class="max-h-66 overflow-y-auto">
-                                                <div
-                                                    class="grid grid-cols-5 gap-x-4 gap-y-2 items-center font-semibold text-sm mb-2 ml-20">
-
-                                                    <span>Widoczna</span>
-                                                    <span class="col-span-2 ml-2">Nagłówek</span>
-                                                    <span class="text-center">Szer.</span>
-                                                    <span class="text-center">Format</span>
-                                                </div>
                                                 <draggable v-model="reportConfig.columns" item-key="field"
                                                            handle=".drag-handle" ghost-class="ghost-class">
                                                     <template #item="{ element: col, index }">
@@ -759,7 +785,6 @@ watch(() => reportConfig.colorSettings, (newColorSettings) => {
                                         <AccordionTrigger class="text-lg">Formatowanie</AccordionTrigger>
                                         <AccordionContent class="space-y-4 pt-4">
                                             <ScrollArea class="max-h-54 overflow-y-auto">
-
                                                 <div class="flex items-center space-x-6">
                                                     <div class="flex items-center space-x-2">
                                                         <Checkbox id="zebra-stripes"
@@ -780,89 +805,77 @@ watch(() => reportConfig.colorSettings, (newColorSettings) => {
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="pt-4 mt-2 border-t dark:border-gray-700">
-                                                    <Label class="font-semibold">Reguły podświetlania wierszy</Label>
-                                                    <div
-                                                        v-for="(rule, index) in reportConfig.formattingOptions.highlightRules"
-                                                        :key="rule.id"
-                                                        class="p-2 border rounded-md mt-2 space-y-2 bg-gray-50 dark:bg-gray-800">
-                                                        <div class="flex items-center space-x-2">
-                                                            <span class="text-sm font-bold">JEŚLI</span>
-                                                            <select v-model="rule.field"
-                                                                    class="flex-1 rounded-md border-input bg-background px-2 py-1 text-sm">
-                                                                <option v-for="field in availableFields"
-                                                                        :key="field.field"
-                                                                        :value="field.field">{{ field.header }}
-                                                                </option>
-                                                            </select>
-                                                            <select v-model="rule.operator"
-                                                                    class="rounded-md border-input bg-background px-2 py-1 text-sm">
-                                                                <option v-for="op in highlightOperators" :key="op.value"
-                                                                        :value="op.value">{{ op.label }}
-                                                                </option>
-                                                            </select>
-                                                            <template
-                                                                v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
-                                                                <Input v-model="(rule as any).value" type="number"
-                                                                       placeholder="Wartość liczbowa"
-                                                                       class="flex-1 text-sm h-8"/>
-                                                            </template>
-                                                            <template v-else>
-                                                                <Input v-model="(rule as any).value"
-                                                                       placeholder="Wartość"
-                                                                       class="flex-1 text-sm h-8"/>
-                                                            </template>
+                                                <Separator class="my-4"/>
+                                                <TabsRoot default-value="highlighting" class="w-full">
+                                                    <TabsList class="grid w-full grid-cols-2">
+                                                        <TabsTrigger value="highlighting">
+                                                            Podświetlanie
+                                                        </TabsTrigger>
+                                                        <TabsTrigger value="colors">
+                                                            Kolory
+                                                        </TabsTrigger>
+                                                    </TabsList>
+                                                    <TabsContent value="highlighting" class="mt-4">
+                                                        <Label class="font-semibold">Reguły podświetlania wierszy</Label>
+                                                        <div
+                                                            v-for="(rule, index) in reportConfig.formattingOptions.highlightRules"
+                                                            :key="rule.id"
+                                                            class="p-2 border rounded-md mt-2 space-y-2 bg-gray-50 dark:bg-gray-800">
+                                                            <div class="flex items-center space-x-2">
+                                                                <span class="text-sm font-bold">JEŚLI</span>
+                                                                <select v-model="rule.field"
+                                                                        class="flex-1 rounded-md border-input bg-background px-2 py-1 text-sm">
+                                                                    <option v-for="field in availableFields"
+                                                                            :key="field.field"
+                                                                            :value="field.field">{{ field.header }}
+                                                                    </option>
+                                                                </select>
+                                                                <select v-model="rule.operator"
+                                                                        class="rounded-md border-input bg-background px-2 py-1 text-sm">
+                                                                    <option v-for="op in highlightOperators" :key="op.value"
+                                                                            :value="op.value">{{ op.label }}
+                                                                    </option>
+                                                                </select>
+                                                                <template
+                                                                    v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
+                                                                    <Input v-model="(rule as any).value" type="number"
+                                                                           placeholder="Wartość liczbowa"
+                                                                           class="flex-1 text-sm h-8"/>
+                                                                </template>
+                                                                <template v-else>
+                                                                    <Input v-model="(rule as any).value"
+                                                                           placeholder="Wartość"
+                                                                           class="flex-1 text-sm h-8"/>
+                                                                </template>
+                                                            </div>
+                                                            <div class="flex items-center space-x-2">
+                                                                <span class="text-sm font-bold">WTEDY</span>
+                                                                <Label for="color-picker" class="text-sm">kolor tła:</Label>
+                                                                <Input v-model="rule.color" type="color" id="color-picker"
+                                                                       class="h-8 w-12 p-1"/>
+                                                                <div class="flex-grow"></div>
+                                                                <Button variant="destructive" size="icon"
+                                                                        @click="removeHighlightRule(index)">
+                                                                    <Icon name="trash" size="14"/>
+                                                                </Button>
+                                                            </div>
                                                         </div>
-                                                        <div class="flex items-center space-x-2">
-                                                            <span class="text-sm font-bold">WTEDY</span>
-                                                            <Label for="color-picker" class="text-sm">kolor tła:</Label>
-                                                            <Input v-model="rule.color" type="color" id="color-picker"
-                                                                   class="h-8 w-12 p-1"/>
-                                                            <div class="flex-grow"></div>
-                                                            <Button variant="destructive" size="icon"
-                                                                    @click="removeHighlightRule(index)">
-                                                                <Icon name="trash" size="14"/>
-                                                            </Button>
+                                                        <Button @click="addHighlightRule" class="mt-2 w-full border-color-nova-accent" variant="outline"
+                                                        >
+                                                            <Icon name="plus" class="mr-2" size="8"/>
+                                                            Dodaj regułę podświetlania
+                                                        </Button>
+                                                    </TabsContent>
+                                                    <TabsContent value="colors" class="mt-4">
+                                                        <Label class="font-semibold">Niestandardowe kolory</Label>
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 mt-2">
+                                                            <div v-for="color in customColors" :key="color.key" class="grid grid-cols-2 items-center">
+                                                                <Label class="text-sm text-right mr-2">{{ color.label }}</Label>
+                                                                <input v-model="reportConfig.colorSettings[color.key]" type="color" class="h-8 w-12 p-1" />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <Button @click="addHighlightRule" class="mt-2 w-full border-color-nova-accent" variant="outline"
-                                                    >
-                                                        <Icon name="plus" class="mr-2" size="8"/>
-                                                        Dodaj regułę podświetlania
-                                                    </Button>
-
-                                                    <Separator class="my-4"/>
-                                                    <Label class="font-semibold">Niestandardowe kolory</Label>
-                                                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Tło Tytułu</Label>
-                                                            <Input v.model="reportConfig.colorSettings.titleBackgroundColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Tekst Tytułu</Label>
-                                                            <Input v.model="reportConfig.colorSettings.titleFontColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Tło Nagłówków</Label>
-                                                            <Input v.model="reportConfig.colorSettings.columnHeaderBackgroundColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Tekst Nagłówków</Label>
-                                                            <Input v.model="reportConfig.colorSettings.columnHeaderFontColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Tło Grupy</Label>
-                                                            <Input v.model="reportConfig.colorSettings.groupHeaderBackgroundColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-                                                        <div class="grid grid-cols-2 items-center gap-2">
-                                                            <Label class="text-right text-sm">Obramowanie</Label>
-                                                            <Input v.model="reportConfig.colorSettings.borderColor" type="color" class="h-8 w-12 p-1"/>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                    </TabsContent>
+                                                </TabsRoot>
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
