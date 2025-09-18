@@ -1,86 +1,36 @@
 <script setup lang="ts">
-import {ref, onMounted, reactive, computed} from 'vue'; // POPRAWIONY IMPORT
+import {ref, onMounted, reactive, computed, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
-import {parseDate, type DateValue} from '@internationalized/date';
 import Icon from '@/components/Icon.vue';
-import type {BreadcrumbItem} from '@/types';
+import type { User, BreadcrumbItem } from '@/types.d';
 import { PrinterCheck } from 'lucide-vue-next';
-import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import {
-    Pagination,
-    PaginationEllipsis,
-    PaginationFirst,
-    PaginationPrevious,
-    PaginationLast,
-    PaginationNext
-} from '@/components/ui/pagination';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Pagination, PaginationEllipsis, PaginationFirst, PaginationPrevious, PaginationLast, PaginationNext } from '@/components/ui/pagination';
 import {PaginationList, PaginationListItem} from 'reka-ui';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Toast from 'primevue/toast';
 import {useToast} from 'primevue/usetoast';
-import {ScrollArea} from "@/components/ui/scroll-area";
+import {ScrollArea} from '@/components/ui/scroll-area';
 import {Calendar} from '@/components/ui/calendar';
 import {format} from 'date-fns';
 import {pl} from 'date-fns/locale';
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
-
-// Importujemy nasz komponent generatora
 import ReportGenerator from '@/components/ReportGenerator.vue';
+import { useAuthStore } from '@/stores/auth';
+import { type DateValue, getLocalTimeZone, today, parseDate } from '@internationalized/date';
 
-// Definicje interfejsów
-interface Patient {
-    id: number;
-    name: string;
-}
-
-interface Doctor {
-    id: number;
-    first_name: string;
-    last_name: string;
-    specialization: string;
-}
-
-interface Procedure {
-    id: number;
-    name: string;
-}
-
-interface Appointment {
-    id: number;
-    patient: Patient;
-    doctor: Doctor;
-    procedure: Procedure;
-    appointment_datetime: string;
-    status: string;
-}
-
-interface AppointmentFilters {
-    doctor_name: string;
-    patient_name: string;
-    status: string;
-    date_from: string;
-    date_to: string;
-
-    [key: string]: string;
-}
+interface Patient { id: number; name: string; }
+interface Doctor { id: number; first_name: string; last_name: string; specialization: string; }
+interface Procedure { id: number; name: string; }
+interface Appointment { id: number; patient: Patient; doctor: Doctor; procedure: Procedure; appointment_datetime: string; status: string; }
+interface AppointmentFilters { doctor_name: string; patient_name: string; status: string; date_from: string; date_to: string; [key: string]: string; }
 
 const toast = useToast();
 const router = useRouter();
@@ -88,16 +38,10 @@ const router = useRouter();
 const appointments = ref<Appointment[]>([]);
 const loading = ref(true);
 const meta = ref({current_page: 1, from: 1, last_page: 1, per_page: 8, to: 8, total: 0});
-const filters = reactive<AppointmentFilters>({
-    doctor_name: '',
-    patient_name: '',
-    status: '',
-    date_from: '',
-    date_to: ''
-});
+const filters = reactive<AppointmentFilters>({ doctor_name: '', patient_name: '', status: '', date_from: '', date_to: '' });
+
 const dateFrom = ref<DateValue | undefined>(undefined);
 const dateTo = ref<DateValue | undefined>(undefined);
-
 const showEditAppointmentForm = ref(false);
 const selectedAppointment = ref<any>(null);
 const appointmentErrors = ref<any>({});
@@ -108,39 +52,20 @@ const allPatients = ref<Patient[]>([]);
 const allDoctors = ref<Doctor[]>([]);
 const procedures = ref<{ id: number, name: string }[]>([]);
 
-// --- STAŁE DANE ---
-const statuses = [
-    {value: '', label: 'Wszystkie statusy'},
-    {value: 'scheduled', label: 'Zarezerwowana'},
-    {value: 'completed', label: 'Zakończona'},
-    {value: 'confirmed', label: 'Potwierdzona'},
-    {value: 'cancelled', label: 'Anulowana'},
-    {value: 'cancelled_by_patient', label: 'Anulowano przez pacjenta'},
-    {value: 'cancelled_by_clinic', label: 'Anulowano przez klinikę'},
-    {value: 'no_show', label: 'Nieobecność'},
-];
+const statuses = [ {value: '', label: 'Wszystkie statusy'}, {value: 'scheduled', label: 'Zarezerwowana'}, {value: 'completed', label: 'Zakończona'}, {value: 'confirmed', label: 'Potwierdzona'}, {value: 'cancelled', label: 'Anulowana'}, {value: 'cancelled_by_patient', label: 'Anulowano przez pacjenta'}, {value: 'cancelled_by_clinic', label: 'Anulowano przez klinikę'}, {value: 'no_show', label: 'Nieobecność'} ];
 const statusOptions = statuses.filter(s => s.value !== '');
 const breadcrumbs: BreadcrumbItem[] = [{title: 'Zarządzanie Wizytami'}];
 
-
 const isReportGeneratorOpen = ref(false);
-const activeFilters = computed(() => Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== null && v !== '')));
-const openReportGenerator = () => {
-    isReportGeneratorOpen.value = true;
-};
+const activeFilters = computed(() => {
+    const f = {...filters};
+    if (f.status === 'all') f.status = '';
+    return Object.fromEntries(Object.entries(f).filter(([_, v]) => v !== null && v !== ''));
+});
+const openReportGenerator = () => { isReportGeneratorOpen.value = true; };
 
-const showSuccessToast = (title: string, content: string) => toast.add({
-    severity: 'success',
-    summary: title,
-    detail: content,
-    life: 3000
-});
-const showErrorToast = (title: string, content: string) => toast.add({
-    severity: 'error',
-    summary: title,
-    detail: content,
-    life: 3000
-});
+const showSuccessToast = (title: string, content: string) => toast.add({ severity: 'success', summary: title, detail: content, life: 3000 });
+const showErrorToast = (title: string, content: string) => toast.add({ severity: 'error', summary: title, detail: content, life: 3000 });
 
 const loadAppointments = async () => {
     loading.value = true;
@@ -179,7 +104,6 @@ const openEditForm = async (appointment: Appointment) => {
     appointmentFormLoading.value = true;
     try {
         const response = await axios.get(`/api/v1/admin/appointments/${appointment.id}`);
-        console.log('Odpowiedź z API:', response);
         if (!response.data || !response.data.data) {
             showErrorToast('Błąd', 'Nie udało się pobrać szczegółów wizyty');
             closeEditForm();
@@ -190,7 +114,6 @@ const openEditForm = async (appointment: Appointment) => {
         selectedAppointment.value.patient_id = selectedAppointment.value.patient.id;
         selectedAppointment.value.doctor_id = selectedAppointment.value.doctor.id;
         if (selectedAppointment.value.appointment_datetime) {
-
             const dateStr = selectedAppointment.value.appointment_datetime.split('T')[0];
             try {
                 selectedDate.value = parseDate(dateStr);
@@ -253,62 +176,49 @@ const deleteAppointment = async (id: number) => {
 };
 
 const resetFilters = () => {
-    Object.keys(filters).forEach((key) => {
-        (filters as any)[key] = '';
-    });
+    Object.keys(filters).forEach((key) => { (filters as any)[key] = ''; });
     dateFrom.value = undefined;
     dateTo.value = undefined;
     meta.value.current_page = 1;
     loadAppointments();
 };
 
-const onDateFromChange = (date: DateValue | undefined) => {
-    dateFrom.value = date;
-    filters.date_from = date ? date.toString() : '';
-};
-const onDateToChange = (date: DateValue | undefined) => {
-    dateTo.value = date;
-    filters.date_to = date ? date.toString() : '';
-};
-const onAppointmentDateChange = (date: DateValue | undefined) => {
-    selectedDate.value = date;
-    if (date && selectedAppointment.value) {
-        selectedAppointment.value.appointment_datetime = date.toString();
-    }
-};
 const changePage = (page: number) => {
     meta.value.current_page = page;
     loadAppointments();
 };
-const formatDateTime = (dateTimeStr: string) => new Date(dateTimeStr).toLocaleString('pl-PL', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-});
-const formatDisplayDate = (dateString: string) => format(new Date(dateString), 'd MMMM yyyy', {locale: pl});
+const formatDateTime = (dateTimeStr: string) => new Date(dateTimeStr).toLocaleString('pl-PL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 const getStatusLabel = (status: string) => statuses.find(s => s.value === status)?.label || status;
 const getStatusClass = (status: string) => {
     switch (status) {
-        case 'scheduled':
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-        case 'completed':
-            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-        case 'cancelled':
-            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-        case 'confirmed':
-            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-        case 'cancelled_by_patient':
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-        case 'no_show':
-            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-        case 'cancelled_by_clinic':
-            return 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200';
-        default:
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+        case 'scheduled': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        case 'confirmed': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        case 'cancelled_by_patient': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        case 'no_show': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        case 'cancelled_by_clinic': return 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200';
+        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
 };
+
+const auth = useAuthStore();
+const userRole = computed(() => auth.user?.role ?? 'guest');
+
+watch(dateFrom, (newDate) => {
+    filters.date_from = newDate ? newDate.toString() : '';
+});
+
+watch(dateTo, (newDate) => {
+    filters.date_to = newDate ? newDate.toString() : '';
+});
+
+watch(selectedDate, (newDate) => {
+    if (selectedAppointment.value && newDate) {
+        const timePart = selectedAppointment.value.appointment_datetime?.split(' ')[1] || '12:00:00';
+        selectedAppointment.value.appointment_datetime = `${newDate.toString()} ${timePart}`;
+    }
+});
 
 onMounted(() => {
     loadAppointments();
@@ -319,298 +229,162 @@ onMounted(() => {
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
         <Toast/>
-
         <div class="container mx-auto px-4 py-6 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-4">
                 <h1 class="text-3xl font-bold dark:text-white">Zarządzanie Wizytami</h1>
             </div>
-
             <div class="rounded-lg shadow-sm mb-6 p-4 border dark:border-gray-700 bg-white dark:bg-gray-800">
                 <h2 class="text-lg font-semibold mb-3 dark:text-white">Filtry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <Label for="doctor-filter" class="mb-1 dark:text-gray-200">Lekarz</Label>
-                        <Input id="doctor-filter" v-model="filters.doctor_name" type="text"
-                               placeholder="Imię lub nazwisko"/>
+                        <Input id="doctor-filter" v-model="filters.doctor_name" type="text" placeholder="Imię lub nazwisko"/>
                     </div>
                     <div>
                         <Label for="patient-filter" class="mb-1 dark:text-gray-200">Pacjent</Label>
-                        <Input id="patient-filter" v-model="filters.patient_name" type="text"
-                               placeholder="Imię lub nazwisko"/>
+                        <Input id="patient-filter" v-model="filters.patient_name" type="text" placeholder="Imię lub nazwisko"/>
                     </div>
                     <div>
                         <Label for="status-filter" class="mb-1 dark:text-gray-200">Status</Label>
-                        <select id="status-filter" v-model="filters.status"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600">
-                            <option v-for="status in statuses" :key="status.value" :value="status.value">{{
-                                    status.label
-                                }}
-                            </option>
-                        </select>
+                        <Select v-model="filters.status">
+                            <SelectTrigger id="status-filter"><SelectValue placeholder="Wszystkie statusy" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Wszystkie statusy</SelectItem>
+                                <SelectItem v-for="status in statuses.filter(s => s.value !== '')" :key="status.value" :value="status.value">{{ status.label }}</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div>
                         <Label for="date-from" class="mb-1 dark:text-gray-200">Data od</Label>
                         <Popover>
                             <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal"
-                                        :class="!filters.date_from && 'text-muted-foreground'">
+                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!dateFrom && 'text-muted-foreground'">
                                     <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{
-                                            filters.date_from ? formatDisplayDate(filters.date_from) : 'Wybierz datę'
-                                        }}</span>
+                                    <span>{{ dateFrom ? dateFrom.toString() : 'Wybierz datę' }}</span>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0">
-                                <Calendar :model-value="dateFrom" @update:model-value="onDateFromChange"/>
-                            </PopoverContent>
+                            <PopoverContent class="w-auto p-0"><Calendar v-model="dateFrom" initial-focus /></PopoverContent>
                         </Popover>
                     </div>
                     <div>
                         <Label for="date-to" class="mb-1 dark:text-gray-200">Data do</Label>
                         <Popover>
                             <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal"
-                                        :class="!filters.date_to && 'text-muted-foreground'">
+                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!dateTo && 'text-muted-foreground'">
                                     <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{
-                                            filters.date_to ? formatDisplayDate(filters.date_to) : 'Wybierz datę'
-                                        }}</span>
+                                    <span>{{ dateTo ? dateTo.toString() : 'Wybierz datę' }}</span>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0">
-                                <Calendar :model-value="dateTo" @update:model-value="onDateToChange"/>
-                            </PopoverContent>
+                            <PopoverContent class="w-auto p-0"><Calendar v-model="dateTo" initial-focus /></PopoverContent>
                         </Popover>
                     </div>
                     <div class="flex items-end space-x-2">
-                        <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent">
-                            <Icon name="search" class="mr-2 h-4 w-4"/>
-                            Filtruj
-                        </Button>
-                        <Button variant="outline" @click="resetFilters">
-                            <Icon name="x" class="mr-2 h-4 w-4"/>
-                            Wyczyść
-                        </Button>
+                        <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent"><Icon name="search" class="mr-2 h-4 w-4"/>Filtruj</Button>
+                        <Button variant="outline" @click="resetFilters"><Icon name="x" class="mr-2 h-4 w-4"/>Wyczyść</Button>
                         <Tooltip>
-                            <TooltipTrigger as-child>
-                                <Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent" aria-label="Generator raportów">
-                                    <PrinterCheck />
-                                </Button>
-                            </TooltipTrigger>
+                            <TooltipTrigger as-child><Button @click="openReportGenerator" class="bg-nova-primary hover:bg-nova-accent" aria-label="Generator raportów"><PrinterCheck /></Button></TooltipTrigger>
                             <TooltipContent align="center" side="bottom">Generator raportów</TooltipContent>
                         </Tooltip>
                     </div>
                 </div>
             </div>
 
-            <div
-                class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
+            <div class="rounded-lg dark:bg-gray-800 shadow-sm border  dark:border-gray-700 flex flex-col flex-grow overflow-hidden">
                 <ScrollArea class="w-full h-[auto]">
-                    <Table>
-                        <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria
-                        </TableCaption>
+                    <Table class="table-auto ">
+                        <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria</TableCaption>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Pacjent</TableHead>
-                                <TableHead>Lekarz</TableHead>
-                                <TableHead>Procedura</TableHead>
-                                <TableHead>Data i godzina</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead class="text-center">Akcje</TableHead>
-                                <TableHead class="text-center">Szczegóły</TableHead>
-                            </TableRow>
+                            <TableRow><TableHead>ID</TableHead><TableHead>Pacjent</TableHead><TableHead>Lekarz</TableHead><TableHead>Procedura</TableHead><TableHead>Data i godzina</TableHead><TableHead>Status</TableHead><TableHead class="text-center">Akcje</TableHead><TableHead class="text-center">Szczegóły</TableHead></TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow v-if="loading">
-                                <TableCell colspan="7" class="text-center py-8">
-                                    <Icon name="loader-2" class="animate-spin h-8 w-8 text-primary mx-auto"/>
-                                </TableCell>
-                            </TableRow>
+                            <TableRow v-if="loading"><TableCell colspan="7" class="text-center py-8"><Icon name="loader-2" class="animate-spin h-8 w-8 text-primary mx-auto"/></TableCell></TableRow>
                             <TableRow v-else v-for="appointment in appointments" :key="appointment.id">
                                 <TableCell>{{ appointment.id }}</TableCell>
                                 <TableCell class="font-medium">{{ appointment.patient.name }}</TableCell>
-                                <TableCell>{{ appointment.doctor.first_name }} {{
-                                        appointment.doctor.last_name
-                                    }}
-                                </TableCell>
+                                <TableCell>{{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</TableCell>
                                 <TableCell>{{ appointment.procedure.name }}</TableCell>
                                 <TableCell>{{ formatDateTime(appointment.appointment_datetime) }}</TableCell>
-                                <TableCell>
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full"
-                                          :class="getStatusClass(appointment.status)">
-                                        {{ getStatusLabel(appointment.status) }}
-                                    </span>
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    <div class="flex space-x-1 justify-center">
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <Button variant="ghost" size="icon-sm"
-                                                        @click="openEditForm(appointment)">
-                                                    <Icon name="pencil" size="16"/>
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Edytuj</TooltipContent>
-                                        </Tooltip>
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <Button variant="ghost" size="icon-sm"
-                                                        @click="deleteAppointment(appointment.id)">
-                                                    <Icon name="trash-2" size="16"/>
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Usuń</TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                </TableCell>
-                                <TableCell class="text-center">
-                                    <Tooltip>
-                                        <TooltipTrigger as-child>
-                                            <Button variant="ghost" size="icon-sm"
-                                                    @click="router.push({ name: 'admin-appointment-details', params: { id: appointment.id } })">
-                                                <Icon name="info" size="16"/>
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>Szczegóły</TooltipContent>
-                                    </Tooltip>
-                                </TableCell>
+                                <TableCell><span class="px-2 py-1 text-xs font-medium rounded-full" :class="getStatusClass(appointment.status)">{{ getStatusLabel(appointment.status) }}</span></TableCell>
+                                <TableCell class="text-center"><div class="flex space-x-1 justify-center"><Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon" @click="openEditForm(appointment)"><Icon name="pencil" size="16"/></Button></TooltipTrigger><TooltipContent side="bottom">Edytuj</TooltipContent></Tooltip></div></TableCell>
+                                <TableCell class="text-center"><Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon" @click="router.push({ name: 'admin-appointment-details', params: { id: appointment.id } })"><Icon name="info" size="16"/></Button></TooltipTrigger><TooltipContent side="bottom">Szczegóły</TooltipContent></Tooltip></TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
                 </ScrollArea>
                 <div class="flex justify-center items-center p-4 border-t dark:border-gray-700">
-                    <Pagination v-if="meta.last_page > 1" :total="meta.total" :items-per-page="meta.per_page"
-                                :page="meta.current_page" @update:page="changePage" show-edges>
+                    <Pagination v-if="meta.last_page > 1" :total="meta.total" :items-per-page="meta.per_page" :page="meta.current_page" @update:page="changePage" show-edges>
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                            <PaginationFirst/>
-                            <PaginationPrevious/>
+                            <PaginationFirst/><PaginationPrevious/>
                             <template v-for="(item, index) in items">
-                                <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value"
-                                                    as-child>
-                                    <Button class="w-9 h-9 p-0"
-                                            :variant="item.value === meta.current_page ? 'default' : 'outline'"
-                                            :class="
-                                            meta.current_page === item.value
-                                                ? 'bg-nova-primary hover:bg-nova-accent text-white'
-                                                : 'dark:border-gray-600 dark:bg-gray-700 dark:text-white'
-                                        ">{{ item.value }}
-                                    </Button>
-                                </PaginationListItem>
+                                <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child><Button class="w-9 h-9 p-0" :variant="item.value === meta.current_page ? 'default' : 'outline'" :class="meta.current_page === item.value ? 'bg-nova-primary hover:bg-nova-accent text-white' : 'dark:border-gray-600 dark:bg-gray-700 dark:text-white'">{{ item.value }}</Button></PaginationListItem>
                                 <PaginationEllipsis v-else :key="item.type" :index="index"/>
                             </template>
-                            <PaginationNext/>
-                            <PaginationLast/>
+                            <PaginationNext/><PaginationLast/>
                         </PaginationList>
                     </Pagination>
                 </div>
             </div>
         </div>
 
-        <ReportGenerator
-            v-model="isReportGeneratorOpen"
-            :active-filters="activeFilters"
-        />
+        <ReportGenerator v-model="isReportGeneratorOpen" :active-filters="activeFilters" :user-role="userRole" report-type="appointments" />
 
         <Dialog :open="showEditAppointmentForm" @update:open="showEditAppointmentForm = $event">
             <DialogContent class="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Edycja Wizyty #{{ selectedAppointment?.id }}</DialogTitle>
-                </DialogHeader>
-                <div v-if="appointmentFormLoading || !selectedAppointment"
-                     class="flex justify-center items-center py-10">
-                    <Icon name="loader-2" class="animate-spin h-8 w-8 text-primary"/>
-                </div>
+                <DialogHeader><DialogTitle>Edycja Wizyty #{{ selectedAppointment?.id }}</DialogTitle></DialogHeader>
+                <div v-if="appointmentFormLoading || !selectedAppointment" class="flex justify-center items-center py-10"><Icon name="loader-2" class="animate-spin h-8 w-8 text-primary"/></div>
                 <div v-else class="space-y-4 py-4">
                     <div class="space-y-1">
                         <Label for="edit-patient">Pacjent</Label>
-                        <select id="edit-patient" v-model="selectedAppointment.patient_id"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                :class="{'border-red-500': appointmentErrors.patient_id}">
-                            <option value="" disabled>Wybierz pacjenta</option>
-                            <option v-for="patient in allPatients" :key="patient.id" :value="patient.id">{{
-                                    patient.name
-                                }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.patient_id[0] }}
-                        </div>
+                        <Select v-model="selectedAppointment.patient_id" :class="{'border-red-500': appointmentErrors.patient_id}">
+                            <SelectTrigger id="edit-patient"><SelectValue placeholder="Wybierz pacjenta" /></SelectTrigger>
+                            <SelectContent><SelectItem v-for="patient in allPatients" :key="patient.id" :value="patient.id">{{ patient.name }}</SelectItem></SelectContent>
+                        </Select>
+                        <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">{{ appointmentErrors.patient_id[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-doctor">Lekarz</Label>
-                        <select id="edit-doctor" v-model="selectedAppointment.doctor_id"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                :class="{'border-red-500': appointmentErrors.doctor_id}">
-                            <option value="" disabled>Wybierz lekarza</option>
-                            <option v-for="doctor in allDoctors" :key="doctor.id" :value="doctor.id">
-                                {{ doctor.first_name }} {{ doctor.last_name }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.doctor_id[0] }}
-                        </div>
+                        <Select v-model="selectedAppointment.doctor_id" :class="{'border-red-500': appointmentErrors.doctor_id}">
+                            <SelectTrigger id="edit-doctor"><SelectValue placeholder="Wybierz lekarza" /></SelectTrigger>
+                            <SelectContent><SelectItem v-for="doctor in allDoctors" :key="doctor.id" :value="doctor.id">{{ doctor.first_name }} {{ doctor.last_name }}</SelectItem></SelectContent>
+                        </Select>
+                        <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">{{ appointmentErrors.doctor_id[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-procedure">Procedura</Label>
-                        <select id="edit-procedure" v-model="selectedAppointment.procedure_id"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                :class="{'border-red-500': appointmentErrors.procedure_id}">
-                            <option value="" disabled>Wybierz procedurę</option>
-                            <option v-for="procedure in procedures" :key="procedure.id" :value="procedure.id">
-                                {{ procedure.name }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">
-                            {{ appointmentErrors.procedure_id[0] }}
-                        </div>
+                        <Select v-model="selectedAppointment.procedure_id" :class="{'border-red-500': appointmentErrors.procedure_id}">
+                            <SelectTrigger id="edit-procedure"><SelectValue placeholder="Wybierz procedurę" /></SelectTrigger>
+                            <SelectContent><SelectItem v-for="procedure in procedures" :key="procedure.id" :value="procedure.id">{{ procedure.name }}</SelectItem></SelectContent>
+                        </Select>
+                        <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">{{ appointmentErrors.procedure_id[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label>Data wizyty</Label>
                         <Popover>
                             <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal"
-                                        :class="!selectedAppointment.appointment_datetime && 'text-muted-foreground'">
+                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!selectedDate && 'text-muted-foreground'">
                                     <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{
-                                            selectedAppointment.appointment_datetime ? formatDisplayDate(selectedAppointment.appointment_datetime) : 'Wybierz datę'
-                                        }}</span>
+                                    <span>{{ selectedDate ? selectedDate.toString() : 'Wybierz datę' }}</span>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0">
-                                <Calendar :model-value="selectedDate" @update:model-value="onAppointmentDateChange"
-                                          initial-focus/>
-                            </PopoverContent>
+                            <PopoverContent class="w-auto p-0"><Calendar v-model="selectedDate" initial-focus/></PopoverContent>
                         </Popover>
-                        <div v-if="appointmentErrors.appointment_datetime" class="text-xs text-red-500">
-                            {{ appointmentErrors.appointment_datetime[0] }}
-                        </div>
+                        <div v-if="appointmentErrors.appointment_datetime" class="text-xs text-red-500">{{ appointmentErrors.appointment_datetime[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-status">Status wizyty</Label>
-                        <select id="edit-status" v-model="selectedAppointment.status"
-                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                :class="{'border-red-500': appointmentErrors.status}">
-                            <option v-for="status in statusOptions" :key="status.value" :value="status.value">
-                                {{ status.label }}
-                            </option>
-                        </select>
-                        <div v-if="appointmentErrors.status" class="text-xs text-red-500">{{
-                                appointmentErrors.status[0]
-                            }}
-                        </div>
+                        <Select v-model="selectedAppointment.status" :class="{'border-red-500': appointmentErrors.status}">
+                            <SelectTrigger id="edit-status"><SelectValue placeholder="Wybierz status" /></SelectTrigger>
+                            <SelectContent><SelectItem v-for="status in statusOptions" :key="status.value" :value="status.value">{{ status.label }}</SelectItem></SelectContent>
+                        </Select>
+                        <div v-if="appointmentErrors.status" class="text-xs text-red-500">{{ appointmentErrors.status[0] }}</div>
                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" @click="closeEditForm">Anuluj</Button>
-                    <Button @click="updateAppointment" :disabled="appointmentFormLoading">
-                        <Icon v-if="appointmentFormLoading" name="loader-2" class="animate-spin mr-2"/>
-                        <span>Zapisz zmiany</span>
-                    </Button>
+                    <Button @click="updateAppointment" :disabled="appointmentFormLoading"><Icon v-if="appointmentFormLoading" name="loader-2" class="animate-spin mr-2"/><span>Zapisz zmiany</span></Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-
     </AppLayout>
 </template>
 

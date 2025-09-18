@@ -81,7 +81,6 @@ const loadProcedures = async () => {
         if (selectedCategory.value) params.append('category_id', selectedCategory.value);
 
         const url = `/api/v1/admin/procedures?${params.toString()}`;
-        console.log('Wywołanie API:', url);
 
         const response = await axios.get(url);
         procedures.value = response.data.data;
@@ -100,7 +99,6 @@ const loadCategories = async () => {
     try {
         const response = await axios.get('/api/v1/admin/procedures/categories');
         categories.value = response.data.data;
-        console.log('Załadowane kategorie:', categories.value);
     } catch (err: any) {
         console.error('Błąd podczas pobierania kategorii:', err);
         showErrorToast('Błąd', 'Nie udało się załadować kategorii procedur');

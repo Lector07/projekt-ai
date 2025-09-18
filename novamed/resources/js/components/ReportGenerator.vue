@@ -14,9 +14,17 @@ import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} fro
 import Icon from '@/components/Icon.vue';
 import {useToast} from 'primevue/usetoast';
 import {Separator} from "@/components/ui/separator"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
 import {LoaderCircle} from "lucide-vue-next";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
-import PickList from 'primevue/picklist';
 
 const toast = useToast();
 
@@ -30,7 +38,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:modelValue']);
-const isLoading = ref(false);
 
 
 const reportLoading = ref(false);
@@ -179,8 +186,7 @@ const initializeConfig = () => {
     if (props.config) {
         Object.assign(reportConfig, props.config);
     } else {
-        const defaultTitle = props.reportType === 'doctors' ? 'Raport Lekarzy' : 'Zestawienie Wizyt';
-        reportConfig.title = defaultTitle;
+        reportConfig.title = props.reportType === 'doctors' ? 'Raport Lekarzy' : 'Zestawienie Wizyt';
 
         if (props.reportType === 'doctors') {
             reportConfig.formattingOptions.highlightRules = [
@@ -542,7 +548,7 @@ watch(() => reportConfig.pageFormat, (newPageFormat) => {
 });
 
 
-watch(() => reportConfig.colorSettings, (newColorSettings) => {
+watch(() => reportConfig.colorSettings, () => {
 }, { deep: true });
 
 const customColors = [
@@ -555,169 +561,156 @@ const customColors = [
     { key: 'groupHeaderBackgroundColor', label: 'Tło grupy' },
     { key: 'groupHeaderFontColor', label: 'Tekst grupy' },
     { key: 'borderColor', label: 'Obramowanie' },
-];
+] as const;
 </script>
 
 <template>
     <Dialog :open="props.modelValue" @update:open="emit('update:modelValue', $event)">
-        <DialogContent class="w-[80vw] max-w-none h-[90vh] flex flex-col">
-            <DialogHeader>
-                <DialogTitle>Zaawansowany Generator Raportów</DialogTitle>
-                <DialogDescription>
-                    Dostosuj raport i zobacz podgląd na żywo. Raport jest generowany na podstawie aktualnie ustawionych
-                    filtrów.
+        <DialogContent class="w-[95vw] sm:w-[90vw] lg:w-[90vw] xl:w-[90vw] max-w-none h-[95vh] sm:h-[90vh] flex flex-col bg-background border-nova-primary/20">
+            <DialogHeader class="border-b border-nova-primary/10">
+                <DialogTitle class="text-md sm:text-md text-nova-dark font-semibold">Generator Raportów</DialogTitle>
+                <DialogDescription class="text-xs sm:text-sm text-muted-foreground">
+                    Dostosuj raport i zobacz podgląd na żywo. Raport jest generowany na podstawie aktualnie ustawionych filtrów.
                 </DialogDescription>
             </DialogHeader>
 
             <div class="flex-grow min-h-0">
                 <ResizablePanelGroup direction="horizontal" class="h-full w-full">
-                    <ResizablePanel :default-size="90" :min-size="30">
-                        <div class="flex flex-col h-full p-4 pr-2 ">
-                            <ScrollArea class="md:h-[100vh] overflow-y-auto pr-2">
+                    <ResizablePanel :default-size="50" :min-size="40" class="hidden lg:block border-r border-nova-primary/10">
+                        <div class="flex flex-col h-full sm:p-1 pr-1 ">
+                            <ScrollArea class="h-full overflow-y-auto pr-1">
                                 <Accordion type="single" collapsible class="w-full" default-value="item-1">
-                                    <AccordionItem value="item-1">
-                                        <AccordionTrigger class="text-lg">Opcje Główne</AccordionTrigger>
-                                        <AccordionContent class="pt-4">
+                                    <AccordionItem value="item-1" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary">Opcje Główne</AccordionTrigger>
+                                        <AccordionContent class="pt-0">
                                             <ScrollArea class="max-h-64 overflow-y-auto">
-                                                <div class="grid grid-cols-4 items-center gap-4">
-                                                    <Label for="report-title" class="text-right">Tytuł Raportu</Label>
+                                                <div class="grid grid-cols-1 lg:grid-cols-4 items-center gap-2 sm:gap-4">
+                                                    <Label for="report-title" class="lg:text-right text-nova-dark font-medium">Tytuł Raportu</Label>
                                                     <Input id="report-title" v-model="reportConfig.title"
-                                                           class="col-span-3"/>
+                                                           class="lg:col-span-3 border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                 </div>
-                                                <div class="grid grid-cols-4 mt-2 items-center gap-4">
-                                                    <Label for="report-format" class="text-right">Format raportu</Label>
-                                                    <select id="report-format" v-model="reportConfig.pageFormat" class="col-span-3 rounded-md border border-input bg-background px-3 py-2 text-sm w-full">
-                                                        <option v-for="format in avaliablePageFormat" :key="format" :value="format">
-                                                            {{ format }}
-                                                        </option>
-                                                    </select>
+                                                <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-center gap-2 sm:gap-4">
+                                                    <Label for="report-format" class="lg:text-right text-nova-dark font-medium">Format raportu</Label>
+                                                    <Select v-model="reportConfig.pageFormat">
+                                                        <SelectTrigger class="lg:col-span-3">
+                                                            <SelectValue placeholder="Wybierz format..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem v-for="format in avaliablePageFormat" :key="format" :value="format">
+                                                                {{ format }}
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
 
-                                                <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
-                                                    <Label for="orientation-checkbox"
-                                                           class="text-right">Orientacja</Label>
-                                                    <div class="col-span-3 flex items-center space-x-2">
+                                                <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 mb-2 items-center gap-2 sm:gap-4">
+                                                    <Label for="orientation-checkbox" class="lg:text-right text-nova-dark font-medium">Orientacja</Label>
+                                                    <div class="lg:col-span-3 flex items-center space-x-2">
                                                         <Checkbox id="orientation-checkbox"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                   v-model:checked="isLandscape"/>
-                                                        <Label for="orientation-checkbox">Pozioma</Label>
+                                                        <Label for="orientation-checkbox" class="text-nova-dark">Pozioma</Label>
                                                     </div>
                                                 </div>
-                                                <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
-                                                    <Label class="text-right">Stopka</Label>
-                                                    <div class="flex items-center space-x-2 col-span-3">
+                                                <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 mb-2 items-center gap-2 sm:gap-4">
+                                                    <Label class="lg:text-right text-nova-dark font-medium">Stopka</Label>
+                                                    <div class="flex items-center space-x-2 lg:col-span-3">
                                                         <Checkbox id="page-footer"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                   v-model:checked="reportConfig.pageFooterEnabled"/>
-                                                        <label for="page-footer"
-                                                               class="text-sm font-medium leading-none">Dołącz
-                                                            stopkę</label>
+                                                        <label for="page-footer" class="text-sm font-medium leading-none text-nova-dark">Dołącz stopkę</label>
                                                     </div>
                                                 </div>
-                                                <div class="grid grid-cols-4 mt-2 mb-2 items-center gap-4">
-                                                    <Label class="text-right">Podsumowanie</Label>
-                                                    <div class="flex items-center space-x-2 col-span-3">
+                                                <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 mb-2 items-center gap-2 sm:gap-4">
+                                                    <Label class="lg:text-right text-nova-dark font-medium">Podsumowanie</Label>
+                                                    <div class="flex items-center space-x-2 lg:col-span-3">
                                                         <Checkbox id="summary-band"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                   v-model:checked="reportConfig.summaryBandEnabled"/>
-                                                        <label for="summary-band"
-                                                               class="text-sm font-medium leading-none">Dołącz
-                                                            podsumowanie na końcu</label>
+                                                        <label for="summary-band" class="text-sm font-medium leading-none text-nova-dark">Dołącz podsumowanie na końcu</label>
                                                     </div>
                                                 </div>
-                                                <div v-if="reportConfig.subreportConfigs.procedures" class=" grid grid-cols-4 mt-2 items-center gap-4">
-                                                    <Label class="text-left">Podsumowanie dla podraportu</Label>
-                                                    <div class="flex items-center space-x-2 col-span-3">
+                                                <div v-if="reportConfig.subreportConfigs.procedures" class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-center gap-2 sm:gap-4">
+                                                    <Label class="lg:text-left text-nova-dark font-medium">Podsumowanie dla podraportu</Label>
+                                                    <div class="flex items-center space-x-2 lg:col-span-3">
                                                         <Checkbox id="subreport-summary"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                   v-model:checked="reportConfig.subreportConfigs.procedures.summaryBandEnabled"/>
-                                                        <label for="subreport-summary"
-                                                               class="text-sm font-medium leading-none">Pokaż
-                                                            podsumowanie podraportu</label>
+                                                        <label for="subreport-summary" class="text-sm font-medium leading-none text-nova-dark">Pokaż podsumowanie podraportu</label>
                                                     </div>
                                                 </div>
 
-                                                <Separator class="my-4"/>
+                                                <Separator class="my-4 bg-nova-primary/20"/>
 
                                                 <div v-if="reportConfig.companyInfo">
-                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                        <Label for="company-info" class="text-right pt-2">Nazwa jednostki</Label>
+                                                    <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                        <Label for="company-info" class="lg:text-left pt-2 text-nova-dark font-medium">Nazwa jednostki</Label>
                                                         <Input id="company-info" v-model="reportConfig.companyInfo.name"
-                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                               rows="2"></Input>
+                                                               class="lg:col-span-3 w-full border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                     </div>
-                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                        <Label for="company-address" class="text-right pt-2">Adres jednostki</Label>
-                                                        <Input id="company-address"
-                                                               v-model="reportConfig.companyInfo.address"
-                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                               rows="2"/>
+                                                    <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                        <Label for="company-address" class="lg:text-left pt-2 text-nova-dark font-medium">Adres jednostki</Label>
+                                                        <Input id="company-address" v-model="reportConfig.companyInfo.address"
+                                                               class="lg:col-span-3 w-full border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                     </div>
-                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                        <Label for="company-postalcode" class="text-right pt-2">Kod pocztowy</Label>
-                                                        <Input id="company-postalcode"
-                                                               v-model="reportConfig.companyInfo.postalCode" class="col-span-3 w-full rounded-md border border-input
-    bg-background px-3 py-2 text-sm " rows="2"></Input>
+                                                    <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                        <Label for="company-postalcode" class="lg:text-left pt-2 text-nova-dark font-medium">Kod pocztowy</Label>
+                                                        <Input id="company-postalcode" v-model="reportConfig.companyInfo.postalCode"
+                                                               class="lg:col-span-3 w-full border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                     </div>
-                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                        <Label for="company-city" class="text-right pt-2">Miasto</Label>
+                                                    <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                        <Label for="company-city" class="lg:text-left pt-2 text-nova-dark font-medium">Miasto</Label>
                                                         <Input id="company-city" v-model="reportConfig.companyInfo.city"
-                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm "
-                                                               rows="2"></Input>
+                                                               class="lg:col-span-3 w-full border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                     </div>
-                                                    <div class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                        <Label for="company-taxid" class="text-right pt-2">NIP</Label>
+                                                    <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                        <Label for="company-taxid" class="lg:text-left pt-2 text-nova-dark font-medium">NIP</Label>
                                                         <Input id="company-taxid" v-model="reportConfig.companyInfo.taxId"
-                                                               class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                                               rows="2"></Input>
+                                                               class="lg:col-span-3 w-full border-nova-primary/30 focus:border-nova-accent focus:ring-nova-accent/20"/>
                                                     </div>
                                                 </div>
 
-                                                <Separator class="my-4"/>
+                                                <Separator class="my-4 bg-nova-primary/20"/>
 
-                                                <div v-if="reportConfig.pageFooterEnabled"
-                                                     class="grid grid-cols-4 mt-2 items-start gap-4">
-                                                    <Label for="footer-text" class="text-right pt-2">Tekst w
-                                                        stopce</Label>
+                                                <div v-if="reportConfig.pageFooterEnabled" class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
+                                                    <Label for="footer-text" class="lg:text-left pt-2 text-nova-dark font-medium">Tekst w stopce</Label>
                                                     <textarea id="footer-text" v-model="reportConfig.footerLeftText"
-                                                              class="col-span-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                              class="lg:col-span-3 w-full rounded-md border border-nova-primary/30 bg-background px-3 py-2 text-sm focus:border-nova-accent focus:ring-2 focus:ring-nova-accent/20 focus:outline-none"
                                                               rows="2"></textarea>
                                                 </div>
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
-                                    <AccordionItem value="item-2">
-                                        <AccordionTrigger class="text-lg">Kolumny</AccordionTrigger>
-                                        <AccordionContent class="pt-4">
+                                    <AccordionItem value="item-2" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary">Kolumny</AccordionTrigger>
+                                        <AccordionContent class="pt-0">
                                             <ScrollArea class="max-h-66 overflow-y-auto">
                                                 <draggable v-model="reportConfig.columns" item-key="field"
                                                            handle=".drag-handle" ghost-class="ghost-class">
                                                     <template #item="{ element: col, index }">
-                                                        <div class="grid grid-cols-6 gap-x-1 gap-y-2 items-center mt-2"
-                                                             :class="{ 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-1': availableFields.find(f => f.field === col.field)?.type === 'subreport' }">
-                                                            <div
-                                                                class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                                                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-x-1 gap-y-2 items-center mt-2 p-2 rounded-md border border-nova-primary/10 bg-nova-light/30"
+                                                             :class="{ 'bg-nova-accent/10 border-nova-accent/30': availableFields.find(f => f.field === col.field)?.type === 'subreport' }">
+                                                            <div class="drag-handle cursor-move p-2 text-nova-primary hover:text-nova-accent">
                                                                 <Icon name="grip" size="18"/>
                                                             </div>
                                                             <Checkbox v-model:checked="col.visible"
-                                                                      class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"/>
-                                                            <div class="col-span-2 flex items-center space-x-2">
-                                                                <Input v-if="!isSubreportColumn(col.field)"
-                                                                       v-model="col.header" class="flex-1 text-xs h-8"/>
-                                                                <Button
-                                                                    v-if="availableFields.find(f => f.field === col.field)?.type === 'subreport' && col.visible"
-                                                                    @click="configureSubreport(col.field)"
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    class="h-8 px-2 text-xs">
+                                                                      class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"/>
+                                                            <div class="col-span-1 sm:col-span-2 flex items-center space-x-2">
+                                                                <Input v-if="!isSubreportColumn(col.field)" v-model="col.header"
+                                                                       class="flex-1 text-xs h-8 border-nova-primary/30 focus:border-nova-accent"/>
+                                                                <Button v-if="availableFields.find(f => f.field === col.field)?.type === 'subreport' && col.visible"
+                                                                        @click="configureSubreport(col.field)"
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        class="h-8 px-2 text-xs border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white">
                                                                     <Icon name="settings" size="12" class="mr-1"/>
-                                                                    Konfig
+                                                                    <span class="hidden sm:inline">Konfig</span>
                                                                 </Button>
                                                             </div>
                                                             <Input v-model.number="col.width" type="number"
-                                                                   class="text-xs h-8 text-center" placeholder="auto"
+                                                                   class="text-xs h-8 text-center w-full border-nova-primary/30 focus:border-nova-accent" placeholder="auto"
                                                                    :disabled="availableFields.find(f => f.field === col.field)?.type === 'subreport'"/>
-                                                            <Input v-model="col.format" class="text-xs h-8"
+                                                            <Input v-model="col.format" class="text-xs h-8 w-full border-nova-primary/30 focus:border-nova-accent"
                                                                    placeholder="np. #,##0.00"
                                                                    :disabled="availableFields.find(f => f.field === col.field)?.type === 'subreport'"/>
                                                         </div>
@@ -726,152 +719,143 @@ const customColors = [
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
-                                    <AccordionItem value="item-3">
-                                        <AccordionTrigger class="text-lg">Grupowane</AccordionTrigger>
-                                        <AccordionContent class="pt-4">
+                                    <AccordionItem value="item-3" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary">Grupowanie</AccordionTrigger>
+                                        <AccordionContent class="pt-0">
                                             <ScrollArea class="max-h-64 overflow-y-auto">
                                                 <draggable v-model="reportConfig.groups" item-key="index"
                                                            handle=".drag-handle" ghost-class="ghost-class">
                                                     <template #item="{ element: group, index }">
-                                                        <div
-                                                            class="p-2 border rounded-md mb-2 bg-gray-50 dark:bg-gray-800 flex items-start space-x-2">
-                                                            <div
-                                                                class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                                                        <div class="p-3 border border-nova-primary/20 rounded-md mb-2 bg-nova-light/50 flex flex-col sm:flex-row items-start space-y-2 sm:space-y-0 sm:space-x-2">
+                                                            <div class="drag-handle cursor-move p-2 text-nova-primary hover:text-nova-accent">
                                                                 <Icon name="grip" size="18"/>
                                                             </div>
-                                                            <div class="flex-grow">
-                                                                <div class="grid grid-cols-2 gap-4">
+                                                            <div class="flex-grow w-full">
+                                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                                                                     <div>
-                                                                        <Label :for="`group-field-${index}`">Grupuj po
-                                                                            polu</Label>
-                                                                        <select v-model="group.field"
-                                                                                :id="`group-field-${index}`"
-                                                                                class="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                                            <option v-for="field in availableFields"
-                                                                                    :key="field.field"
-                                                                                    :value="field.field">
-                                                                                {{ field.header }}
-                                                                            </option>
-                                                                        </select>
+                                                                        <Label :for="`group-field-${index}`" class="text-nova-dark font-medium">Grupuj po polu</Label>
+                                                                        <Select v-model="group.field">
+                                                                            <SelectTrigger :id="`group-field-${index}`">
+                                                                                <SelectValue placeholder="Wybierz pole..."/>
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem v-for="field in availableFields" :key="field.field" :value="field.field">
+                                                                                    {{ field.header }}
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
                                                                     </div>
                                                                 </div>
-                                                                <div class="flex justify-between items-center mt-2">
+                                                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
                                                                     <div class="flex items-center space-x-2">
                                                                         <Checkbox :id="`group-footer-${index}`"
-                                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                                   v-model:checked="group.showFooter"/>
-                                                                        <label :for="`group-footer-${index}`"
-                                                                               class="text-sm">Pokaż
-                                                                            podsumowanie</label>
+                                                                        <label :for="`group-footer-${index}`" class="text-sm text-nova-dark">Pokaż podsumowanie</label>
                                                                     </div>
-                                                                    <Button variant="destructive" size="sm"
-                                                                            @click="removeGroup(index)">Usuń
-                                                                    </Button>
+                                                                    <Button variant="destructive" size="sm" @click="removeGroup(index)"
+                                                                            class="bg-red-500 hover:bg-red-600 text-white">Usuń</Button>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </template>
                                                 </draggable>
-                                                <Button @click="addGroup" class="mt-2 w-full" variant="outline">
+                                                <Button @click="addGroup" class="mt-2 w-full border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white" variant="outline">
                                                     <Icon name="plus" class="mr-2" size="8"/>
-                                                    Dodaj
-                                                    nową
-                                                    grupę
+                                                    Dodaj nową grupę
                                                 </Button>
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
-                                    <AccordionItem value="item-4">
-                                        <AccordionTrigger class="text-lg">Formatowanie</AccordionTrigger>
-                                        <AccordionContent class="space-y-4 pt-4">
+                                    <AccordionItem value="item-4" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary">Formatowanie</AccordionTrigger>
+                                        <AccordionContent class="space-y-4 pt-0">
                                             <ScrollArea class="max-h-54 overflow-y-auto">
-                                                <div class="flex items-center space-x-6">
+                                                <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
                                                     <div class="flex items-center space-x-2">
                                                         <Checkbox id="zebra-stripes"
-                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"
+                                                                  class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"
                                                                   v-model:checked="reportConfig.formattingOptions.zebraStripes"/>
-                                                        <label for="zebra-stripes" class="text-sm font-medium">Paski
-                                                            zebry</label>
+                                                        <label for="zebra-stripes" class="text-sm font-medium text-nova-dark">Paski zebry</label>
                                                     </div>
-                                                    <div class="flex items-center space-x-2">
-                                                        <Label for="report-theme" class="text-right">Motyw
-                                                            wizualny</Label>
-                                                        <select v-model="reportConfig.theme" id="report-theme"
-                                                                class="col-span-2 w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm">
-                                                            <option v-for="theme in availableThemes" :key="theme.value"
-                                                                    :value="theme.value">
-                                                                {{ theme.label }}
-                                                            </option>
-                                                        </select>
+                                                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                                                        <Label for="report-theme" class="text-left sm:text-right whitespace-nowrap text-nova-dark font-medium">Motyw wizualny</Label>
+                                                        <Select v-model="reportConfig.theme">
+                                                            <SelectTrigger id="report-theme">
+                                                                <SelectValue placeholder="Wybierz motyw..."/>
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem v-for="theme in availableThemes" :key="theme.value" :value="theme.value">
+                                                                    {{ theme.label }}
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                     </div>
                                                 </div>
-                                                <Separator class="my-4"/>
+                                                <Separator class="my-4 bg-nova-primary/20"/>
                                                 <TabsRoot default-value="highlighting" class="w-full">
                                                     <TabsList class="grid w-full grid-cols-2">
-                                                        <TabsTrigger value="highlighting">
+                                                        <TabsTrigger value="highlighting" class="transition duration-300 ease-in-out hover:-translate-y-1">
                                                             Podświetlanie
                                                         </TabsTrigger>
-                                                        <TabsTrigger value="colors">
+                                                        <TabsTrigger value="colors" class="transition duration-300 ease-in-out hover:-translate-y-1">
                                                             Kolory
                                                         </TabsTrigger>
                                                     </TabsList>
                                                     <TabsContent value="highlighting" class="mt-4">
-                                                        <Label class="font-semibold">Reguły podświetlania wierszy</Label>
-                                                        <div
-                                                            v-for="(rule, index) in reportConfig.formattingOptions.highlightRules"
-                                                            :key="rule.id"
-                                                            class="p-2 border rounded-md mt-2 space-y-2 bg-gray-50 dark:bg-gray-800">
-                                                            <div class="flex items-center space-x-2">
-                                                                <span class="text-sm font-bold">JEŚLI</span>
-                                                                <select v-model="rule.field"
-                                                                        class="flex-1 rounded-md border-input bg-background px-2 py-1 text-sm">
-                                                                    <option v-for="field in availableFields"
-                                                                            :key="field.field"
-                                                                            :value="field.field">{{ field.header }}
-                                                                    </option>
-                                                                </select>
-                                                                <select v-model="rule.operator"
-                                                                        class="rounded-md border-input bg-background px-2 py-1 text-sm">
-                                                                    <option v-for="op in highlightOperators" :key="op.value"
-                                                                            :value="op.value">{{ op.label }}
-                                                                    </option>
-                                                                </select>
-                                                                <template
-                                                                    v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
-                                                                    <Input v-model="(rule as any).value" type="number"
-                                                                           placeholder="Wartość liczbowa"
-                                                                           class="flex-1 text-sm h-8"/>
+                                                        <Label class="font-semibold text-nova-dark">Reguły podświetlania wierszy</Label>
+                                                        <div v-for="(rule, index) in reportConfig.formattingOptions.highlightRules" :key="rule.id"
+                                                             class="p-3 border border-nova-primary/20 rounded-md mt-2 space-y-2 bg-nova-light/30">
+                                                            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                                                <span class="text-sm font-bold text-nova-primary">JEŚLI</span>
+                                                                <Select v-model="rule.field">
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Wybierz pole..."/>
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem v-for="field in availableFields" :key="field.field" :value="field.field">{{ field.header }}</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Select v-model="rule.operator">
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Wybierz operator..."/>
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem v-for="op in highlightOperators" :key="op.value" :value="op.value">{{ op.label }}</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <template v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'">
+                                                                    <Input v-model="(rule as any).value" type="number" placeholder="Wartość liczbowa"
+                                                                           class="flex-1 w-full sm:w-auto text-sm h-8 border-nova-primary/30 focus:border-nova-accent"/>
                                                                 </template>
                                                                 <template v-else>
-                                                                    <Input v-model="(rule as any).value"
-                                                                           placeholder="Wartość"
-                                                                           class="flex-1 text-sm h-8"/>
+                                                                    <Input v-model="(rule as any).value" placeholder="Wartość"
+                                                                           class="flex-1 w-full sm:w-auto text-sm h-8 border-nova-primary/30 focus:border-nova-accent"/>
                                                                 </template>
                                                             </div>
-                                                            <div class="flex items-center space-x-2">
-                                                                <span class="text-sm font-bold">WTEDY</span>
-                                                                <Label for="color-picker" class="text-sm">kolor tła:</Label>
-                                                                <Input v-model="rule.color" type="color" id="color-picker"
-                                                                       class="h-8 w-12 p-1"/>
+                                                            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                                                <span class="text-sm font-bold text-nova-primary">WTEDY</span>
+                                                                <Label for="color-picker" class="text-sm whitespace-nowrap text-nova-dark">kolor tła:</Label>
+                                                                <Input v-model="rule.color" type="color" id="color-picker" class="h-8 w-12 p-1 border-nova-primary/30"/>
                                                                 <div class="flex-grow"></div>
-                                                                <Button variant="destructive" size="icon"
-                                                                        @click="removeHighlightRule(index)">
+                                                                <Button variant="destructive" size="icon" @click="removeHighlightRule(index)"
+                                                                        class="bg-red-500 hover:bg-red-600 text-white">
                                                                     <Icon name="trash" size="14"/>
                                                                 </Button>
                                                             </div>
                                                         </div>
-                                                        <Button @click="addHighlightRule" class="mt-2 w-full border-color-nova-accent" variant="outline"
-                                                        >
+                                                        <Button @click="addHighlightRule" class="mt-2 w-full border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white" variant="outline">
                                                             <Icon name="plus" class="mr-2" size="8"/>
                                                             Dodaj regułę podświetlania
                                                         </Button>
                                                     </TabsContent>
                                                     <TabsContent value="colors" class="mt-4">
-                                                        <Label class="font-semibold">Niestandardowe kolory</Label>
-                                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 mt-2">
-                                                            <div v-for="color in customColors" :key="color.key" class="grid grid-cols-2 items-center">
-                                                                <Label class="text-sm text-right mr-2">{{ color.label }}</Label>
-                                                                <input v-model="reportConfig.colorSettings[color.key]" type="color" class="h-8 w-12 p-1" />
+                                                        <Label class="font-semibold text-nova-dark">Niestandardowe kolory</Label>
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 sm:gap-x-6 gap-y-2 mt-2">
+                                                            <div v-for="color in customColors" :key="color.key" class="grid grid-cols-2 items-center gap-2">
+                                                                <Label class="text-xs sm:text-sm text-left sm:text-right text-nova-dark">{{ color.label }}</Label>
+                                                                <input v-model="reportConfig.colorSettings[color.key]" type="color"
+                                                                       class="h-8 w-12 p-1 border border-nova-primary/30 rounded" />
                                                             </div>
                                                         </div>
                                                     </TabsContent>
@@ -879,35 +863,206 @@ const customColors = [
                                             </ScrollArea>
                                         </AccordionContent>
                                     </AccordionItem>
-
                                 </Accordion>
                             </ScrollArea>
                         </div>
                     </ResizablePanel>
-                    <ResizableHandle with-handle/>
-                    <ResizablePanel :default-size="70" :min-size="30">
-                        <div class="flex flex-col h-full items-center justify-center bg-gray-200 dark:bg-gray-800">
-                            <div v-if="reportLoading" class="flex flex-col items-center text-gray-500">
+
+
+
+                    <div class="lg:hidden flex flex-col h-full w-full">
+                        <div class="flex flex-col flex-shrink-0 border-b border-nova-primary/20" style="max-height: 60vh;">
+                            <div class="p-2 sm:p-4">
+                                <h3 class="text-lg font-semibold text-nova-dark">Konfiguracja Raportu</h3>
+                            </div>
+                            <ScrollArea class="flex-grow p-2 sm:p-4 pt-0">
+                                <Accordion type="single" collapsible class="w-full" default-value="item-1">
+                                    <AccordionItem value="item-1" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base text-nova-dark hover:text-nova-primary">Opcje Główne</AccordionTrigger>
+                                        <AccordionContent class="pt-4 space-y-4">
+                                            <div><Label for="mobile-report-title" class="text-nova-dark font-medium">Tytuł Raportu</Label><Input id="mobile-report-title" v-model="reportConfig.title" class="mt-1 border-nova-primary/30"/></div>
+                                            <div>
+                                                <Label for="mobile-report-format" class="text-nova-dark font-medium">Format</Label>
+                                                <Select id="mobile-report-format" v-model="reportConfig.pageFormat">
+                                                    <SelectTrigger class="mt-1 w-full">
+                                                        <SelectValue placeholder="Wybierz format..."/>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem v-for="format in avaliablePageFormat" :key="format" :value="format">{{ format }}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div class="space-y-2 pt-2">
+                                                <div class="flex items-center space-x-2"><Checkbox id="mobile-orientation" v-model:checked="isLandscape"/><Label for="mobile-orientation" class="text-nova-dark">Orientacja pozioma</Label></div>
+                                                <div class="flex items-center space-x-2"><Checkbox id="mobile-footer" v-model:checked="reportConfig.pageFooterEnabled"/><Label for="mobile-footer" class="text-nova-dark">Dołącz stopkę</Label></div>
+                                                <div class="flex items-center space-x-2"><Checkbox id="mobile-summary" v-model:checked="reportConfig.summaryBandEnabled"/><Label for="mobile-summary" class="text-nova-dark">Dołącz podsumowanie</Label></div>
+                                                <div v-if="reportConfig.subreportConfigs.procedures" class="flex items-center space-x-2"><Checkbox id="mobile-sub-summary" v-model:checked="reportConfig.subreportConfigs.procedures.summaryBandEnabled"/><Label for="mobile-sub-summary" class="text-nova-dark">Podsumowanie podraportu</Label></div>
+                                            </div>
+                                            <Separator class="my-4"/>
+                                            <div v-if="reportConfig.companyInfo" class="space-y-2">
+                                                <div><Label for="mobile-company-name" class="text-nova-dark font-medium">Nazwa jednostki</Label><Input id="mobile-company-name" v-model="reportConfig.companyInfo.name" class="mt-1 border-nova-primary/30"/></div>
+                                                <div><Label for="mobile-company-address" class="text-nova-dark font-medium">Adres</Label><Input id="mobile-company-address" v-model="reportConfig.companyInfo.address" class="mt-1 border-nova-primary/30"/></div>
+                                                <div><Label for="mobile-company-postal" class="text-nova-dark font-medium">Kod i Miasto</Label><div class="flex gap-2 mt-1"><Input id="mobile-company-postal" v-model="reportConfig.companyInfo.postalCode" class="border-nova-primary/30"/><Input v-model="reportConfig.companyInfo.city" class="border-nova-primary/30"/></div></div>
+                                                <div><Label for="mobile-company-nip" class="text-nova-dark font-medium">NIP</Label><Input id="mobile-company-nip" v-model="reportConfig.companyInfo.taxId" class="mt-1 border-nova-primary/30"/></div>
+                                            </div>
+                                            <Separator class="my-4"/>
+                                            <div v-if="reportConfig.pageFooterEnabled" class="space-y-2">
+                                                <Label for="mobile-footer-text" class="text-nova-dark font-medium">Tekst w stopce</Label>
+                                                <textarea id="mobile-footer-text" v-model="reportConfig.footerLeftText" class="mt-1 w-full rounded-md border border-nova-primary/30 bg-background px-3 py-2 text-sm" rows="2"></textarea>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    <AccordionItem value="item-2" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base text-nova-dark hover:text-nova-primary">Kolumny</AccordionTrigger>
+                                        <AccordionContent class="pt-2">
+                                            <draggable v-model="reportConfig.columns" item-key="field" handle=".drag-handle" ghost-class="ghost-class" class="space-y-2">
+                                                <template #item="{ element: col }">
+                                                    <div class="grid grid-cols-[auto_auto_1fr_auto] gap-2 items-center p-2 rounded-md border border-nova-primary/10 bg-nova-light/30">
+                                                        <div class="drag-handle cursor-move p-2 text-nova-primary"><Icon name="grip" size="18"/></div>
+                                                        <Checkbox v-model:checked="col.visible"/>
+                                                        <div class="flex items-center space-x-2">
+                                                            <Input v-if="!isSubreportColumn(col.field)" v-model="col.header" class="text-xs h-8"/>
+                                                            <span v-else class="text-sm font-medium px-2">{{ availableFields.find(f => f.field === col.field)?.header }}</span>
+                                                            <Button v-if="isSubreportColumn(col.field) && col.visible" @click="configureSubreport(col.field)" size="sm" variant="outline" class="h-8 px-2 text-xs"><Icon name="settings" size="12" class="mr-1"/>Konfig</Button>
+                                                        </div>
+                                                        <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center w-20" placeholder="auto" :disabled="isSubreportColumn(col.field)"/>
+                                                    </div>
+                                                </template>
+                                            </draggable>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    <AccordionItem value="item-3" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base text-nova-dark hover:text-nova-primary">Grupowanie</AccordionTrigger>
+                                        <AccordionContent class="pt-4 space-y-2">
+                                            <draggable v-model="reportConfig.groups" item-key="index" handle=".drag-handle" ghost-class="ghost-class" class="space-y-2">
+                                                <template #item="{ element: group, index }">
+                                                    <div class="p-3 border rounded-md bg-nova-light/50 flex items-start space-x-2">
+                                                        <div class="drag-handle cursor-move p-2 text-nova-primary"><Icon name="grip" size="18"/></div>
+                                                        <div class="flex-grow w-full space-y-2">
+                                                            <Label :for="`group-field-mob-${index}`" class="font-medium">Grupuj po polu</Label>
+                                                            <Select v-model="group.field" :id="`group-field-mob-${index}`">
+                                                                <SelectTrigger class="w-full mt-1">
+                                                                    <SelectValue placeholder="Wybierz pole..."/>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem v-for="field in availableFields.filter(f => f.type !== 'subreport')" :key="field.field" :value="field.field">{{ field.header }}</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <div class="flex justify-between items-center pt-2">
+                                                                <div class="flex items-center space-x-2"><Checkbox :id="`group-footer-mob-${index}`" v-model:checked="group.showFooter"/><label :for="`group-footer-mob-${index}`" class="text-sm">Pokaż podsumowanie</label></div>
+                                                                <Button variant="destructive" size="sm" @click="removeGroup(index)">Usuń</Button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </draggable>
+                                            <Button @click="addGroup" class="mt-4 w-full" variant="outline"><Icon name="plus" class="mr-2" size="8"/>Dodaj grupę</Button>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                    <AccordionItem value="item-4" class="border-nova-primary/20">
+                                        <AccordionTrigger class="text-base text-nova-dark hover:text-nova-primary">Formatowanie</AccordionTrigger>
+                                        <AccordionContent class="pt-4 space-y-4">
+                                            <div class="flex items-center space-x-2"><Checkbox id="mobile-zebra" v-model:checked="reportConfig.formattingOptions.zebraStripes"/><Label for="mobile-zebra">Paski zebry</Label></div>
+                                            <div>
+                                                <Label for="mobile-theme" class="font-medium">Motyw</Label>
+                                                <Select v-model="reportConfig.theme" id="mobile-theme">
+                                                    <SelectTrigger class="w-full mt-1">
+                                                        <SelectValue placeholder="Wybierz motyw..."/>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem v-for="theme in availableThemes" :key="theme.value" :value="theme.value">{{ theme.label }}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <Separator />
+                                            <TabsRoot default-value="colors" class="w-full">
+                                                <TabsList class="grid w-full grid-cols-2"><TabsTrigger value="highlighting">Podświetlanie</TabsTrigger><TabsTrigger value="colors">Kolory</TabsTrigger></TabsList>
+                                                <TabsContent value="highlighting" class="mt-4">
+                                                    <div v-for="(rule, index) in reportConfig.formattingOptions.highlightRules" :key="rule.id" class="p-3 border rounded-md mt-2 space-y-2 bg-nova-light/30">
+                                                        <div class="flex flex-col space-y-2">
+                                                            <span class="text-sm font-bold text-nova-primary">JEŚLI</span>
+                                                            <Select v-model="rule.field">
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Wybierz pole..."/>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem v-for="field in availableFields" :key="field.field" :value="field.field">{{ field.header }}</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <Select v-model="rule.operator">
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Wybierz operator..."/>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem v-for="op in highlightOperators" :key="op.value" :value="op.value">{{ op.label }}</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <template v-if="(availableFields.find(f => f.field === rule.field)?.type === 'numeric') && rule.operator !== 'CONTAINS'"><Input v.model="(rule as any).value" type="number" placeholder="Wartość liczbowa" class="w-full text-sm h-8"/></template>
+                                                            <template v-else><Input v.model="(rule as any).value" placeholder="Wartość" class="w-full text-sm h-8"/></template>
+                                                        </div>
+                                                        <div class="flex items-center space-x-2 pt-2"><span class="text-sm font-bold text-nova-primary">WTEDY</span><Label for="color-picker-mob" class="text-sm">kolor tła:</Label><Input v.model="rule.color" type="color" id="color-picker-mob" class="h-8 w-12 p-1"/><div class="flex-grow"></div><Button variant="destructive" size="icon" @click="removeHighlightRule(index)"><Icon name="trash" size="14"/></Button></div>
+                                                    </div>
+                                                    <Button @click="addHighlightRule" class="mt-4 w-full" variant="outline"><Icon name="plus" class="mr-2" size="8"/>Dodaj regułę</Button>
+                                                </TabsContent>
+                                                <TabsContent value="colors" class="mt-4">
+                                                    <div class="grid grid-cols-1 gap-y-2">
+                                                        <div v-for="color in customColors" :key="color.key" class="grid grid-cols-2 items-center gap-2">
+                                                            <Label class="text-sm text-right">{{ color.label }}</Label>
+                                                            <input v.model="reportConfig.colorSettings[color.key]" type="color" class="h-8 w-12 p-1 border rounded-md" />
+                                                        </div>
+                                                    </div>
+                                                </TabsContent>
+                                            </TabsRoot>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </ScrollArea>
+                        </div>
+
+
+                        <div class="flex-grow flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-800 border-t border-nova-primary/20">
+                            <div v-if="reportLoading" class="flex flex-col items-center text-nova-primary">
                                 <LoaderCircle class="h-8 w-8 animate-spin mb-2"/>
+                                <p class="text-sm">Generowanie podglądu...</p>
                             </div>
                             <div v-else-if="pdfUrl" class="w-full h-full">
-                                <iframe :src="pdfUrl" class="w-full h-full border-0" title="Podgląd Raportu"></iframe>
+                                <iframe :src="pdfUrl" :key="pdfUrl" class="w-full h-full border-0" title="Podgląd Raportu"></iframe>
                             </div>
-                            <div v-else class="text-center text-gray-500 p-4">
-                                <p>Podgląd raportu pojawi się tutaj.</p>
-                                <p class="text-sm mt-1">Jeśli wystąpił błąd, sprawdź konsolę przeglądarki (F12).</p>
+                            <div v-else class="text-center text-nova-primary p-4">
+                                <p class="text-sm sm:text-base">Podgląd raportu pojawi się tutaj.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ResizableHandle with-handle class=" hidden lg:flex bg-nova-primary/10 hover:bg-nova-primary/20"/>
+                    <ResizablePanel :default-size="50" :min-size="30" class="hidden lg:block">
+                        <div class="flex flex-col h-full items-center justify-center">
+                            <div v-if="reportLoading" class="flex flex-col items-center text-nova-primary">
+                                <LoaderCircle class="h-8 w-8 animate-spin mb-2"/>
+                                <p class="font-medium">Generowanie podglądu...</p>
+                            </div>
+                            <div v-else-if="pdfUrl" class="w-full h-full p-1">
+                                <iframe :src="pdfUrl" class="w-full h-full  rounded-lg shadow-sm" title="Podgląd Raportu"></iframe>
+                            </div>
+                            <div v-else class="text-center text-nova-primary p-0">
+                                <div class="bg-white/80 p-6 rounded-lg border border-nova-primary/20 shadow-sm">
+                                    <p class="font-medium">Podgląd raportu pojawi się tutaj.</p>
+                                    <p class="text-sm mt-2 text-muted-foreground">Jeśli wystąpił błąd, sprawdź konsolę przeglądarki (F12).</p>
+                                </div>
                             </div>
                         </div>
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </div>
-            <div class="mt-4 pt-4 border-t dark:border-gray-700 flex items-center justify-between">
-                <Button @click="refreshPreview" :disabled="reportLoading" variant="outline">
+            <Separator class="bg-nova-primary/20"/>
+            <div class="mt-2 pt-2 border-nova-primary/20 flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0  p-4 rounded-md">
+                <Button @click="refreshPreview" :disabled="reportLoading" variant="outline"
+                        class="w-full sm:w-auto border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white">
                     <LoaderCircle v-if="reportLoading" class="h-4 w-4 animate-spin" />
                     {{ reportLoading ? 'Odświeżanie...' : 'Odśwież' }}
                 </Button>
                 <Button @click="downloadReport" :disabled="!pdfUrl || reportLoading"
-                        class="bg-green-600 hover:bg-green-700 text-white">
+                        class="bg-nova-primary hover:bg-nova-dark text-white w-full sm:w-auto shadow-sm">
                     <Icon name="download" class="mr-2" size="16"/>
                     Pobierz PDF
                 </Button>
@@ -915,47 +1070,44 @@ const customColors = [
         </DialogContent>
     </Dialog>
     <Dialog :open="subreportEditorVisible" @update:open="subreportEditorVisible = $event">
-        <DialogContent class="w-[40vw] max-w-none h-[70vh] flex flex-col">
-            <DialogHeader>
-                <DialogTitle>Edytor Kolumn Subraportu: {{ editingSubreportField }}</DialogTitle>
-                <DialogDescription>
+        <DialogContent class="w-[95vw] sm:w-[90vw] lg:w-[70vw] xl:w-[60vw] max-w-none h-[90vh] sm:h-[80vh] lg:h-[70vh] flex flex-col bg-background border-nova-primary/20">
+            <DialogHeader class="border-b border-nova-primary/10 pb-4">
+                <DialogTitle class="text-lg sm:text-xl text-nova-dark font-semibold">Edytor Kolumn Subraportu: {{ editingSubreportField }}</DialogTitle>
+                <DialogDescription class="text-sm sm:text-base text-muted-foreground">
                     Przeciągnij, aby zmienić kolejność. Ustaw widoczność, nagłówki i szerokości kolumn.
                 </DialogDescription>
             </DialogHeader>
 
             <div v-if="editingSubreportField && reportConfig.subreportConfigs[editingSubreportField]"
-                 class="flex-grow min-h-0 py-4">
+                 class="flex-grow min-h-0 py-2 bg-nova-light/30">
                 <ScrollArea class="h-full">
-                    <div class="grid grid-cols-5 gap-8 items-center font-semibold text-sm mb-2 ml-20">
+                    <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-8 items-center font-semibold text-sm mb-2 ml-4 sm:ml-20 text-nova-dark">
                         <span class="text-center">Widoczna</span>
-                        <span class="col-span-2 text-center ">Nagłówek</span>
-                        <span class="text-center ml-18">Szer.</span>
+                        <span class="col-span-1 sm:col-span-2 text-center">Nagłówek</span>
+                        <span class="text-center">Szer.</span>
                     </div>
-                    <draggable
-                        v-model="reportConfig.subreportConfigs[editingSubreportField].columns"
-                        item-key="field"
-                        handle=".drag-handle"
-                        ghost-class="ghost-class"
-                    >
+                    <draggable v-model="reportConfig.subreportConfigs[editingSubreportField].columns"
+                               item-key="field"
+                               handle=".drag-handle"
+                               ghost-class="ghost-class">
                         <template #item="{ element: col }">
-                            <div class="grid grid-cols-5 gap-x-2 gap-y-2 items-center mt-2 ml-4">
-                                <div
-                                    class="drag-handle cursor-move p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                            <div class="grid grid-cols-4 sm:grid-cols-5 gap-x-1 sm:gap-x-2 gap-y-2 items-center mt-2 ml-2 sm:ml-4 p-2 bg-nova-light/50 border border-nova-primary/10 rounded-md">
+                                <div class="drag-handle cursor-move p-2 text-nova-primary hover:text-nova-accent">
                                     <Icon name="grip" size="18"/>
                                 </div>
                                 <Checkbox v-model:checked="col.visible"
-                                          class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-nova-light border-nova-accent"/>
-                                <Input v-model="col.header" class="col-span-2 text-xs h-8"/>
-                                <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center"
-                                       placeholder="auto"/>
+                                          class="data-[state=checked]:bg-nova-accent data-[state=unchecked]:bg-background border-nova-primary/40 data-[state=checked]:border-nova-accent"/>
+                                <Input v-model="col.header" class="col-span-1 sm:col-span-2 text-xs h-8 border-nova-primary/30 focus:border-nova-accent"/>
+                                <Input v-model.number="col.width" type="number" class="text-xs h-8 text-center border-nova-primary/30 focus:border-nova-accent" placeholder="auto"/>
                             </div>
                         </template>
                     </draggable>
                 </ScrollArea>
             </div>
 
-            <div class="mt-4 pt-4 border-t flex justify-end">
-                <Button @click="subreportEditorVisible = false" variant="secondary">Zamknij</Button>
+            <div class="mt-4 pt-4 border-t border-nova-primary/20 flex justify-end bg-nova-light/30 p-4 rounded-md">
+                <Button @click="subreportEditorVisible = false" variant="secondary"
+                        class="w-full sm:w-auto bg-nova-light text-nova-dark hover:bg-nova-primary/10 border border-nova-primary/20">Zamknij</Button>
             </div>
         </DialogContent>
     </Dialog>

@@ -68,16 +68,13 @@ const fetchCategories = async () => {
     error.value = false;
 
     try {
-        console.log('Pobieranie kategorii...');
         const response = await axios.get('/api/v1/admin/procedure-categories');
-        console.log('Odpowiedź API:', response);
 
         if (response.data && Array.isArray(response.data)) {
             categories.value = response.data;
         } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
             categories.value = response.data.data;
         } else {
-            console.error('Nieprawidłowa struktura danych:', response.data);
             error.value = true;
             toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nieprawidłowy format danych.', life: 3000 });
         }

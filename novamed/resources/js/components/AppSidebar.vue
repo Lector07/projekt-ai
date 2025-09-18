@@ -142,6 +142,7 @@ const footerNavItems: NavItem[] = [
         variant="inset"
         collapsible="icon"
         class="text-nova-light"
+
     >
         <SidebarHeader>
             <SidebarMenu>

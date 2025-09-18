@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useRoute } from 'vue-router';
-import { SharedData } from '@/types';
 
 interface Props {
     variant?: 'header' | 'sidebar';
@@ -9,8 +8,7 @@ interface Props {
 
 defineProps<Props>();
 
-
-const isOpen = useRoute().query.sidebarOpen === 'true';
+const isOpen = useRoute().query.sidebarOpen !== 'false';
 </script>
 
 <template>

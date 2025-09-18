@@ -7,6 +7,7 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -89,7 +90,7 @@ const loadUsers = async () => {
         params.append('page', query.value.page.toString());
         params.append('per_page', query.value.per_page.toString());
         if (query.value.search) params.append('search', query.value.search);
-        if (query.value.role) params.append('role', query.value.role);
+        if (query.value.role && query.value.role !== 'all') params.append('role', query.value.role);
 
         const response = await axios.get(`/api/v1/admin/users?${params.toString()}`);
         users.value = response.data.data.map((user: any) => ({
@@ -397,17 +398,17 @@ onMounted(() => {
                 </div>
                 <div class="space-y-2">
                     <Label for="roleFilter">Filtruj po roli</Label>
-                    <select
-                        id="roleFilter"
-                        v-model="query.role"
-                        @change="loadUsers()"
-                        class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                    >
-                        <option value="">Wszystkie role</option>
-                        <option value="admin">Administrator</option>
-                        <option value="patient">Pacjent</option>
-                        <option value="doctor">Lekarz</option>
-                    </select>
+                    <Select v-model="query.role" @update:modelValue="loadUsers()">
+                        <SelectTrigger id="roleFilter">
+                            <SelectValue placeholder="Wszystkie role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie role</SelectItem>
+                            <SelectItem value="admin">Administrator</SelectItem>
+                            <SelectItem value="patient">Pacjent</SelectItem>
+                            <SelectItem value="doctor">Lekarz</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
@@ -591,17 +592,17 @@ onMounted(() => {
                             <InputError v-else-if="backendUserErrors.password_confirmation" :message="backendUserErrors.password_confirmation?.[0]" />
                         </div>
                         <div>
-                            <Label for="new-role" class="mb-1">Rola</Label
-                            ><select
-                                id="new-role"
-                                v-model="newUser.role"
-                                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                                :class="{ 'border-red-500': frontendUserErrors.role || backendUserErrors.role }"
-                            >
-                                <option value="patient">Pacjent</option>
-                                <option value="doctor">Lekarz</option>
-                                <option value="admin">Administrator</option>
-                            </select>
+                            <Label for="new-role" class="mb-1">Rola</Label>
+                            <Select v-model="newUser.role" :class="{ 'border-red-500': frontendUserErrors.role || backendUserErrors.role }">
+                                <SelectTrigger id="new-role">
+                                    <SelectValue placeholder="Wybierz rolę" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="patient">Pacjent</SelectItem>
+                                    <SelectItem value="doctor">Lekarz</SelectItem>
+                                    <SelectItem value="admin">Administrator</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <p v-if="frontendUserErrors.role" class="mt-1 text-xs text-red-500">
                                 {{ frontendUserErrors.role }}
                             </p>
@@ -681,17 +682,17 @@ onMounted(() => {
                             <InputError v-else-if="backendUserErrors.password_confirmation" :message="backendUserErrors.password_confirmation?.[0]" />
                         </div>
                         <div>
-                            <Label for="edit-role" class="mb-1">Rola</Label
-                            ><select
-                                id="edit-role"
-                                v-model="selectedUser.role"
-                                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                                :class="{ 'border-red-500': frontendUserErrors.role || backendUserErrors.role }"
-                            >
-                                <option value="patient">Pacjent</option>
-                                <option value="doctor">Lekarz</option>
-                                <option value="admin">Administrator</option>
-                            </select>
+                            <Label for="edit-role" class="mb-1">Rola</Label>
+                            <Select v-model="selectedUser.role" :class="{ 'border-red-500': frontendUserErrors.role || backendUserErrors.role }">
+                                <SelectTrigger id="edit-role">
+                                    <SelectValue placeholder="Wybierz rolę" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="patient">Pacjent</SelectItem>
+                                    <SelectItem value="doctor">Lekarz</SelectItem>
+                                    <SelectItem value="admin">Administrator</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <p v-if="frontendUserErrors.role" class="mt-1 text-xs text-red-500">
                                 {{ frontendUserErrors.role }}
                             </p>

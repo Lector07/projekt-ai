@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import type { User } from '@/types/index';
+import type { User } from '@/types.d';
 
 
 const fetchUserData = async (): Promise<User | null> => {
