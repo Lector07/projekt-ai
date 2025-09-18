@@ -7,7 +7,7 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
-import type { User, BreadcrumbItem } from '@/types.d';
+import type { BreadcrumbItem } from '@/types.d';
 import { PrinterCheck } from 'lucide-vue-next';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationPrevious, PaginationLast, PaginationNext } from '@/components/ui/pagination';
@@ -18,13 +18,11 @@ import Toast from 'primevue/toast';
 import {useToast} from 'primevue/usetoast';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {Calendar} from '@/components/ui/calendar';
-import {format} from 'date-fns';
-import {pl} from 'date-fns/locale';
+import {type DateValue, getLocalTimeZone, today, parseDate } from '@internationalized/date';
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import ReportGenerator from '@/components/ReportGenerator.vue';
 import { useAuthStore } from '@/stores/auth';
-import { type DateValue, getLocalTimeZone, today, parseDate } from '@internationalized/date';
 
 interface Patient { id: number; name: string; }
 interface Doctor { id: number; first_name: string; last_name: string; specialization: string; }

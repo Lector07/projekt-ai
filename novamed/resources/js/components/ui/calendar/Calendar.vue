@@ -58,3 +58,5 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     </div>
   </CalendarRoot>
 </template>
+
+<style src="./calendar.css"></style>

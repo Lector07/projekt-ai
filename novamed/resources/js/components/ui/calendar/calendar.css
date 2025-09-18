@@ -1,0 +1,61 @@
+/* Podstawowe style shadcn-vue dla kalendarza */
+.calendar {
+  width: 100%;
+  max-width: 320px;
+  background: var(--background);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1rem;
+  font-family: inherit;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+.calendar-cell {
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.calendar-cell.selected {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.calendar-cell.today {
+  border: 1px solid var(--primary);
+}
+.calendar-cell.disabled {
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.calendar-heading {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.calendar-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+.calendar-nav button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  transition: background 0.2s;
+}
+.calendar-nav button:hover {
+  background: var(--muted);
+}
+
