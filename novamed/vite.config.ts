@@ -4,6 +4,8 @@ import path from 'path';
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import Components from 'unplugin-vue-components/vite';
+import { PrimeVueResolver } from 'unplugin-vue-components/resolvers';
 
 export default defineConfig({
     plugins: [
@@ -20,8 +22,17 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
+            compilerOptions: {
+                isCustomElement: (tag) => tag.startsWith('p-')
+            }
         }),
+        Components({
+            resolvers: [
+                PrimeVueResolver() // To jest "magia", która wszystko naprawi
+            ]
+        })
     ],
+
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './resources/js'),

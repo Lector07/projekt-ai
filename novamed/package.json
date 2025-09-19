@@ -20,6 +20,7 @@
         "prettier-plugin-organize-imports": "^4.3.0",
         "prettier-plugin-tailwindcss": "^0.6.14",
         "typescript-eslint": "^8.44.0",
+        "unplugin-vue-components": "^29.0.0",
         "vue-tsc": "^3.0.7"
     },
     "dependencies": {
@@ -29,6 +30,7 @@
         "@fullcalendar/list": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
         "@fullcalendar/vue3": "^6.1.19",
+        "@internationalized/date": "^3.9.0",
         "@primeuix/themes": "^1.2.3",
         "@schedule-x/calendar": "^3.1.2",
         "@schedule-x/event-modal": "^3.1.2",
@@ -51,6 +53,7 @@
         "lucide": "^0.544.0",
         "lucide-vue-next": "^0.544.0",
         "pinia": "^3.0.3",
+        "primeicons": "^7.0.0",
         "primevue": "^4.3.9",
         "radix-vue": "^1.9.17",
         "reka-ui": "^2.5.0",

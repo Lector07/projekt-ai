@@ -7,22 +7,41 @@ import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
-import type { BreadcrumbItem } from '@/types.d';
+import type { User, BreadcrumbItem } from '@/types.d';
+import { MoveRight, MoveLeft } from 'lucide-vue-next';
 import { PrinterCheck } from 'lucide-vue-next';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationEllipsis, PaginationFirst, PaginationPrevious, PaginationLast, PaginationNext } from '@/components/ui/pagination';
 import {PaginationList, PaginationListItem} from 'reka-ui';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Toast from 'primevue/toast';
 import {useToast} from 'primevue/usetoast';
 import {ScrollArea} from '@/components/ui/scroll-area';
-import {Calendar} from '@/components/ui/calendar';
-import {type DateValue, getLocalTimeZone, today, parseDate } from '@internationalized/date';
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import ReportGenerator from '@/components/ReportGenerator.vue';
 import { useAuthStore } from '@/stores/auth';
+import { type DateValue, getLocalTimeZone, today, parseDate } from '@internationalized/date';
+import {
+    DatePickerAnchor,
+    DatePickerCalendar,
+    DatePickerCell,
+    DatePickerCellTrigger,
+    DatePickerContent,
+    DatePickerField,
+    DatePickerGrid,
+    DatePickerGridBody,
+    DatePickerGridHead,
+    DatePickerGridRow,
+    DatePickerHeadCell,
+    DatePickerHeader,
+    DatePickerHeading,
+    DatePickerInput,
+    DatePickerNext,
+    DatePickerPrev,
+    DatePickerRoot,
+    DatePickerTrigger,
+} from 'reka-ui';
 
 interface Patient { id: number; name: string; }
 interface Doctor { id: number; first_name: string; last_name: string; specialization: string; }
@@ -144,7 +163,7 @@ const updateAppointment = async () => {
             status: selectedAppointment.value.status,
             appointment_datetime: selectedAppointment.value.appointment_datetime,
             patient_notes: selectedAppointment.value.patient_notes,
-            clinic_notes: selectedAppointment.value.clinic_notes,
+            admin_notes: selectedAppointment.value.admin_notes,
             procedure_id: selectedAppointment.value.procedure_id,
             patient_id: selectedAppointment.value.patient_id,
             doctor_id: selectedAppointment.value.doctor_id
@@ -213,8 +232,14 @@ watch(dateTo, (newDate) => {
 
 watch(selectedDate, (newDate) => {
     if (selectedAppointment.value && newDate) {
+        // Pobierz część czasową (HH:mm:ss) ze starej daty, jeśli istnieje.
+        // Domyślnie ustaw np. 12:00, jeśli nie ma części czasowej.
         const timePart = selectedAppointment.value.appointment_datetime?.split(' ')[1] || '12:00:00';
-        selectedAppointment.value.appointment_datetime = `${newDate.toString()} ${timePart}`;
+
+        const datePart = newDate.toString();
+
+        // Połącz nową datę ze starą godziną.
+        selectedAppointment.value.appointment_datetime = `${datePart} ${timePart}`;
     }
 });
 
@@ -254,27 +279,115 @@ onMounted(() => {
                     </div>
                     <div>
                         <Label for="date-from" class="mb-1 dark:text-gray-200">Data od</Label>
-                        <Popover>
-                            <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!dateFrom && 'text-muted-foreground'">
-                                    <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{ dateFrom ? dateFrom.toString() : 'Wybierz datę' }}</span>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0"><Calendar v-model="dateFrom" initial-focus /></PopoverContent>
-                        </Popover>
+                        <DatePickerRoot v-model="dateFrom" locale="pl-PL" class="relative">
+                            <DatePickerField v-slot="{ segments }" class="flex h-10 items-center w-full justify-between text-left font-normal border border-input rounded-md px-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[invalid]:border-red-500 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50" :class="!dateFrom && 'text-muted-foreground'">
+                                <div class="flex items-center">
+                                    <template v-for="segment in segments" :key="segment.part">
+                                        <DatePickerInput
+                                            :part="segment.part"
+                                            class="rounded p-0.5 focus:outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[placeholder]:text-muted-foreground"
+                                        >
+                                            {{ segment.value }}
+                                        </DatePickerInput>
+                                    </template>
+                                </div>
+                                <DatePickerTrigger class="focus:shadow-[0_0_0_2px] rounded p-1 focus:shadow-black">
+                                    <Icon name="calendar" class="h-4 w-4"/>
+                                </DatePickerTrigger>
+                            </DatePickerField>
+                            <DatePickerAnchor />
+                            <DatePickerContent :side-offset="2" class="bg-white dark:bg-gray-900 border rounded-lg shadow-lg p-1 z-50">
+                                <DatePickerCalendar v-slot="{ weekDays, grid }" class="p-2">
+                                    <DatePickerHeader class="flex items-center justify-between">
+                                        <DatePickerPrev class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveLeft class="w-4 h-4" />
+                                        </DatePickerPrev>
+                                        <DatePickerHeading class="text-sm font-medium" />
+                                        <DatePickerNext class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveRight class="w-4 h-4" />
+                                        </DatePickerNext>
+                                    </DatePickerHeader>
+                                    <div class="flex flex-col space-y-4 pt-3">
+                                        <DatePickerGrid v-for="month in grid" :key="month.value.toString()" class="w-full border-collapse select-none space-y-1">
+                                            <DatePickerGridHead>
+                                                <DatePickerGridRow class=" flex w-full justify-between">
+                                                    <DatePickerHeadCell v-for="day in weekDays" :key="day" class="w-11 text-center rounded-md text-xs">
+                                                        {{ day }}
+                                                    </DatePickerHeadCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridHead>
+                                            <DatePickerGridBody>
+                                                <DatePickerGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`" class="flex w-full">
+                                                    <DatePickerCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate">
+                                                        <DatePickerCellTrigger
+                                                            :day="weekDate"
+                                                            :month="month.value"
+                                                            class="relative flex items-center justify-center whitespace-nowrap rounded-md text-sm w-6 h-6 outline-none hover:bg-accent data-[selected]:bg-nova-primary data-[selected]:font-semibold data-[outside-view]:text-muted-foreground data-[selected]:text-primary-foreground data-[unavailable]:text-muted-foreground data-[unavailable]:opacity-50"
+                                                        />
+                                                    </DatePickerCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridBody>
+                                        </DatePickerGrid>
+                                    </div>
+                                </DatePickerCalendar>
+                            </DatePickerContent>
+                        </DatePickerRoot>
                     </div>
                     <div>
                         <Label for="date-to" class="mb-1 dark:text-gray-200">Data do</Label>
-                        <Popover>
-                            <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!dateTo && 'text-muted-foreground'">
-                                    <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{ dateTo ? dateTo.toString() : 'Wybierz datę' }}</span>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0"><Calendar v-model="dateTo" initial-focus /></PopoverContent>
-                        </Popover>
+                        <DatePickerRoot v-model="dateTo" locale="pl-PL" class="relative">
+                            <DatePickerField v-slot="{ segments }" class="flex h-10 items-center w-full justify-between text-left font-normal border border-input rounded-md px-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[invalid]:border-red-500 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50" :class="!dateFrom && 'text-muted-foreground'">
+                                <div class="flex items-center">
+                                    <template v-for="segment in segments" :key="segment.part">
+                                        <DatePickerInput
+                                            :part="segment.part"
+                                            class="rounded p-0.5 focus:outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[placeholder]:text-muted-foreground"
+                                        >
+                                            {{ segment.value }}
+                                        </DatePickerInput>
+                                    </template>
+                                </div>
+                                <DatePickerTrigger class="focus:shadow-[0_0_0_2px] rounded p-1 focus:shadow-black">
+                                    <Icon name="calendar" class="h-4 w-4"/>
+                                </DatePickerTrigger>
+                            </DatePickerField>
+                            <DatePickerAnchor />
+                            <DatePickerContent :side-offset="2" class="bg-white dark:bg-gray-900 border rounded-lg shadow-lg p-1 z-50">
+                                <DatePickerCalendar v-slot="{ weekDays, grid }" class="p-2">
+                                    <DatePickerHeader class="flex items-center justify-between">
+                                        <DatePickerPrev class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveLeft class="w-4 h-4" />
+                                        </DatePickerPrev>
+                                        <DatePickerHeading class="text-sm font-medium" />
+                                        <DatePickerNext class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveRight class="w-4 h-4" />
+                                        </DatePickerNext>
+                                    </DatePickerHeader>
+                                    <div class="flex flex-col space-y-4 pt-3">
+                                        <DatePickerGrid v-for="month in grid" :key="month.value.toString()" class="w-full border-collapse select-none space-y-1">
+                                            <DatePickerGridHead>
+                                                <DatePickerGridRow class=" flex w-full justify-between">
+                                                    <DatePickerHeadCell v-for="day in weekDays" :key="day" class="w-11 text-center rounded-md text-xs">
+                                                        {{ day }}
+                                                    </DatePickerHeadCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridHead>
+                                            <DatePickerGridBody>
+                                                <DatePickerGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`" class="flex w-full">
+                                                    <DatePickerCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate">
+                                                        <DatePickerCellTrigger
+                                                            :day="weekDate"
+                                                            :month="month.value"
+                                                            class="relative flex items-center justify-center whitespace-nowrap rounded-md text-sm w-6 h-6 outline-none hover:bg-accent data-[selected]:bg-nova-primary data-[selected]:font-semibold data-[outside-view]:text-muted-foreground data-[selected]:text-primary-foreground data-[unavailable]:text-muted-foreground data-[unavailable]:opacity-50"
+                                                        />
+                                                    </DatePickerCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridBody>
+                                        </DatePickerGrid>
+                                    </div>
+                                </DatePickerCalendar>
+                            </DatePickerContent>
+                        </DatePickerRoot>
                     </div>
                     <div class="flex items-end space-x-2">
                         <Button @click="loadAppointments" class="bg-nova-primary hover:bg-nova-accent"><Icon name="search" class="mr-2 h-4 w-4"/>Filtruj</Button>
@@ -291,9 +404,7 @@ onMounted(() => {
                 <ScrollArea class="w-full h-[auto]">
                     <Table class="table-auto ">
                         <TableCaption v-if="!loading && appointments.length === 0">Brak wizyt spełniających kryteria</TableCaption>
-                        <TableHeader>
-                            <TableRow><TableHead>ID</TableHead><TableHead>Pacjent</TableHead><TableHead>Lekarz</TableHead><TableHead>Procedura</TableHead><TableHead>Data i godzina</TableHead><TableHead>Status</TableHead><TableHead class="text-center">Akcje</TableHead><TableHead class="text-center">Szczegóły</TableHead></TableRow>
-                        </TableHeader>
+                        <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Pacjent</TableHead><TableHead>Lekarz</TableHead><TableHead>Procedura</TableHead><TableHead>Data i godzina</TableHead><TableHead>Status</TableHead><TableHead class="text-center">Akcje</TableHead><TableHead class="text-center">Szczegóły</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow v-if="loading"><TableCell colspan="7" class="text-center py-8"><Icon name="loader-2" class="animate-spin h-8 w-8 text-primary mx-auto"/></TableCell></TableRow>
                             <TableRow v-else v-for="appointment in appointments" :key="appointment.id">
@@ -309,7 +420,7 @@ onMounted(() => {
                         </TableBody>
                     </Table>
                 </ScrollArea>
-                <div class="flex justify-center items-center p-4 border-t dark:border-gray-700">
+                <div class="flex justify-center items-center p-2 border-t dark:border-gray-700">
                     <Pagination v-if="meta.last_page > 1" :total="meta.total" :items-per-page="meta.per_page" :page="meta.current_page" @update:page="changePage" show-edges>
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
                             <PaginationFirst/><PaginationPrevious/>
@@ -333,47 +444,78 @@ onMounted(() => {
                 <div v-else class="space-y-4 py-4">
                     <div class="space-y-1">
                         <Label for="edit-patient">Pacjent</Label>
-                        <Select v-model="selectedAppointment.patient_id" :class="{'border-red-500': appointmentErrors.patient_id}">
-                            <SelectTrigger id="edit-patient"><SelectValue placeholder="Wybierz pacjenta" /></SelectTrigger>
-                            <SelectContent><SelectItem v-for="patient in allPatients" :key="patient.id" :value="patient.id">{{ patient.name }}</SelectItem></SelectContent>
-                        </Select>
+                        <Select v-model="selectedAppointment.patient_id" :class="{'border-red-500': appointmentErrors.patient_id}"><SelectTrigger id="edit-patient"><SelectValue placeholder="Wybierz pacjenta" /></SelectTrigger><SelectContent><SelectItem v-for="patient in allPatients" :key="patient.id" :value="patient.id">{{ patient.name }}</SelectItem></SelectContent></Select>
                         <div v-if="appointmentErrors.patient_id" class="text-xs text-red-500">{{ appointmentErrors.patient_id[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-doctor">Lekarz</Label>
-                        <Select v-model="selectedAppointment.doctor_id" :class="{'border-red-500': appointmentErrors.doctor_id}">
-                            <SelectTrigger id="edit-doctor"><SelectValue placeholder="Wybierz lekarza" /></SelectTrigger>
-                            <SelectContent><SelectItem v-for="doctor in allDoctors" :key="doctor.id" :value="doctor.id">{{ doctor.first_name }} {{ doctor.last_name }}</SelectItem></SelectContent>
-                        </Select>
+                        <Select v-model="selectedAppointment.doctor_id" :class="{'border-red-500': appointmentErrors.doctor_id}"><SelectTrigger id="edit-doctor"><SelectValue placeholder="Wybierz lekarza" /></SelectTrigger><SelectContent><SelectItem v-for="doctor in allDoctors" :key="doctor.id" :value="doctor.id">{{ doctor.first_name }} {{ doctor.last_name }}</SelectItem></SelectContent></Select>
                         <div v-if="appointmentErrors.doctor_id" class="text-xs text-red-500">{{ appointmentErrors.doctor_id[0] }}</div>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-procedure">Procedura</Label>
-                        <Select v-model="selectedAppointment.procedure_id" :class="{'border-red-500': appointmentErrors.procedure_id}">
-                            <SelectTrigger id="edit-procedure"><SelectValue placeholder="Wybierz procedurę" /></SelectTrigger>
-                            <SelectContent><SelectItem v-for="procedure in procedures" :key="procedure.id" :value="procedure.id">{{ procedure.name }}</SelectItem></SelectContent>
-                        </Select>
+                        <Select v-model="selectedAppointment.procedure_id" :class="{'border-red-500': appointmentErrors.procedure_id}"><SelectTrigger id="edit-procedure"><SelectValue placeholder="Wybierz procedurę" /></SelectTrigger><SelectContent><SelectItem v-for="procedure in procedures" :key="procedure.id" :value="procedure.id">{{ procedure.name }}</SelectItem></SelectContent></Select>
                         <div v-if="appointmentErrors.procedure_id" class="text-xs text-red-500">{{ appointmentErrors.procedure_id[0] }}</div>
                     </div>
-                    <div class="space-y-1">
-                        <Label>Data wizyty</Label>
-                        <Popover>
-                            <PopoverTrigger as-child>
-                                <Button variant="outline" class="w-full justify-start text-left font-normal" :class="!selectedDate && 'text-muted-foreground'">
-                                    <Icon name="calendar" class="mr-2 h-4 w-4"/>
-                                    <span>{{ selectedDate ? selectedDate.toString() : 'Wybierz datę' }}</span>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent class="w-auto p-0"><Calendar v-model="selectedDate" initial-focus/></PopoverContent>
-                        </Popover>
-                        <div v-if="appointmentErrors.appointment_datetime" class="text-xs text-red-500">{{ appointmentErrors.appointment_datetime[0] }}</div>
+                    <div>
+                        <Label for="date-to" class="mb-1 dark:text-gray-200">Data wizyty</Label>
+                        <DatePickerRoot v-model="selectedDate" locale="pl-PL" class="relative">
+                            <DatePickerField v-slot="{ segments }" class="flex h-10 items-center w-full justify-between text-left font-normal border border-input rounded-md px-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[invalid]:border-red-500 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50" :class="!dateFrom && 'text-muted-foreground'">
+                                <div class="flex items-center">
+                                    <template v-for="segment in segments" :key="segment.part">
+                                        <DatePickerInput
+                                            :part="segment.part"
+                                            class="rounded p-0.5 focus:outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[placeholder]:text-muted-foreground"
+                                        >
+                                            {{ segment.value }}
+                                        </DatePickerInput>
+                                    </template>
+                                </div>
+                                <DatePickerTrigger class="focus:shadow-[0_0_0_2px] rounded p-1 focus:shadow-black">
+                                    <Icon name="calendar" class="h-4 w-4"/>
+                                </DatePickerTrigger>
+                            </DatePickerField>
+                            <DatePickerAnchor />
+                            <DatePickerContent :side-offset="2" class="bg-white dark:bg-gray-900 border rounded-lg shadow-lg p-1 z-50">
+                                <DatePickerCalendar v-slot="{ weekDays, grid }" class="p-2">
+                                    <DatePickerHeader class="flex items-center justify-between">
+                                        <DatePickerPrev class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveLeft class="w-4 h-4" />
+                                        </DatePickerPrev>
+                                        <DatePickerHeading class="text-sm font-medium" />
+                                        <DatePickerNext class="inline-flex items-center cursor-pointer justify-center rounded-md text-sm font-medium w-9 h-9 hover:bg-accent active:scale-90">
+                                            <MoveRight class="w-4 h-4" />
+                                        </DatePickerNext>
+                                    </DatePickerHeader>
+                                    <div class="flex flex-col space-y-4 pt-3">
+                                        <DatePickerGrid v-for="month in grid" :key="month.value.toString()" class="w-full border-collapse select-none space-y-1">
+                                            <DatePickerGridHead>
+                                                <DatePickerGridRow class=" flex w-full justify-between">
+                                                    <DatePickerHeadCell v-for="day in weekDays" :key="day" class="w-11 text-center rounded-md text-xs">
+                                                        {{ day }}
+                                                    </DatePickerHeadCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridHead>
+                                            <DatePickerGridBody>
+                                                <DatePickerGridRow v-for="(weekDates, index) in month.rows" :key="`weekDate-${index}`" class="flex w-full">
+                                                    <DatePickerCell v-for="weekDate in weekDates" :key="weekDate.toString()" :date="weekDate">
+                                                        <DatePickerCellTrigger
+                                                            :day="weekDate"
+                                                            :month="month.value"
+                                                            class="relative flex items-center justify-center whitespace-nowrap rounded-md text-sm w-6 h-6 outline-none hover:bg-accent data-[selected]:bg-nova-primary data-[selected]:font-semibold data-[outside-view]:text-muted-foreground data-[selected]:text-primary-foreground data-[unavailable]:text-muted-foreground data-[unavailable]:opacity-50"
+                                                        />
+                                                    </DatePickerCell>
+                                                </DatePickerGridRow>
+                                            </DatePickerGridBody>
+                                        </DatePickerGrid>
+                                    </div>
+                                </DatePickerCalendar>
+                            </DatePickerContent>
+                        </DatePickerRoot>
                     </div>
                     <div class="space-y-1">
                         <Label for="edit-status">Status wizyty</Label>
-                        <Select v-model="selectedAppointment.status" :class="{'border-red-500': appointmentErrors.status}">
-                            <SelectTrigger id="edit-status"><SelectValue placeholder="Wybierz status" /></SelectTrigger>
-                            <SelectContent><SelectItem v-for="status in statusOptions" :key="status.value" :value="status.value">{{ status.label }}</SelectItem></SelectContent>
-                        </Select>
+                        <Select v-model="selectedAppointment.status" :class="{'border-red-500': appointmentErrors.status}"><SelectTrigger id="edit-status"><SelectValue placeholder="Wybierz status" /></SelectTrigger><SelectContent><SelectItem v-for="status in statusOptions" :key="status.value" :value="status.value">{{ status.label }}</SelectItem></SelectContent></Select>
                         <div v-if="appointmentErrors.status" class="text-xs text-red-500">{{ appointmentErrors.status[0] }}</div>
                     </div>
                 </div>

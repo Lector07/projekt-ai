@@ -25,6 +25,10 @@ class UpdateAppointmentRequest extends FormRequest
         return [
             'status' => ['required', 'string', Rule::in(['booked', 'confirmed', 'completed', 'cancelled_by_clinic', 'cancelled_by_patient', 'cancelled', 'no_show'])],
             'admin_notes' => ['nullable', 'string', 'max:1000'],
+            'appointment_datetime' => ['required', 'date_format:Y-m-d H:i:s'],
+            'patient_id' => ['required', 'integer', 'exists:users,id'],
+            'doctor_id' => ['required', 'integer', 'exists:doctors,id'],
+            'procedure_id' => ['required', 'integer', 'exists:procedures,id'],
         ];
     }
 

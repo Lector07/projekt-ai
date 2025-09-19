@@ -105,7 +105,7 @@ class AdminAppointmentController extends Controller
         $validated = $request->validated();
 
         $appointment->update($validated);
-        $appointment->refresh();
+        $appointment->load(['patient', 'doctor', 'procedure']);
 
         return new AppointmentResource($appointment);
     }
