@@ -84,7 +84,6 @@ const fetchCategories = async () => {
         toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać kategorii.', life: 3000 });
     } finally {
         loading.value = false;
-        console.log('Stan kategorii:', categories.value);
     }
 };
 
