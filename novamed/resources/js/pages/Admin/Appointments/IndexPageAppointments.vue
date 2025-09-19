@@ -232,13 +232,11 @@ watch(dateTo, (newDate) => {
 
 watch(selectedDate, (newDate) => {
     if (selectedAppointment.value && newDate) {
-        // Pobierz część czasową (HH:mm:ss) ze starej daty, jeśli istnieje.
-        // Domyślnie ustaw np. 12:00, jeśli nie ma części czasowej.
+
         const timePart = selectedAppointment.value.appointment_datetime?.split(' ')[1] || '12:00:00';
 
         const datePart = newDate.toString();
 
-        // Połącz nową datę ze starą godziną.
         selectedAppointment.value.appointment_datetime = `${datePart} ${timePart}`;
     }
 });

@@ -10,10 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/AuthLayout.vue';
-import { LoaderCircle } from 'lucide-vue-next';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const showPassword = ref(false);
 
 const form = ref({
     email: '',
@@ -30,20 +31,10 @@ async function submit() {
 
     try {
         await axios.get('/sanctum/csrf-cookie');
-
         await axios.post('/api/v1/login', form.value, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
         });
-
-        try {
-            await authStore.initAuth();
-        } catch (authError) {
-            console.error('Błąd podczas inicjalizacji auth:', authError);
-        }
-
+        await authStore.initAuth();
         const redirectPath = (router.currentRoute.value.query.redirect as string) || '/dashboard';
         router.push(redirectPath);
     } catch (error: any) {
@@ -86,26 +77,39 @@ async function submit() {
                     <div class="flex items-center justify-between">
                         <Label for="password">Hasło</Label>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        v-model="form.password"
-                        placeholder="Password"
-                    />
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            required
+                            :tabindex="2"
+                            autocomplete="current-password"
+                            v-model="form.password"
+                            placeholder="Hasło"
+                            class="pr-10"
+                        />
+                        <button
+                            type="button"
+                            @click="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                            :aria-label="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
+                        >
+                            <component
+                                :is="showPassword ? EyeOff : Eye"
+                                class="h-5 w-5"
+                            />
+                        </button>
+                    </div>
                     <InputError :message="errors.password ? errors.password[0] : ''" />
                 </div>
 
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
+                        <Checkbox id="remember" v-model:checked="form.remember" :tabindex="3" />
                         <span>Zapamiętaj hasło</span>
                     </Label>
                     <router-link :to="{ name: 'forgot-password' }" :tabindex="4" class="text-sm text-nova-accent hover:text-nova-primary dark:text-nova-accent hover:dark:text-nova-light">Nie pamiętasz hasła?</router-link>
                 </div>
-
 
                 <Button type="submit" class="mt-4 w-full bg-nova-dark hover:bg-nova-accent dark:bg-nova-light hover:dark:bg-nova-accent" :tabindex="5" :disabled="isLoading">
                     <LoaderCircle v-if="isLoading" class="h-4 w-4 animate-spin" />

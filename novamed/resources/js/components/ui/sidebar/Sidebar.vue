@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 })
 
 // Przekazujemy defaultExpanded jako true, aby sidebar był domyślnie rozwinięty
-const { isMobile, state, openMobile, setOpenMobile } = useSidebar({ defaultExpanded: true })
+const { isMobile, state, openMobile, setOpenMobile } = useSidebar({ defaultExpanded: false })
 </script>
 
 <template>
