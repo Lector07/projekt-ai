@@ -25,7 +25,7 @@ class AdminUserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $query = User::query()->orderBy('id', 'asc');
+        $query = User::query();
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -38,6 +38,9 @@ class AdminUserController extends Controller
         if ($request->filled('role')) {
             $query->where('role', $request->input('role'));
         }
+
+        $query->orderBy('id', 'asc');
+
 
         $perPage = $request->input('per_page', 15);
         $users = $query->paginate($perPage);

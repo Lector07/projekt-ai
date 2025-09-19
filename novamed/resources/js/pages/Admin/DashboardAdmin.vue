@@ -183,7 +183,6 @@ const proceduresChartData = computed(() => {
         };
     }
 
-    console.log('Dane dla wykresu procedur:', procedures);
 
     return {
         labels: procedures.map((p) => p.name || ''),

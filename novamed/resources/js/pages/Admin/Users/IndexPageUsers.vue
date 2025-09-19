@@ -18,6 +18,10 @@ import Toast from 'primevue/toast';
 import { useToast } from 'primevue/usetoast';
 import { PaginationList, PaginationListItem } from 'reka-ui';
 import { computed, onMounted, ref, watch } from 'vue';
+import { debounce } from 'lodash';
+import { RecycleScroller } from 'vue3-virtual-scroller';
+import 'vue3-virtual-scroller/dist/vue3-virtual-scroller.css';
+
 
 interface User {
     id: number;
@@ -354,7 +358,10 @@ const deleteAvatar = async (userId: number) => {
 };
 
 watch(query, loadUsers, { deep: true, immediate: false });
-watch([() => query.value.search, () => query.value.role], resetPagination);
+watch(() => query.value.search, debounce(() => {
+    resetPagination();
+    loadUsers();
+}, 300));
 
 onMounted(() => {
     loadUsers();
@@ -453,6 +460,7 @@ onMounted(() => {
                                                     alt="Avatar"
                                                     class="h-10 w-10 cursor-pointer rounded-full object-cover"
                                                     @click="openAvatarModal(user)"
+                                                    loading="lazy"
                                                 />
                                             </TableCell>
                                             <TableCell>{{ user.name }}</TableCell>
@@ -952,5 +960,10 @@ tr:last-child td:last-child {
 
 :deep(.p-toast) {
     font-family: 'Inter', sans-serif;
+}
+
+.scroller {
+    height: 600px;
+    overflow-y: auto;
 }
 </style>

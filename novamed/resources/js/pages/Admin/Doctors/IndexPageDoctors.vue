@@ -603,6 +603,7 @@ onMounted(() => {
                                                     alt="Avatar"
                                                     class="h-10 w-10 cursor-pointer rounded-full object-cover"
                                                     @click="openAvatarModal(doctor)"
+                                                    loading="lazy"
                                                 />
                                             </TableCell>
                                             <TableCell>

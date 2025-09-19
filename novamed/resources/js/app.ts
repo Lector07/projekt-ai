@@ -9,7 +9,6 @@ import './services/axios';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import 'primeicons/primeicons.css'
-import Lara from 'primevue/themes/lara';
 
 
 

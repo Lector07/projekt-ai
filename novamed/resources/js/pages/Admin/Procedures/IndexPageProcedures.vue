@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { InputError } from '@/components/ui/input-error';
-import { TableHeader, TableRow, TableCell, TableHead, Table, TableBody } from '@/components/ui/table';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {InputError} from '@/components/ui/input-error';
+import {TableHeader, TableRow, TableCell, TableHead, Table, TableBody} from '@/components/ui/table';
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
 import InputNumber from 'primevue/inputnumber';
 import Icon from '@/components/Icon.vue';
-import { Search } from 'lucide-vue-next';
+import {Search} from 'lucide-vue-next';
 import FloatLabel from 'primevue/floatlabel';
 import {
     Tooltip,
@@ -25,9 +25,9 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { useToast } from 'primevue/usetoast';
+import {Textarea} from '@/components/ui/textarea';
+import {Label} from '@/components/ui/label';
+import {useToast} from 'primevue/usetoast';
 import {
     Pagination,
     PaginationEllipsis,
@@ -36,10 +36,10 @@ import {
     PaginationLast,
     PaginationNext
 } from '@/components/ui/pagination';
-import { PaginationList, PaginationListItem } from 'reka-ui';
-import type { BreadcrumbItem } from '@/types';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import {PaginationList, PaginationListItem} from 'reka-ui';
+import type {BreadcrumbItem} from '@/types';
+import {ScrollArea} from '@/components/ui/scroll-area';
+import {Separator} from '@/components/ui/separator';
 
 const toast = useToast();
 const loading = ref(false);
@@ -242,7 +242,7 @@ const formatDuration = (minutes) => {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Zarządzanie zabiegamiami' }
+    {title: 'Zarządzanie zabiegamiami'}
 ];
 
 const recoveryPlaceholder = `Dzień 1-3: ...
@@ -262,7 +262,7 @@ Miesiąc 3-6: ...`;
                 </div>
                 <Button @click="showAddForm = true"
                         class="bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light">
-                    <Icon name="plus" size="16" class="mr-2" />
+                    <Icon name="plus" size="16" class="mr-2"/>
                     Dodaj Zabieg
                 </Button>
             </div>
@@ -280,7 +280,7 @@ Miesiąc 3-6: ...`;
                         />
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
                              @click="currentPage = 1; loadProcedures()">
-                            <Search class="h-4 w-4 text-gray-400" />
+                            <Search class="h-4 w-4 text-gray-400"/>
                         </div>
                     </div>
                 </div>
@@ -289,7 +289,7 @@ Miesiąc 3-6: ...`;
                     <Select v-model="selectedCategory"
                             @update:modelValue="() => { currentPage = 1; loadProcedures() }">
                         <SelectTrigger id="category" class="w-full">
-                            <SelectValue :placeholder="'Wybierz kategorię'" />
+                            <SelectValue :placeholder="'Wybierz kategorię'"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -304,15 +304,15 @@ Miesiąc 3-6: ...`;
                         variant="outline"
                         @click="resetFilters"
                         class="w-full">
-                        <Icon name="x-circle" size="14" class="mr-1" />
+                        <Icon name="x-circle" size="14" class="mr-1"/>
                         Wyczyść filtry
                     </Button>
                 </div>
             </div>
 
-            <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-hidden">
+            <div class="rounded-lg border border-border shadow-sm bg-card mb-4 overflow-x-auto overflow-hidden">
                 <div v-if="loading" class="flex justify-center items-center p-8">
-                    <Icon name="loader2" size="32" class="animate-spin text-nova-primary" />
+                    <Icon name="loader2" size="32" class="animate-spin text-nova-primary"/>
                 </div>
 
                 <div v-else-if="error" class="p-6 text-center text-red-500">
@@ -325,41 +325,48 @@ Miesiąc 3-6: ...`;
                 </div>
 
                 <div v-else class="w-full overflow-x-auto dark:bg-gray-900">
-                    <ScrollArea class="w-full h-[auto]">
-                        <Table class="w-full">
+                    <div class="overflow-x-auto">
+                        <Table class="w-full table-fixed">
                             <TableHeader class="sticky top-0 bg-card z-10">
                                 <TableRow class="border-b border-border">
-                                    <TableHead class="whitespace-nowrap">Nazwa</TableHead>
-                                    <TableHead class="max-w-[40%]">Opis</TableHead>
-                                    <TableHead class="whitespace-nowrap">Kategoria</TableHead>
-                                    <TableHead class="whitespace-nowrap text-center">Czas trwania</TableHead>
-                                    <TableHead class="text-center whitespace-nowrap">Cena Bazowa</TableHead>
-                                    <TableHead class="text-center whitespace-nowrap">Akcje</TableHead>
+                                    <TableHead class="w-[20%]">Nazwa</TableHead>
+                                    <TableHead class="w-[30%]">Opis</TableHead>
+                                    <TableHead class="w-[15%]">Kategoria</TableHead>
+                                    <TableHead class="w-[10%] text-center">Czas trwania</TableHead>
+                                    <TableHead class="w-[10%] text-center whitespace-nowrap">Cena Bazowa</TableHead>
+                                    <TableHead class="w-[15%] text-right whitespace-nowrap">Akcje</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                <TableRow v-for="procedure in procedures" :key="procedure.id"
-                                          class="border-b border-border hover:bg-muted/50">
-                                    <TableCell class="font-medium">{{ procedure.name }}</TableCell>
-                                    <TableCell class="text-sm text-gray-500 max-w-[200px] min-w-[150px]">
-                                        <div v-if="procedure.description" class="truncate">
-                                            <span
-                                                :title="procedure.description">{{ truncateText(procedure.description, 40)
-                                                }}</span>
-                                        </div>
-                                        <div v-else class="text-gray-400">Brak opisu</div>
+                                <TableRow v-for="procedure in procedures" :key="procedure.id" class="border-b border-border hover:bg-muted/50">
+                                    <!-- NAZWA — ZAWIJA SIĘ -->
+                                    <TableCell class="font-medium p-3 whitespace-normal break-words min-w-0">
+                                        {{ procedure.name }}
                                     </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline"
-                                               class="bg-nova-primary dark:bg-nova-accent text-nova-light">
+
+                                    <!-- OPIS — ZAWIJA SIĘ, BEZ TRUNCATE -->
+                                    <TableCell class="p-3 text-sm text-gray-500 whitespace-normal break-words min-w-0 max-w-full">
+                                        <div v-if="procedure.description" class="line-clamp-3">
+                                            {{ procedure.description }}
+                                        </div>
+                                        <div v-else class="text-gray-400 italic">Brak opisu</div>
+                                    </TableCell>
+
+                                    <!-- KATEGORIA -->
+                                    <TableCell class="p-3">
+                                        <Badge variant="outline" class="bg-nova-primary dark:bg-nova-accent text-nova-light">
                                             {{ procedure.category?.name || 'Brak kategorii' }}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell class="text-left">
-                                        {{ formatDuration(procedure.duration) }}
-                                    </TableCell>
-                                    <TableCell class="text-left">{{ formatPrice(procedure.base_price) }}</TableCell>
-                                    <TableCell class="text-left">
+
+                                    <!-- CZAS TRWANIA -->
+                                    <TableCell class="p-3 text-left">{{ formatDuration(procedure.duration) }}</TableCell>
+
+                                    <!-- CENA -->
+                                    <TableCell class="p-3 text-left">{{ formatPrice(procedure.base_price) }}</TableCell>
+
+                                    <!-- AKCJE -->
+                                    <TableCell class="p-3 text-left">
                                         <TooltipProvider class="flex space-x-1">
                                             <Tooltip>
                                                 <TooltipTrigger>
@@ -374,8 +381,7 @@ Miesiąc 3-6: ...`;
 
                                             <Tooltip>
                                                 <TooltipTrigger>
-                                                    <Button variant="ghost" size="sm"
-                                                            @click="deleteProcedure(procedure.id)">
+                                                    <Button variant="ghost" size="sm" @click="deleteProcedure(procedure.id)">
                                                         <Icon name="trash" size="16" class="text-red-500" />
                                                     </Button>
                                                 </TooltipTrigger>
@@ -388,7 +394,7 @@ Miesiąc 3-6: ...`;
                                 </TableRow>
                             </TableBody>
                         </Table>
-                    </ScrollArea>
+                    </div>
                 </div>
 
                 <div v-if="totalPages > 1 && procedures.length > 0"
@@ -402,8 +408,8 @@ Miesiąc 3-6: ...`;
                         @update:page="goToPage"
                     >
                         <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                            <PaginationFirst @click="goToPage(1)" />
-                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))" />
+                            <PaginationFirst @click="goToPage(1)"/>
+                            <PaginationPrevious @click="goToPage(Math.max(1, currentPage - 1))"/>
 
                             <template v-for="(item, index) in items" :key="index">
                                 <PaginationListItem v-if="item.type === 'page'" :value="item.value" as-child>
@@ -415,11 +421,11 @@ Miesiąc 3-6: ...`;
                                         {{ item.value }}
                                     </Button>
                                 </PaginationListItem>
-                                <PaginationEllipsis v-else :index="index" />
+                                <PaginationEllipsis v-else :index="index"/>
                             </template>
 
-                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))" />
-                            <PaginationLast @click="goToPage(totalPages)" />
+                            <PaginationNext @click="goToPage(Math.min(totalPages, currentPage + 1))"/>
+                            <PaginationLast @click="goToPage(totalPages)"/>
                         </PaginationList>
                     </Pagination>
                 </div>
@@ -431,7 +437,7 @@ Miesiąc 3-6: ...`;
                 <CardHeader class="flex justify-between items-center border-b">
                     <CardTitle>Dodaj nowy zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showAddForm = false">
-                        <Icon name="x" size="18" />
+                        <Icon name="x" size="18"/>
                     </Button>
                 </CardHeader>
                 <CardContent class="pt-4">
@@ -439,15 +445,15 @@ Miesiąc 3-6: ...`;
                         <div class="space-y-2">
                             <Label for="name">Nazwa</Label>
                             <Input id="name" v-model="newProcedure.name" placeholder="Wpisz nazwę zabiegu"
-                                   :class="{'border-red-500': formErrors.name}" />
-                            <InputError :message="formErrors.name?.[0]" />
+                                   :class="{'border-red-500': formErrors.name}"/>
+                            <InputError :message="formErrors.name?.[0]"/>
                         </div>
 
                         <div class="space-y-2">
                             <Label for="category_id">Kategoria</Label>
                             <Select v-model="newProcedure.procedure_category_id">
                                 <SelectTrigger id="category_id" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'" />
+                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -455,7 +461,7 @@ Miesiąc 3-6: ...`;
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="formErrors.category_id?.[0]" />
+                            <InputError :message="formErrors.category_id?.[0]"/>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -477,13 +483,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.base_price}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14" />
+                                        <Icon name="plus" size="14"/>
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2" />
+                                        <Icon name="minus" size="14" class="mr-2"/>
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.base_price?.[0]" />
+                                <InputError :message="formErrors.base_price?.[0]"/>
                             </div>
                             <div class="space-y-2">
                                 <Label for="duration">Czas trwania (minuty)</Label>
@@ -499,13 +505,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.duration}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14" />
+                                        <Icon name="plus" size="14"/>
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2" />
+                                        <Icon name="minus" size="14" class="mr-2"/>
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.duration?.[0]" />
+                                <InputError :message="formErrors.duration?.[0]"/>
                             </div>
                         </div>
 
@@ -518,7 +524,7 @@ Miesiąc 3-6: ...`;
                                 class="w-full resize-none"
                                 :class="{'border-red-500': formErrors.description}"
                             />
-                            <InputError :message="formErrors.description?.[0]" />
+                            <InputError :message="formErrors.description?.[0]"/>
                         </div>
 
                         <div class="space-y-2">
@@ -534,7 +540,7 @@ Miesiąc 3-6: ...`;
                                 />
                             </FloatLabel>
                             <p class="text-xs mt-1 ml-1 text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
-                            <InputError :message="formErrors.recovery_info?.[0]" />
+                            <InputError :message="formErrors.recovery_info?.[0]"/>
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
@@ -544,7 +550,7 @@ Miesiąc 3-6: ...`;
                                 :disabled="formLoading"
                                 class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                             >
-                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16" />
+                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16"/>
                                 <span>Zapisz Procedurę</span>
                             </Button>
                         </div>
@@ -559,7 +565,7 @@ Miesiąc 3-6: ...`;
                 <CardHeader class="flex justify-between items-center border-b">
                     <CardTitle>Edytuj zabieg</CardTitle>
                     <Button variant="ghost" size="icon" @click="showEditForm = false">
-                        <Icon name="x" size="18" />
+                        <Icon name="x" size="18"/>
                     </Button>
                 </CardHeader>
                 <CardContent class="pt-4">
@@ -567,15 +573,15 @@ Miesiąc 3-6: ...`;
                         <div class="space-y-2">
                             <Label for="edit-name">Nazwa</Label>
                             <Input id="edit-name" v-model="selectedProcedure.name"
-                                   :class="{'border-red-500': formErrors.name}" />
-                            <InputError :message="formErrors.name?.[0]" />
+                                   :class="{'border-red-500': formErrors.name}"/>
+                            <InputError :message="formErrors.name?.[0]"/>
                         </div>
 
                         <div class="space-y-2">
                             <Label for="edit-category_id">Kategoria</Label>
                             <Select v-model="selectedProcedure.procedure_category_id">
                                 <SelectTrigger id="edit-category_id" class="w-full">
-                                    <SelectValue :placeholder="'Wybierz kategorię'" />
+                                    <SelectValue :placeholder="'Wybierz kategorię'"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem v-for="category in categories" :key="category.id" :value="category.id">
@@ -583,7 +589,7 @@ Miesiąc 3-6: ...`;
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <InputError :message="formErrors.category_id?.[0]" />
+                            <InputError :message="formErrors.category_id?.[0]"/>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -603,13 +609,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.base_price}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14" />
+                                        <Icon name="plus" size="14"/>
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2" />
+                                        <Icon name="minus" size="14" class="mr-2"/>
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.base_price?.[0]" />
+                                <InputError :message="formErrors.base_price?.[0]"/>
                             </div>
                             <div class="space-y-2">
                                 <Label for="edit-duration">Czas trwania (minuty)</Label>
@@ -625,13 +631,13 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.duration}"
                                 >
                                     <template #incrementbuttonicon>
-                                        <Icon name="plus" size="14" />
+                                        <Icon name="plus" size="14"/>
                                     </template>
                                     <template #decrementbuttonicon>
-                                        <Icon name="minus" size="14" class="mr-2" />
+                                        <Icon name="minus" size="14" class="mr-2"/>
                                     </template>
                                 </InputNumber>
-                                <InputError :message="formErrors.duration?.[0]" />
+                                <InputError :message="formErrors.duration?.[0]"/>
                             </div>
                         </div>
 
@@ -646,7 +652,7 @@ Miesiąc 3-6: ...`;
                                     :class="{'p-invalid': formErrors.description}"
                                 />
                             </FloatLabel>
-                            <InputError :message="formErrors.description?.[0]" />
+                            <InputError :message="formErrors.description?.[0]"/>
                         </div>
 
                         <div class="space-y-2">
@@ -662,7 +668,7 @@ Miesiąc 3-6: ...`;
         />
                             </FloatLabel>
                             <p class="text-xs text-gray-500">Format: Dzień/Tydzień/Miesiąc: opis</p>
-                            <InputError :message="formErrors.recovery_timeline_info?.[0]" />
+                            <InputError :message="formErrors.recovery_timeline_info?.[0]"/>
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
@@ -672,7 +678,7 @@ Miesiąc 3-6: ...`;
                                 :disabled="formLoading"
                                 class="flex bg-nova-primary hover:bg-nova-accent dark:bg-nova-accent dark:hover:bg-nova-primary dark:text-nova-light items-center gap-2"
                             >
-                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16" />
+                                <Icon v-if="formLoading" name="loader2" class="animate-spin" size="16"/>
                                 <span>Aktualizuj Zabieg</span>
                             </Button>
                         </div>
@@ -727,4 +733,6 @@ tr:last-child td:last-child {
     padding: 1rem !important;
     vertical-align: middle;
 }
+
+
 </style>
