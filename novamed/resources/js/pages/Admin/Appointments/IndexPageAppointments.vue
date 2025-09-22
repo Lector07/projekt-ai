@@ -543,11 +543,8 @@ onMounted(() => {
                             </TableRow>
                             <TableRow v-else v-for="appointment in appointments" :key="appointment.id">
                                 <TableCell>{{ appointment.id }}</TableCell>
-                                <TableCell class="font-medium">{{ appointment.patient.name }}</TableCell>
-                                <TableCell>{{ appointment.doctor.first_name }} {{
-                                        appointment.doctor.last_name
-                                    }}
-                                </TableCell>
+                                <TableCell class="font-medium hover:text-nova-accent hover:underline"><router-link :to="{ name: 'admin-patient-details', params: { id: appointment.patient.id } }">{{ appointment.patient.name }}</router-link></TableCell>
+                                <TableCell class="hover:underline hover:text-nova-accent font-medium"><router-link :to="{ name: 'admin-doctor-details', params: { id: appointment.doctor.id } }">{{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</router-link></TableCell>
                                 <TableCell>{{ appointment.procedure.name }}</TableCell>
                                 <TableCell>{{ formatDateTime(appointment.appointment_datetime) }}</TableCell>
                                 <TableCell><span class="px-2 py-1 text-xs font-medium rounded-full"

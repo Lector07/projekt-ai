@@ -345,7 +345,7 @@ Miesiąc 3-6: ...`;
                                     </TableCell>
 
                                     <!-- OPIS — ZAWIJA SIĘ, BEZ TRUNCATE -->
-                                    <TableCell class="p-3 text-sm text-gray-500 whitespace-normal break-words min-w-0 max-w-full">
+                                    <TableCell class="p-3 text-sm text-gray-500 whitespace-normal text-justify break-words min-w-0 max-w-full">
                                         <div v-if="procedure.description" class="line-clamp-3">
                                             {{ procedure.description }}
                                         </div>
@@ -366,7 +366,7 @@ Miesiąc 3-6: ...`;
                                     <TableCell class="p-3 text-left">{{ formatPrice(procedure.base_price) }}</TableCell>
 
                                     <!-- AKCJE -->
-                                    <TableCell class="p-3 text-left">
+                                    <TableCell class="p-3 text-justify">
                                         <TooltipProvider class="flex space-x-1">
                                             <Tooltip>
                                                 <TooltipTrigger>

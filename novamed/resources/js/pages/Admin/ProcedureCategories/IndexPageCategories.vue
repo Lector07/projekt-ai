@@ -147,9 +147,9 @@ onMounted(() => { fetchCategories(); });
                                     <ContextMenu v-for="category in categories" :key="category.id">
                                         <ContextMenuTrigger as-child>
                                             <TableRow class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-context-menu">
-                                                <TableCell class="hidden sm:table-cell">{{ category.id }}</TableCell>
-                                                <TableCell class="font-medium break-words">{{ category.name }}</TableCell>
-                                                <TableCell class="hidden md:table-cell text-sm text-gray-500 break-words text-balance">{{ category.slug }}</TableCell>
+                                                <TableCell class="hidden content-center sm:table-cell">{{ category.id }}</TableCell>
+                                                <TableCell class="font-medium content-center break-words">{{ category.name }}</TableCell>
+                                                <TableCell class="hidden md:table-cell content-center text-sm text-gray-500 break-words text-balance">{{ category.slug }}</TableCell>
                                             </TableRow>
                                         </ContextMenuTrigger>
                                         <ContextMenuContent>

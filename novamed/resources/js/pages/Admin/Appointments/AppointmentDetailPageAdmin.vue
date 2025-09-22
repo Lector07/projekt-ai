@@ -398,7 +398,7 @@ onMounted(() => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
+                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:text-nova-light hover:dark:bg-nova-primary dark:text-nova-light"
                                         >
                                             Zobacz profil pacjenta
                                         </Button>
@@ -440,7 +440,7 @@ onMounted(() => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:dark:bg-nova-primary dark:text-nova-light"
+                                            class="w-full sm:w-auto bg-nova-primary text-nova-light hover:bg-nova-accent dark:bg-nova-accent hover:text-nova-light hover:dark:bg-nova-primary dark:text-nova-light"
                                         >
                                             Zobacz profil lekarza
                                         </Button>
