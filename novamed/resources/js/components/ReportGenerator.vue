@@ -146,10 +146,10 @@ const reportConfig = reactive<ReportConfig>({
     pageFormat: 'A4',
     theme: 'CLASSIC',
     companyInfo: {
-        name: 'Klinika Chirurgii Plastycznej "Projekt AI"',
-        address: 'ul. Medyczna 1',
+        name: 'Softres',
+        address: 'ul. Zaciszna 44',
         postalCode: '00-001',
-        city: 'Warszawa',
+        city: 'Rzeszów',
         taxId: '123-456-78-90'
     },
     footerLeftText: 'eBudżet - ZSI "Sprawny Urząd" \nBUK Softres - www.softres.pl',
@@ -566,22 +566,22 @@ const customColors = [
 
 <template>
     <Dialog :open="props.modelValue" @update:open="emit('update:modelValue', $event)">
-        <DialogContent class="w-[95vw] sm:w-[90vw] lg:w-[90vw] xl:w-[90vw] max-w-none h-[95vh] sm:h-[90vh] flex flex-col bg-background border-nova-primary/20">
+        <DialogContent class="w-[95vw] sm:w-[90vw] lg:w-[90vw] xl:w-[90vw] max-w-none h-[95vh] sm:h-[90vh] flex flex-col dark:bg-background  bg-background border-nova-primary/20">
             <DialogHeader class="border-b border-nova-primary/10">
                 <DialogTitle class="text-md sm:text-md text-nova-dark font-semibold">Generator Raportów</DialogTitle>
-                <DialogDescription class="text-xs sm:text-sm text-muted-foreground">
+                <DialogDescription class="text-xs sm:text-sm mb-1 text-muted-foreground">
                     Dostosuj raport i zobacz podgląd na żywo. Raport jest generowany na podstawie aktualnie ustawionych filtrów.
                 </DialogDescription>
             </DialogHeader>
 
             <div class="flex-grow min-h-0">
-                <ResizablePanelGroup direction="horizontal" class="h-full w-full">
-                    <ResizablePanel :default-size="50" :min-size="40" class="hidden lg:block border-r border-nova-primary/10">
+                <ResizablePanelGroup direction="horizontal" class="h-full dark:bg-background bg-background w-full">
+                    <ResizablePanel :default-size="50" :min-size="40" class="hidden lg:block border-r dark:border-nova-primary/10 border-nova-primary/10">
                         <div class="flex flex-col h-full sm:p-1 pr-1 ">
                             <ScrollArea class="h-full overflow-y-auto pr-1">
                                 <Accordion type="single" collapsible class="w-full" default-value="item-1">
-                                    <AccordionItem value="item-1" class="border-nova-primary/20">
-                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary">Opcje Główne</AccordionTrigger>
+                                    <AccordionItem value="item-1" class="dark:border-nova-primary/10 border-nova-primary/20">
+                                        <AccordionTrigger class="text-base sm:text-lg text-nova-dark hover:text-nova-primary dark:hover:nova-accent dark:text-nova-accent">Opcje Główne</AccordionTrigger>
                                         <AccordionContent class="pt-0">
                                             <ScrollArea class="max-h-64 overflow-y-auto">
                                                 <div class="grid grid-cols-1 lg:grid-cols-4 items-center gap-2 sm:gap-4">
@@ -702,9 +702,10 @@ const customColors = [
                                                                         @click="configureSubreport(col.field)"
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        class="h-8 px-2 text-xs border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white">
+                                                                        class="h-8 px-2 text-xs w-full border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white"
+                                                                        >
                                                                     <Icon name="settings" size="12" class="mr-1"/>
-                                                                    <span class="hidden sm:inline">Konfig</span>
+                                                                    <span class="hidden sm:inline">Konfiguruj podraport</span>
                                                                 </Button>
                                                             </div>
                                                             <Input v-model.number="col.width" type="number"
@@ -778,19 +779,7 @@ const customColors = [
                                                                   v-model:checked="reportConfig.formattingOptions.zebraStripes"/>
                                                         <label for="zebra-stripes" class="text-sm font-medium text-nova-dark">Paski zebry</label>
                                                     </div>
-                                                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-                                                        <Label for="report-theme" class="text-left sm:text-right whitespace-nowrap text-nova-dark font-medium">Motyw wizualny</Label>
-                                                        <Select v-model="reportConfig.theme">
-                                                            <SelectTrigger id="report-theme">
-                                                                <SelectValue placeholder="Wybierz motyw..."/>
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem v-for="theme in availableThemes" :key="theme.value" :value="theme.value">
-                                                                    {{ theme.label }}
-                                                                </SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
+
                                                 </div>
                                                 <Separator class="my-4 bg-nova-primary/20"/>
                                                 <TabsRoot default-value="highlighting" class="w-full">
@@ -851,7 +840,7 @@ const customColors = [
                                                     </TabsContent>
                                                     <TabsContent value="colors" class="mt-4">
                                                         <Label class="font-semibold text-nova-dark">Niestandardowe kolory</Label>
-                                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 sm:gap-x-6 gap-y-2 mt-2">
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-x-2 sm:gap-x-6 gap-y-2 mt-2">
                                                             <div v-for="color in customColors" :key="color.key" class="grid grid-cols-2 items-center gap-2">
                                                                 <Label class="text-xs sm:text-sm text-left sm:text-right text-nova-dark">{{ color.label }}</Label>
                                                                 <input v-model="reportConfig.colorSettings[color.key]" type="color"
@@ -867,7 +856,6 @@ const customColors = [
                             </ScrollArea>
                         </div>
                     </ResizablePanel>
-
 
 
                     <div class="lg:hidden flex flex-col h-full w-full">
@@ -939,8 +927,8 @@ const customColors = [
                                                     <div class="p-3 border rounded-md bg-nova-light/50 flex items-start space-x-2">
                                                         <div class="drag-handle cursor-move p-2 text-nova-primary"><Icon name="grip" size="18"/></div>
                                                         <div class="flex-grow w-full space-y-2">
-                                                            <Label :for="`group-field-mob-${index}`" class="font-medium">Grupuj po polu</Label>
-                                                            <Select v-model="group.field" :id="`group-field-mob-${index}`">
+                                                            <Label :for="`group-field-mob-${index}`" class="font-medium mb-2">Grupuj po polu</Label>
+                                                            <Select v-model="group.field" :id="`group-field-mob-${index}`" class="mt-2">
                                                                 <SelectTrigger class="w-full mt-1">
                                                                     <SelectValue placeholder="Wybierz pole..."/>
                                                                 </SelectTrigger>
