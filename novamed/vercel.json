@@ -1,31 +1,12 @@
 {
   "version": 2,
-  "env": {
-    "APP_ENV": "production",
-    "APP_DEBUG": "false",
-    "VERCEL_DEMO_MODE": "true"
-  },
   "functions": {
-    "api/index.php": {
-      "runtime": "vercel-php@0.7.2",
-      "excludeFiles": "{tests/**,node_modules/**}"
-    }
+    "api/index.php": { "runtime": "vercel-php@0.6.0" }
   },
-  "redirects": [],
-  "rewrites": [],
-  "headers": [
+  "rewrites": [
     {
-      "source": "/build/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "source": "/(.*)",
+      "destination": "/api/index.php"
     }
-  ],
-  "github": {
-    "silent": true
-  }
+  ]
 }
-
