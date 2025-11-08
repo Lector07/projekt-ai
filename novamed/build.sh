@@ -1,24 +1,21 @@
 #!/bin/bash
 
-echo "🚀 Starting Vercel build process..."
-
-# Install PHP dependencies
-echo "📦 Installing Composer dependencies..."
-composer install --no-dev --optimize-autoloader --no-interaction
-
-# Install Node dependencies
-echo "📦 Installing Node dependencies..."
-npm ci
-
-# Build frontend assets
-echo "🔨 Building frontend assets with Vite..."
+# 1. Zainstaluj zależności i zbuduj frontend
+echo ">>> Installing frontend dependencies and building assets..."
+npm install
 npm run build
 
-# Optimize Laravel
-echo "⚡ Optimizing Laravel..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# 2. Zainstaluj zależności PHP
+echo ">>> Installing PHP dependencies..."
+composer install --no-dev --optimize-autoloader
 
-echo "✅ Build completed successfully!"
+# 3. Wyczyść cache Laravela
+echo ">>> Clearing Laravel caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
+# 4. Skonfiguruj storage dla Vercel
+echo ">>> Configuring storage for Vercel..."
+mv storage storage_local
+ln -s /tmp/storage storage

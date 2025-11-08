@@ -218,8 +218,19 @@ class AdminAppointmentController extends Controller
         Log::info('--- KONTROLER LARAVELA - PAYLOAD WYSYŁANY DO JAVY ---');
         Log::info(json_encode($payload, JSON_PRETTY_PRINT));
 
+        // Sprawdź czy serwis raportów jest włączony
+        $reportServiceEnabled = config('services.report.enabled', true);
+        $reportServiceUrl = config('services.report.url', 'http://localhost:8080/api/generate-dynamic-report');
+
+        if (!$reportServiceEnabled) {
+            Log::warning('Serwis raportów jest wyłączony w konfiguracji');
+            return response()->json([
+                'error' => 'Generowanie raportów jest tymczasowo niedostępne.',
+                'message' => 'Funkcja raportów nie jest dostępna w tym środowisku.'
+            ], 503);
+        }
+
         try {
-            $reportServiceUrl = 'http://localhost:8080/api/generate-dynamic-report';
             $response = Http::withBody(json_encode($payload), 'application/json')
                 ->timeout(30)->post($reportServiceUrl);
 

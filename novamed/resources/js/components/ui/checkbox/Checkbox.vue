@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForwardPropsEmits, type CheckboxRootEmits, type CheckboxRootProps } from "reka-ui"
+import { useForwardPropsEmits, type CheckboxRootProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit, useVModel } from "@vueuse/core"
 import { Check } from "lucide-vue-next"
@@ -7,7 +7,9 @@ import { CheckboxIndicator, CheckboxRoot } from 'radix-vue'
 import { cn } from "@/lib/utils"
 
 const props = defineProps<CheckboxRootProps & { class?: HTMLAttributes["class"] }>()
-const emits = defineEmits<CheckboxRootEmits>()
+const emits = defineEmits<{
+  (e: 'update:checked', value: boolean): void
+}>()
 
 const delegatedProps = reactiveOmit(props, "class")
 
