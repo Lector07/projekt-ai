@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'report' => [
+        'enabled' => env('REPORT_SERVICE_ENABLED', true),
+        'url' => env('REPORT_SERVICE_URL', 'http://localhost:8080/api/generate-dynamic-report'),
+    ],
+
 ];
