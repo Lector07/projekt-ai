@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/index.php"
+      "destination": "novamed/api/index.php"
     }
   ]
 }
