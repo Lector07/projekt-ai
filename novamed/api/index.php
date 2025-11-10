@@ -1,29 +1,20 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Laravel Serverless Entry Point (Vercel)
-|--------------------------------------------------------------------------
-*/
-
-use IlluminateContractsHttpKernel;
-use IlluminateHttpRequest;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Load Composer's autoloader
-require __DIR__ . '/../vendor/autoload.php';
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
 
-// Bootstrap Laravel
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+// Register the Composer autoloader...
+require __DIR__.'/../vendor/autoload.php';
 
-// Run the application
-$kernel = $app->make(Kernel::class);
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
 
-$response = $kernel->handle(
-    $request = Request::capture()
-);
-
-$response->send();
-
-$kernel->terminate($request, $response);
+$app->handleRequest(Request::capture());
