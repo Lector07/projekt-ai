@@ -65,10 +65,11 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        // Rejestracja polityk
+
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Doctor::class, DoctorPolicy::class);
         Gate::policy(Procedure::class, ProcedurePolicy::class);
         Gate::policy(Appointment::class, AppointmentPolicy::class);
     })
     ->create();
+
