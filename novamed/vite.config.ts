@@ -28,7 +28,7 @@ export default defineConfig({
         }),
         Components({
             resolvers: [
-                PrimeVueResolver() // To jest "magia", która wszystko naprawi
+                PrimeVueResolver()
             ]
         })
     ],
@@ -47,7 +47,7 @@ export default defineConfig({
     build: {
         manifest: 'manifest.json',
         outDir: 'public/build',
-        emptyOutDir: true,
+        emptyOutDir: true
     }
 
 });

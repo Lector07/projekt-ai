@@ -4,7 +4,7 @@
     "outputDirectory": "public",
     "framework": null,
 
-    "buildCommand": "composer install && npm install && npm run build && php artisan migrate --force && php artisan db:seed --force",
+    "buildCommand": "npm install && npm run build && composer install && php artisan config:clear && php artisan migrate --force && php artisan db:seed --force",
     "installCommand": "npm install",
 
     "builds": [
@@ -23,18 +23,11 @@
 
     "routes": [
         {
-            "src": "/build/(.*)",
-            "dest": "/build/$1",
+            "src": "/(.*)\\.(js|css|svg|png|jpg|jpeg|gif|ico|woff2?|ttf|eot|json|webp|map)$",
             "headers": {
-                "Cache-Control": "public, max-age=31536000, immutable"
-            }
-        },
-        {
-            "src": "/(.*\\.(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf|eot|json))",
-            "dest": "/$1",
-            "headers": {
-                "Cache-Control": "public, max-age=86400"
-            }
+                "cache-control": "public, max-age=31536000, immutable"
+            },
+            "dest": "/$1"
         },
         {
             "src": "/api/(.*)",
@@ -45,11 +38,19 @@
             "dest": "/api/index.php"
         }
     ],
+
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
-        "APP_URL": "https://novamed-29sgigu29-lector07-s-projects.vercel.app",
+        "APP_URL": "https://novamed-fhwbgfzi6-lector07-s-projects.vercel.app",
+        "APP_KEY": "@app-key",
 
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "@db-host",
+        "DB_PORT": "5432",
+        "DB_DATABASE": "@db-database",
+        "DB_USERNAME": "@db-username",
+        "DB_PASSWORD": "@db-password",
 
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",

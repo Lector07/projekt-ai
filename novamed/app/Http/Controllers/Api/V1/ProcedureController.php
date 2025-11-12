@@ -17,10 +17,6 @@ class ProcedureController extends Controller
     public function index(Request $request): JsonResponse | AnonymousResourceCollection
     {
         try {
-            \Log::info('Fetching procedures', [
-                'page' => $request->get('page', 1),
-                'per_page' => $request->get('per_page', 9)
-            ]);
 
             $query = Procedure::with('category');
 
@@ -61,18 +57,10 @@ class ProcedureController extends Controller
                 $perPage = (int) ($request->input('per_page', 9));
                 $procedures = $query->paginate($perPage);
 
-                \Log::info('Procedures fetched (paginated)', [
-                    'count' => $procedures->count(),
-                    'total' => $procedures->total()
-                ]);
 
                 return ProcedureResource::collection($procedures);
             }
         } catch (\Exception $e) {
-            \Log::error('Error fetching procedures', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
 
             return response()->json([
                 'error' => 'Failed to fetch procedures',

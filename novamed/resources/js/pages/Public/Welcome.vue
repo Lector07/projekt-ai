@@ -69,7 +69,6 @@ const fetchData = async () => {
 
     try {
         if (activeTab.value === 0) {
-            console.log('Fetching procedures...');
             const proceduresResponse = await axios.get('/api/v1/procedures', {
                 params: {
                     page: proceduresCurrentPage.value,
@@ -77,7 +76,6 @@ const fetchData = async () => {
                 }
             });
 
-            console.log('Procedures response:', proceduresResponse.data);
 
             if (proceduresResponse.data) {
                 // Sprawdź czy response.data.data istnieje (paginacja Laravel)
@@ -92,7 +90,6 @@ const fetchData = async () => {
                         per_page: proceduresResponse.data.meta.per_page || 9
                     };
                 } else {
-                    console.warn('Brak meta w odpowiedzi, używam wartości domyślnych');
                     proceduresMeta.value = {
                         current_page: 1,
                         last_page: 1,
@@ -101,7 +98,6 @@ const fetchData = async () => {
                     };
                 }
             } else {
-                console.error('Pusta odpowiedź z API');
                 procedures.value = [];
             }
         } else {
@@ -115,12 +111,7 @@ const fetchData = async () => {
             doctors.value = doctorsResponse.data?.data ?? doctorsResponse.data ?? [];
         }
     } catch (err) {
-        console.error('Błąd podczas pobierania danych:', err);
-        if (axios.isAxiosError(err)) {
-            console.error('Status:', err.response?.status);
-            console.error('Response:', err.response?.data);
-            console.error('URL:', err.config?.url);
-        }
+
         error.value = true;
         procedures.value = [];
         proceduresMeta.value = {

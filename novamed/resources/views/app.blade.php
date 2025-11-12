@@ -11,10 +11,7 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
-
-    @vite(['resources/js/app.ts'])
-    @vite('resources/css/app.css')
-
+    @vite(['resources/css/app.css', 'resources/js/app.ts'])
 </head>
 <body class="font-sans antialiased">
 <div id="app"></div>
