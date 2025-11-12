@@ -4,7 +4,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-// --- Importy ---
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -18,6 +17,7 @@ use App\Models\Procedure;
 use App\Policies\ProcedurePolicy;
 use Illuminate\Support\Facades\Gate;
 
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+
+        $middleware->append(\App\Http\Middleware\Cors::class);
 
         $middleware->web(append: [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
@@ -50,6 +52,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'auth.doctor' => \App\Http\Middleware\EnsureUserIsDoctor::class,
         ]);
+
+        $middleware->trustProxies(
+            '*',
+                Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO
+        );
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

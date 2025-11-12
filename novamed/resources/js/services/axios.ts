@@ -1,6 +1,16 @@
 import router from '@/router';
 import axios from 'axios';
 
+
+axios.defaults.baseURL = import.meta.env.PROD
+    ? ''
+    : 'http://127.0.0.1:8000/api/v1';
+
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+axios.defaults.headers.common['Accept'] = 'application/json';
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 declare module 'axios' {
     interface AxiosRequestConfig {
         skipAuthRedirect?: boolean;
@@ -11,10 +21,6 @@ declare module 'axios' {
         checkAuth(url: string, options?: object): Promise<any>;
     }
 }
-
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-axios.defaults.withCredentials = true;
-axios.defaults.headers.common['Accept'] = 'application/json';
 
 const logoutEndpoints = ['/api/v1/auth/logout', '/api/auth/logout', '/logout', '/api/v1/logout'];
 const authCheckEndpoints = ['/api/v1/user', '/api/auth/user', '/api/user'];
@@ -51,7 +57,6 @@ const shouldSkipRedirect = (url: string | undefined | null) => {
 axios.interceptors.response.use(
     (response) => response,
     (error) => {
-
         const skipAuthRedirect = error.config?.headers?.['X-Skip-Auth-Redirect'];
 
         if (skipAuthRedirect && (error.response?.status === 401 || error.response?.status === 419)) {
