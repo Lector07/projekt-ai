@@ -1,10 +1,10 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "version": 2,
-    "outputDirectory": "public/build",
+    "outputDirectory": "public",
     "framework": null,
 
-    "buildCommand": "npm install && npm run build && composer install --no-dev --optimize-autoloader",
+    "buildCommand": "composer install && npm install && npm run build && php artisan migrate --force && php artisan db:seed --force",
     "installCommand": "npm install",
 
     "builds": [
@@ -47,7 +47,7 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "true",
+        "APP_DEBUG": "false",
         "APP_URL": "https://novamed-29sgigu29-lector07-s-projects.vercel.app",
 
 

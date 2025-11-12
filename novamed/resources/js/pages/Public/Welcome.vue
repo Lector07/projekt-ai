@@ -69,19 +69,41 @@ const fetchData = async () => {
 
     try {
         if (activeTab.value === 0) {
+            console.log('Fetching procedures...');
             const proceduresResponse = await axios.get('/api/v1/procedures', {
                 params: {
                     page: proceduresCurrentPage.value,
                     per_page: proceduresMeta.value.per_page
                 }
             });
-            procedures.value = proceduresResponse.data.data;
-            proceduresMeta.value = {
-                current_page: proceduresResponse.data.meta.current_page,
-                last_page: proceduresResponse.data.meta.last_page,
-                total: proceduresResponse.data.meta.total,
-                per_page: proceduresResponse.data.meta.per_page
-            };
+
+            console.log('Procedures response:', proceduresResponse.data);
+
+            if (proceduresResponse.data) {
+                // Sprawdź czy response.data.data istnieje (paginacja Laravel)
+                procedures.value = proceduresResponse.data.data || [];
+
+                // Bezpieczne przypisanie meta
+                if (proceduresResponse.data.meta) {
+                    proceduresMeta.value = {
+                        current_page: proceduresResponse.data.meta.current_page || 1,
+                        last_page: proceduresResponse.data.meta.last_page || 1,
+                        total: proceduresResponse.data.meta.total || 0,
+                        per_page: proceduresResponse.data.meta.per_page || 9
+                    };
+                } else {
+                    console.warn('Brak meta w odpowiedzi, używam wartości domyślnych');
+                    proceduresMeta.value = {
+                        current_page: 1,
+                        last_page: 1,
+                        total: procedures.value.length,
+                        per_page: 9
+                    };
+                }
+            } else {
+                console.error('Pusta odpowiedź z API');
+                procedures.value = [];
+            }
         } else {
             const doctorsResponse = await axios.get('/api/v1/doctors', {
                 params: {
@@ -89,11 +111,24 @@ const fetchData = async () => {
                     per_page: 1000
                 }
             });
+
             doctors.value = doctorsResponse.data?.data ?? doctorsResponse.data ?? [];
         }
-    } catch (e) {
-        console.error('Błąd podczas pobierania danych:', e);
+    } catch (err) {
+        console.error('Błąd podczas pobierania danych:', err);
+        if (axios.isAxiosError(err)) {
+            console.error('Status:', err.response?.status);
+            console.error('Response:', err.response?.data);
+            console.error('URL:', err.config?.url);
+        }
         error.value = true;
+        procedures.value = [];
+        proceduresMeta.value = {
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            per_page: 9
+        };
     } finally {
         loading.value = false;
     }

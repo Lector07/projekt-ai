@@ -4,7 +4,7 @@ import axios from 'axios';
 
 axios.defaults.baseURL = import.meta.env.PROD
     ? ''
-    : 'http://127.0.0.1:8000/api/v1';
+    : 'http://127.0.0.1:8000';
 
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
