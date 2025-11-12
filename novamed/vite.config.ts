@@ -43,6 +43,13 @@ export default defineConfig({
         fs: {
             strict: true
         }
+    },
+    build: {
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            input: 'resources/js/app.ts'
+        }
     }
 
 });
