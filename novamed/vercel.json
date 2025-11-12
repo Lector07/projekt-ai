@@ -1,9 +1,11 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "version": 2,
-    "outputDirectory": "public",
+    "outputDirectory": "public/build",
     "framework": null,
 
+    "buildCommand": "npm install && npm run build && composer install --no-dev --optimize-autoloader",
+    "installCommand": "npm install",
 
     "builds": [
         {
