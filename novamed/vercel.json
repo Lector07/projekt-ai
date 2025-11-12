@@ -3,12 +3,22 @@
     "version": 2,
     "outputDirectory": "public",
     "framework": null,
-    "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.7.4",
-            "maxDuration": 30
+
+
+    "builds": [
+        {
+            "src": "api/index.php",
+            "use": "vercel-php@0.7.4"
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "public"
+            }
         }
-    },
+    ],
+
     "routes": [
         {
             "src": "/build/(.*)",
@@ -35,8 +45,9 @@
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
-        "APP_URL": "https://novamed-ia6upiyqh-lector07-s-projects.vercel.app",
+        "APP_DEBUG": "true",
+        "APP_URL": "https://novamed-29sgigu29-lector07-s-projects.vercel.app",
+
 
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
