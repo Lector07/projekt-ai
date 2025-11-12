@@ -2,10 +2,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build ",
+        "build": "vite build",
         "build:ssr": "vite build && vite build --ssr",
-        "build:vercel": "vite build",
-        "vercel-build": "vite build && npm run build",
+        "vercel-build": "vite build",
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",

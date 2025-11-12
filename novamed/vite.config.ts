@@ -48,7 +48,15 @@ export default defineConfig({
         manifest: true,
         outDir: 'public/build',
         rollupOptions: {
-            input: 'resources/js/app.ts'
+            output: {
+                manualChunks: {
+                    'vendor': ['vue', 'vue-router', '@vueuse/core'],
+                    'ui-lib': ['radix-vue', 'reka-ui'],
+                    'primevue': ['primevue/usetoast'],
+                    'charts': ['chart.js'],
+                    'utils': ['axios', 'vuedraggable', 'lucide-vue-next'],
+                }
+            }
         }
     }
 
