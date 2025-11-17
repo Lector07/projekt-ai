@@ -1,69 +1,57 @@
-# --- PHP + FPM (Alpine) ---
-FROM php:8.2-fpm-alpine
+FROM php:8.2-fpm
 
-# --- System dependencies & PHP extensions ---
-RUN apk add --no-cache \
-    oniguruma-dev \
-    curl \
+# System packages
+RUN apt-get update && apt-get install -y \
     git \
-    libxml2-dev \
+    curl \
+    zip \
+    unzip \
+    libpq-dev \
     libzip-dev \
-    postgresql-dev \
-    sqlite-dev \
+    libonig-dev \
+    libxml2-dev \
+    libsqlite3-dev \
+    nginx \
     supervisor \
     nodejs \
     npm \
-    bash \
     && docker-php-ext-install \
-    bcmath \
-    ctype \
-    dom \
-    fileinfo \
-    mbstring \
-    pcntl \
-    pdo \
-    pdo_pgsql \
-    pdo_sqlite \
-    tokenizer \
-    xml \
-    zip
+        pdo \
+        pdo_pgsql \
+        mbstring \
+        xml \
+        zip \
+        bcmath
 
-# --- Composer ---
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Kopiujemy tylko pliki wymagane do pobrania zależności
+# Install PHP dependencies
 COPY composer.json composer.lock ./
-
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Node dependencies
+# Install frontend dependencies
 COPY package.json package-lock.json ./
-RUN npm install --production=false
+RUN npm install
 
-# --- Copy entire app ---
+# Copy full project
 COPY . .
 
-# --- Build frontend ---
+# Build frontend
 RUN npm run build
 
-# Wymagane katalogi
-RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+# Laravel required dirs
+RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache \
+    && chown -R www-data:www-data /var/www
 
-# Uprawnienia do storage + cache
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 775 storage bootstrap/cache
+# Copy Nginx config
+COPY ./deploy/nginx.conf /etc/nginx/nginx.conf
 
+# Copy Supervisor config
+COPY ./deploy/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 
-RUN php artisan route:cache || true && \
-    php artisan view:cache || true
+EXPOSE 8080
 
-# Użytkownik produkcyjny
-USER www-data
-
-EXPOSE 8000
-
-# --- ENTRYPOINT ---
-CMD php artisan migrate --force && \
-    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD php artisan migrate --force && supervisorctl -c /etc/supervisor/supervisor.conf
