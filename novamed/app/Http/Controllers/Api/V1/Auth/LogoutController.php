@@ -4,24 +4,23 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
 class LogoutController extends Controller
 {
     /**
-     * Destroy an authenticated session.
+     * Revoke the user's current API token.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request): JsonResponse
     {
-        Auth::guard('web')->logout();
+        // Usuń bieżący token Sanctum
+        $request->user()->currentAccessToken()->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json(null, 204);
+        return response()->json([
+            'message' => 'Wylogowano pomyślnie'
+        ]);
     }
 }

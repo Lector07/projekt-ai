@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
+import { useAuthStore } from '@/stores/auth';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -12,19 +12,9 @@ import { useToast } from "primevue/usetoast";
 import Toast from "primevue/toast";
 import { useRouter } from 'vue-router';
 
-
 const router = useRouter();
 const toast = useToast();
-
-axios.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response && error.response.status === 422) {
-            return Promise.reject(error);
-        }
-        return Promise.reject(error);
-    }
-);
+const authStore = useAuthStore();
 
 const form = ref({
     name: '',
@@ -36,24 +26,17 @@ const form = ref({
 const isLoading = ref(false);
 const errors = ref<Record<string, string[]>>({});
 
-axios.defaults.headers.common['Accept'] = 'application/json';
-axios.defaults.withCredentials = true;
-
 async function submit() {
     isLoading.value = true;
     errors.value = {};
 
     try {
-        await axios.get('/sanctum/csrf-cookie');
-
-        const registerResponse = await axios.post('/api/v1/register', form.value, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-
-        console.log('Rejestracja udana:', registerResponse);
+        await authStore.register(
+            form.value.name,
+            form.value.email,
+            form.value.password,
+            form.value.password_confirmation
+        );
 
         toast.add({
             severity: 'success',
@@ -68,7 +51,7 @@ async function submit() {
 
     } catch (error: any) {
         if (error.response?.status === 422) {
-            errors.value = error.response.data.errors;
+            errors.value = error.response.data.errors || {};
             toast.add({
                 severity: 'error',
                 summary: 'Błąd walidacji',

@@ -31,10 +31,12 @@
         },
         {
             "src": "/api/(.*)",
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
             "dest": "/api/index.php"
         },
         {
             "src": "/(.*)",
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
             "dest": "/api/index.php"
         }
     ],
@@ -43,14 +45,9 @@
         "APP_ENV": "production",
         "APP_DEBUG": "false",
         "APP_URL": "https://novamed-fhwbgfzi6-lector07-s-projects.vercel.app",
-        "APP_KEY": "@app-key",
 
         "DB_CONNECTION": "pgsql",
-        "DB_HOST": "@db-host",
         "DB_PORT": "5432",
-        "DB_DATABASE": "@db-database",
-        "DB_USERNAME": "@db-username",
-        "DB_PASSWORD": "@db-password",
 
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",

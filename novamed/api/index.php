@@ -1,11 +1,6 @@
 <?php
 
-$cacheDirs = ['/tmp/cache', '/tmp/views', '/tmp/framework/cache', '/tmp/framework/sessions', '/tmp/framework/views'];
-foreach ($cacheDirs as $dir) {
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
-    }
-}
+file_put_contents('php://stderr', "🐘 api/index.php STARTED | Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'n/a') . " | URI: " . ($_SERVER['REQUEST_URI'] ?? 'n/a') . "\n");
 
 require __DIR__ . '/../vendor/autoload.php';
 

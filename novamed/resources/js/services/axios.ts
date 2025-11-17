@@ -11,6 +11,17 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
+// Interceptor do dodawania Bearer token
+axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
 declare module 'axios' {
     interface AxiosRequestConfig {
         skipAuthRedirect?: boolean;
@@ -88,6 +99,7 @@ axios.interceptors.response.use(
                     router.push('/400');
                     break;
                 case 401:
+                    localStorage.removeItem('auth_token');
                     router.push('/401');
                     break;
                 case 403:

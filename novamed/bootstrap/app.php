@@ -66,13 +66,18 @@ return Application::configure(basePath: dirname(__DIR__))
         Illuminate\Filesystem\FilesystemServiceProvider::class,
     ])
     ->booted(function () {
-        // Rejestracja limitów żądań
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute($request->user() ? 60 : 10)->by(
                 $request->user()?->id ?: $request->ip()
             );
         });
 
+        $storage = '/tmp/storage';
+        if (! is_dir($storage)) {
+            @mkdir($storage, 0777, true);
+        }
+        app()->useStoragePath($storage);
+        app()->instance('path.storage', $storage);
 
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Doctor::class, DoctorPolicy::class);

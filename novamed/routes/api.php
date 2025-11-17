@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\V1\Admin\AdminProcedureCategoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\PatientAppointmentController;
 
+// routes/api.php
+
 Route::get('/email/verify', function () {
     return redirect('/#/settings/profile?verified=1');
 })->middleware('auth:sanctum')->name('verification.notice');
@@ -26,7 +28,24 @@ Route::post('/email/verification-notification', [VerifyEmailController::class, '
 
 
 Route::prefix('v1')->name('v1.')->group(function () {
+    // Trasy publiczne - Auth (guest)
+    Route::post('/register', V1\Auth\RegisterController::class)
+        ->middleware('guest')
+        ->name('register');
 
+    Route::post('/login', [V1\Auth\LoginController::class, 'store'])
+        ->middleware('guest')
+        ->name('login');
+
+    Route::post('/forgot-password', [ForgotPasswordLinkController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.email');
+
+    Route::post('/reset-password', [V1\Auth\NewPasswordController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.reset');
+
+    // Trasy publiczne - Procedures & Doctors
     Route::get('/procedures/categories', [V1\ProcedureController::class, 'categories'])
         ->name('procedures.categories');
 
@@ -47,15 +66,12 @@ Route::prefix('v1')->name('v1.')->group(function () {
     Route::get('/doctors/{doctor}/booked-appointments', [V1\DoctorController::class, 'getBookedAppointments'])
         ->name('doctors.booked-appointments');
 
-    Route::post('/reset-password', [V1\Auth\NewPasswordController::class, 'store'])
-        ->name('password.reset');
-
-    Route::post('/forgot-password', [ForgotPasswordLinkController::class, 'store'])
-        ->middleware('guest')
-        ->name('password.email');
 
     // Trasy wymagające uwierzytelnienia
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [V1\Auth\LogoutController::class, 'destroy'])
+            ->name('logout');
+
         Route::get('/user', function (Request $request) {
             \Illuminate\Support\Facades\Log::info('GET /api/v1/user route hit with UserResource. User ID: ' . $request->user()->id . ', Role: ' . $request->user()->role . ', Path: ' . $request->user()->profile_picture_path);
             return new \App\Http\Resources\Api\V1\UserResource($request->user());

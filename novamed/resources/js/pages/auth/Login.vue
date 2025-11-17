@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
@@ -30,16 +29,13 @@ async function submit() {
     errors.value = {};
 
     try {
-        await axios.get('/sanctum/csrf-cookie');
-        await axios.post('/api/v1/login', form.value, {
-            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-        });
+        await authStore.login(form.value.email, form.value.password);
         await authStore.initAuth();
         const redirectPath = (router.currentRoute.value.query.redirect as string) || '/dashboard';
         router.push(redirectPath);
     } catch (error: any) {
         if (error.response?.status === 422) {
-            errors.value = error.response.data.errors;
+            errors.value = error.response.data.errors || { general: [error.response.data.message || 'Nieprawidłowe dane logowania'] };
         } else {
             console.error('Błąd logowania:', error);
             errors.value = { general: ['Wystąpił nieoczekiwany błąd.'] };

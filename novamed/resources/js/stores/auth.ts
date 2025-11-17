@@ -45,33 +45,67 @@ export const useAuthStore = defineStore('auth', {
         async initAuth() {
             this.isInitializing = true;
             try {
-                const userData = await fetchUserData();
-                this.user = userData;
-            } catch (error) {
+                this.user = await fetchUserData();
+            } catch (_error) {
                 this.user = null;
             } finally {
                 this.isInitializing = false;
             }
         },
 
+        async login(email: string, password: string) {
+            try {
+                const response = await axios.post('/api/v1/login', {
+                    email,
+                    password
+                });
+
+                if (response.data.token) {
+                    localStorage.setItem('auth_token', response.data.token);
+                }
+
+                if (response.data.user) {
+                    this.user = response.data.user;
+                }
+
+                return response.data;
+            } catch (error) {
+                console.error('auth.ts - Błąd logowania:', error);
+                throw error;
+            }
+        },
+
+        async register(name: string, email: string, password: string, password_confirmation: string) {
+            try {
+                const response = await axios.post('/api/v1/register', {
+                    name,
+                    email,
+                    password,
+                    password_confirmation
+                });
+
+                return response.data;
+            } catch (error) {
+                console.error('auth.ts - Błąd rejestracji:', error);
+                throw error;
+            }
+        },
+
         async logout() {
             try {
                 try {
-                    await axios.post('/logout', {});
+                    await axios.post('/api/v1/logout', {});
                 } catch (logoutError) {
-                    console.warn('auth.ts - Błąd wylogowania na standardowej ścieżce (/logout), próba /api/v1/logout:', logoutError);
-                    try {
-                        await axios.post('/api/v1/logout', {});
-                    } catch (apiLogoutError) {
-                        console.warn('auth.ts - Błąd wylogowania na ścieżce API (/api/v1/logout):', apiLogoutError);
-                    }
+                    console.warn('auth.ts - Błąd wylogowania:', logoutError);
                 }
 
+                localStorage.removeItem('auth_token');
                 this.user = null;
                 window.location.href = '/';
                 return true;
             } catch (error) {
                 console.error('auth.ts - Krytyczny błąd podczas wylogowywania:', error);
+                localStorage.removeItem('auth_token');
                 this.user = null;
                 throw error;
             }

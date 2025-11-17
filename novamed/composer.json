@@ -66,8 +66,7 @@
             "@php artisan test"
         ],
         "vercel": [
-            "npm run build",
-            "mkdir -p /vercel/output/static"
+            "npm run build"
         ]
     },
     "extra": {
