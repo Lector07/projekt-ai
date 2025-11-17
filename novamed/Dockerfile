@@ -1,7 +1,7 @@
-# Użyj obrazu PHP 8.2 FPM Alpine jako podstawy
+# --- PHP + FPM (Alpine) ---
 FROM php:8.2-fpm-alpine
 
-# Zainstaluj wymagane rozszerzenia PHP i narzędzia systemowe
+# --- System dependencies & PHP extensions ---
 RUN apk add --no-cache \
     oniguruma-dev \
     curl \
@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     supervisor \
     nodejs \
     npm \
+    bash \
     && docker-php-ext-install \
     bcmath \
     ctype \
@@ -27,47 +28,42 @@ RUN apk add --no-cache \
     xml \
     zip
 
-# Zainstaluj Composer
+# --- Composer ---
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Ustaw katalog roboczy
 WORKDIR /var/www/html
 
-# Skopiuj pliki composer i zainstaluj zależności PHP
+# Kopiujemy tylko pliki wymagane do pobrania zależności
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Skopiuj pliki package.json i zainstaluj zależności Node
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Node dependencies
 COPY package.json package-lock.json ./
-RUN npm ci --prefer-offline --no-audit
+RUN npm install --production=false
 
-# Skopiuj wszystkie pliki projektu
+# --- Copy entire app ---
 COPY . .
 
-# Build assets Vue/Vite
+# --- Build frontend ---
 RUN npm run build
 
-# Utwórz katalogi storage i bootstrap/cache jeśli nie istnieją
-RUN mkdir -p storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/logs \
-    bootstrap/cache
+# Wymagane katalogi
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
 
-# Optymalizacje Laravel (bez config:cache - wymaga .env)
-RUN php artisan route:cache || true \
-    && php artisan view:cache || true
+# Uprawnienia do storage + cache
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 775 storage bootstrap/cache
 
-# Ustaw uprawnienia
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
 
-# Przełącz się na użytkownika www-data
+RUN php artisan route:cache || true && \
+    php artisan view:cache || true
+
+# Użytkownik produkcyjny
 USER www-data
 
-# Expose port (Render używa zmiennej PORT)
 EXPOSE 8000
 
-# Użyj php artisan serve dla prostszego deploymentu na Render
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
-
+# --- ENTRYPOINT ---
+CMD php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
