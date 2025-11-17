@@ -50,8 +50,8 @@ RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cac
 COPY ./deploy/nginx.conf /etc/nginx/nginx.conf
 
 # Copy Supervisor config
-COPY ./deploy/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+COPY ./deploy/supervisord.conf /etc/supervisor/supervisord.conf
 
 EXPOSE 8080
 
-CMD php artisan migrate --force && supervisorctl -c /etc/supervisor/supervisor.conf
+CMD php artisan migrate --force && supervisord -c /etc/supervisor/supervisord.conf
