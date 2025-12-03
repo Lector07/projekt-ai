@@ -249,14 +249,34 @@ const calculateColumnWidths = (
             const calculatedWidth = Math.floor((colData.weight / totalWeight) * remainingWidth);
             // Ensure minimum width of 40 pixels
             newCol.width = Math.max(40, calculatedWidth);
-        } else {
-            // Fallback to equal distribution
-            const autoColCount = columnsNeedingWidth.length || 1;
+        } else if (!col.width || col.width <= 0) {
+            // Fallback for edge cases: distribute remaining width equally among auto-width columns
+            const autoColCount = Math.max(1, columnsNeedingWidth.length);
             newCol.width = Math.max(40, Math.floor(remainingWidth / autoColCount));
         }
 
         return newCol;
     });
+};
+
+/**
+ * Infer field type from column properties for subreport columns
+ */
+const inferFieldType = (col: ColumnConfig): string => {
+    const field = col.field.toLowerCase();
+
+    // Check format pattern for numeric type
+    if (col.format && (col.format.includes('#') || col.format.includes('0'))) {
+        return 'numeric';
+    }
+
+    // Check field name patterns
+    if (field === 'id' || field.endsWith('_id')) return 'numeric';
+    if (field.includes('price') || field.includes('amount') || field.includes('quantity') || field.includes('total')) return 'numeric';
+    if (field.includes('date') || field.includes('time') || field.includes('created') || field.includes('updated')) return 'date';
+    if (field.includes('description') || field.includes('notes') || field.includes('bio') || field.includes('comment')) return 'text';
+
+    return 'text';
 };
 
 const reportConfig = reactive<ReportConfig>({
@@ -549,10 +569,10 @@ const refreshPreview = async () => {
             for (const reportKey in payloadConfig.subreportConfigs) {
                 const subreport = payloadConfig.subreportConfigs[reportKey];
                 if (subreport.columns) {
-                    // Define field types for subreport columns
+                    // Infer field types for subreport columns using improved detection
                     const subreportFields = subreport.columns.map((col: ColumnConfig) => ({
                         field: col.field,
-                        type: col.format?.includes('#') ? 'numeric' : 'text'
+                        type: inferFieldType(col)
                     }));
                     subreport.columns = calculateColumnWidths(
                         subreport.columns,
