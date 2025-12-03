@@ -140,6 +140,125 @@ const avaliablePageFormat = computed(() => {
     return ['A4', 'A3', 'LETTER', 'LEGAL'];
 });
 
+// Page dimensions in pixels (72 DPI) - width x height
+const PAGE_DIMENSIONS: Record<string, { width: number; height: number }> = {
+    'A4': { width: 595, height: 842 },
+    'A3': { width: 842, height: 1191 },
+    'LETTER': { width: 612, height: 792 },
+    'LEGAL': { width: 612, height: 1008 },
+};
+
+// Margins in pixels (default JasperReports margins)
+const PAGE_MARGINS = {
+    left: 20,
+    right: 20,
+};
+
+// Column width weights based on field type
+const COLUMN_WIDTH_WEIGHTS: Record<string, number> = {
+    'id': 1,           // ID columns are narrow
+    'numeric': 2,      // Numeric fields need moderate space
+    'date': 3,         // Date fields need space for formatted dates
+    'text': 4,         // Text fields get more space
+    'subreport': 0,    // Subreports don't need width allocation in parent
+};
+
+/**
+ * Calculate available content width for the page based on format and orientation
+ */
+const getAvailablePageWidth = (pageFormat: string, orientation: string): number => {
+    const dimensions = PAGE_DIMENSIONS[pageFormat] || PAGE_DIMENSIONS['A4'];
+    const isLandscape = orientation === 'LANDSCAPE';
+    const pageWidth = isLandscape ? dimensions.height : dimensions.width;
+    return pageWidth - PAGE_MARGINS.left - PAGE_MARGINS.right;
+};
+
+/**
+ * Get the weight for a column based on its field name and type
+ */
+const getColumnWeight = (fieldName: string, fieldType: string | undefined): number => {
+    // Special handling for known field names
+    if (fieldName === 'id') return COLUMN_WIDTH_WEIGHTS['id'];
+    if (fieldName.includes('price') || fieldName.includes('amount')) return COLUMN_WIDTH_WEIGHTS['numeric'];
+    if (fieldName.includes('date') || fieldName.includes('datetime')) return COLUMN_WIDTH_WEIGHTS['date'];
+    if (fieldName === 'bio' || fieldName.includes('notes') || fieldName.includes('description')) return 5; // Extra wide for long text
+
+    // Fallback to type-based weights
+    if (fieldType === 'subreport') return COLUMN_WIDTH_WEIGHTS['subreport'];
+    if (fieldType === 'numeric') return COLUMN_WIDTH_WEIGHTS['numeric'];
+    if (fieldType === 'date') return COLUMN_WIDTH_WEIGHTS['date'];
+
+    return COLUMN_WIDTH_WEIGHTS['text'];
+};
+
+/**
+ * Calculate explicit column widths for visible columns
+ * Replaces width: -1 (auto) with calculated pixel widths
+ */
+const calculateColumnWidths = (
+    columns: ColumnConfig[],
+    pageFormat: string,
+    orientation: string,
+    fieldDefinitions: Array<{ field: string; type: string }>
+): ColumnConfig[] => {
+    const availableWidth = getAvailablePageWidth(pageFormat, orientation);
+
+    // Filter to visible columns that need width calculation (excluding subreports)
+    const visibleColumns = columns.filter(col => {
+        if (!col.visible) return false;
+        const fieldDef = fieldDefinitions.find(f => f.field === col.field);
+        return fieldDef?.type !== 'subreport';
+    });
+
+    // Calculate total weight and columns that need auto-width
+    let totalWeight = 0;
+    let usedWidth = 0;
+    const columnsNeedingWidth: { col: ColumnConfig; weight: number }[] = [];
+
+    for (const col of visibleColumns) {
+        if (col.width && col.width > 0) {
+            // Column has explicit width set by user
+            usedWidth += col.width;
+        } else {
+            // Column needs auto-width calculation
+            const fieldDef = fieldDefinitions.find(f => f.field === col.field);
+            const weight = getColumnWeight(col.field, fieldDef?.type);
+            totalWeight += weight;
+            columnsNeedingWidth.push({ col, weight });
+        }
+    }
+
+    // Calculate remaining width for auto-width columns
+    const remainingWidth = Math.max(0, availableWidth - usedWidth);
+
+    // Create a new array with calculated widths
+    return columns.map(col => {
+        const newCol = { ...col };
+
+        // Skip invisible columns and subreports
+        if (!col.visible) return newCol;
+        const fieldDef = fieldDefinitions.find(f => f.field === col.field);
+        if (fieldDef?.type === 'subreport') return newCol;
+
+        // If column already has explicit width, keep it
+        if (col.width && col.width > 0) return newCol;
+
+        // Calculate width based on weight
+        const colData = columnsNeedingWidth.find(c => c.col.field === col.field);
+        if (colData && totalWeight > 0) {
+            const calculatedWidth = Math.floor((colData.weight / totalWeight) * remainingWidth);
+            // Ensure minimum width of 40 pixels
+            newCol.width = Math.max(40, calculatedWidth);
+        } else {
+            // Fallback to equal distribution
+            const autoColCount = columnsNeedingWidth.length || 1;
+            newCol.width = Math.max(40, Math.floor(remainingWidth / autoColCount));
+        }
+
+        return newCol;
+    });
+};
+
 const reportConfig = reactive<ReportConfig>({
     title: 'Zestawienie Wizyt',
     orientation: 'PORTRAIT',
@@ -412,6 +531,35 @@ const refreshPreview = async () => {
                     for (const key in subreport.colorSettings) {
                         subreport.colorSettings[key] = normalizeColor(subreport.colorSettings[key]);
                     }
+                }
+            }
+        }
+
+        // Calculate explicit column widths to replace width: -1 (auto)
+        // JasperReports handles auto-widths poorly, so we calculate explicit widths
+        payloadConfig.columns = calculateColumnWidths(
+            payloadConfig.columns,
+            payloadConfig.pageFormat,
+            payloadConfig.orientation,
+            availableFields.value
+        );
+
+        // Also calculate widths for subreport columns
+        if (payloadConfig.subreportConfigs) {
+            for (const reportKey in payloadConfig.subreportConfigs) {
+                const subreport = payloadConfig.subreportConfigs[reportKey];
+                if (subreport.columns) {
+                    // Define field types for subreport columns
+                    const subreportFields = subreport.columns.map((col: ColumnConfig) => ({
+                        field: col.field,
+                        type: col.format?.includes('#') ? 'numeric' : 'text'
+                    }));
+                    subreport.columns = calculateColumnWidths(
+                        subreport.columns,
+                        payloadConfig.pageFormat,
+                        payloadConfig.orientation,
+                        subreportFields
+                    );
                 }
             }
         }
