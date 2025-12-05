@@ -29,8 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
-        $middleware->append(\App\Http\Middleware\Cors::class);
-
         $middleware->web(append: [
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
@@ -40,6 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\HandleAppearance::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        // Cors musi być PIERWSZY w API middleware aby obsługiwać OPTIONS preflight
+        $middleware->api(prepend: [
+            \App\Http\Middleware\Cors::class,
         ]);
 
         $middleware->api(append: [
