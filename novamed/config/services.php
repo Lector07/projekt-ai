@@ -37,7 +37,7 @@ return [
 
     'report' => [
         'enabled' => env('REPORT_SERVICE_ENABLED', true),
-        'url' => env('REPORT_SERVICE_URL', 'http://localhost:8080/api/generate-dynamic-report'),
+        'url' => env('REPORT_SERVICE_URL', 'https://jrxml-service-1.onrender.com/api/generate-dynamic-report'),
     ],
 
     'jrxml' => [
