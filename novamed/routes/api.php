@@ -148,7 +148,6 @@ Route::prefix('v1/admin')
     ->group(function () {
         Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport'])
             ->name('appointments.report');
-        Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport']);
 
         Route::get('/doctors/report', [Admin\AdminDoctorController::class, 'generateDoctorsReport'])
             ->name('doctors.report');
