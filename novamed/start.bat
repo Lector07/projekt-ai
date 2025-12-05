@@ -1,4 +1,4 @@
-@echo off
+yes@echo off
 echo ====================================
 echo Uruchamianie projektu Laravel + Vue
 echo ====================================

@@ -97,6 +97,8 @@ interface ReportConfig {
     orientation: 'PORTRAIT' | 'LANDSCAPE';
     pageFormat: 'A4' | 'A3' | 'LETTER' | 'LEGAL';
     theme: 'DEFAULT' | 'CLASSIC' | 'MODERN' | 'CORPORATE' | 'MINIMAL';
+    margins?: number[]; // [top, right, bottom, left]
+
     companyInfo: CompanyInfo | null;
     footerLeftText: string | null;
     columns: ColumnConfig[];
@@ -145,6 +147,9 @@ const reportConfig = reactive<ReportConfig>({
     orientation: 'PORTRAIT',
     pageFormat: 'A4',
     theme: 'CLASSIC',
+
+    margins: [20, 20, 20, 20], // [top, right, bottom, left]
+
     companyInfo: {
         name: 'Softres',
         address: 'ul. Zaciszna 44',
@@ -283,6 +288,39 @@ const isLandscape = computed({
     get: () => reportConfig.orientation === 'LANDSCAPE',
     set: (val) => {
         reportConfig.orientation = val ? 'LANDSCAPE' : 'PORTRAIT';
+    }
+});
+
+// Computed properties dla marginesów (tablica: [top, right, bottom, left])
+const marginTop = computed({
+    get: () => reportConfig.margins?.[0] ?? 20,
+    set: (val) => {
+        if (!reportConfig.margins) reportConfig.margins = [20, 20, 20, 20];
+        reportConfig.margins[0] = val;
+    }
+});
+
+const marginRight = computed({
+    get: () => reportConfig.margins?.[1] ?? 20,
+    set: (val) => {
+        if (!reportConfig.margins) reportConfig.margins = [20, 20, 20, 20];
+        reportConfig.margins[1] = val;
+    }
+});
+
+const marginBottom = computed({
+    get: () => reportConfig.margins?.[2] ?? 20,
+    set: (val) => {
+        if (!reportConfig.margins) reportConfig.margins = [20, 20, 20, 20];
+        reportConfig.margins[2] = val;
+    }
+});
+
+const marginLeft = computed({
+    get: () => reportConfig.margins?.[3] ?? 20,
+    set: (val) => {
+        if (!reportConfig.margins) reportConfig.margins = [20, 20, 20, 20];
+        reportConfig.margins[3] = val;
     }
 });
 
@@ -642,6 +680,37 @@ const customColors = [
 
                                                 <Separator class="my-4 bg-nova-primary/20"/>
 
+                                                <div class="space-y-2">
+                                                    <Label class="text-nova-dark font-medium">Marginesy strony (px)</Label>
+                                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                                        <div>
+                                                            <Label class="text-xs text-muted-foreground mb-1 block">Górny</Label>
+                                                            <Input v-model.number="marginTop" type="number" min="0" max="100"
+                                                                   class="h-8 text-xs border-nova-primary/30 focus:border-nova-accent"/>
+                                                        </div>
+                                                        <div>
+                                                            <Label class="text-xs text-muted-foreground mb-1 block">Prawy</Label>
+                                                            <Input v-model.number="marginRight" type="number" min="0" max="100"
+                                                                   class="h-8 text-xs border-nova-primary/30 focus:border-nova-accent"/>
+                                                        </div>
+                                                        <div>
+                                                            <Label class="text-xs text-muted-foreground mb-1 block">Dolny</Label>
+                                                            <Input v-model.number="marginBottom" type="number" min="0" max="100"
+                                                                   class="h-8 text-xs border-nova-primary/30 focus:border-nova-accent"/>
+                                                        </div>
+                                                        <div>
+                                                            <Label class="text-xs text-muted-foreground mb-1 block">Lewy</Label>
+                                                            <Input v-model.number="marginLeft" type="number" min="0" max="100"
+                                                                   class="h-8 text-xs border-nova-primary/30 focus:border-nova-accent"/>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-muted-foreground italic">
+                                                        Kolejność: górny, prawy, dolny, lewy (zgodnie z CSS)
+                                                    </p>
+                                                </div>
+
+                                                <Separator class="my-4 bg-nova-primary/20"/>
+
                                                 <div v-if="reportConfig.companyInfo">
                                                     <div class="grid grid-cols-1 lg:grid-cols-4 mt-2 items-start gap-2 sm:gap-4">
                                                         <Label for="company-info" class="lg:text-left pt-2 text-nova-dark font-medium">Nazwa jednostki</Label>
@@ -703,7 +772,7 @@ const customColors = [
                                                                         size="sm"
                                                                         variant="outline"
                                                                         class="h-8 px-2 text-xs w-full border-nova-accent text-nova-accent hover:bg-nova-accent hover:text-white"
-                                                                        >
+                                                                >
                                                                     <Icon name="settings" size="12" class="mr-1"/>
                                                                     <span class="hidden sm:inline">Konfiguruj podraport</span>
                                                                 </Button>
@@ -885,6 +954,32 @@ const customColors = [
                                                 <div class="flex items-center space-x-2"><Checkbox id="mobile-footer" v-model:checked="reportConfig.pageFooterEnabled"/><Label for="mobile-footer" class="text-nova-dark">Dołącz stopkę</Label></div>
                                                 <div class="flex items-center space-x-2"><Checkbox id="mobile-summary" v-model:checked="reportConfig.summaryBandEnabled"/><Label for="mobile-summary" class="text-nova-dark">Dołącz podsumowanie</Label></div>
                                                 <div v-if="reportConfig.subreportConfigs.procedures" class="flex items-center space-x-2"><Checkbox id="mobile-sub-summary" v-model:checked="reportConfig.subreportConfigs.procedures.summaryBandEnabled"/><Label for="mobile-sub-summary" class="text-nova-dark">Podsumowanie podraportu</Label></div>
+                                            </div>
+                                            <Separator class="my-4"/>
+                                            <div class="space-y-2">
+                                                <Label class="text-nova-dark font-medium">Marginesy strony (px)</Label>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <Label class="text-xs text-muted-foreground">Górny</Label>
+                                                        <Input v-model.number="marginTop" type="number" min="0" max="100"
+                                                               class="mt-1 border-nova-primary/30"/>
+                                                    </div>
+                                                    <div>
+                                                        <Label class="text-xs text-muted-foreground">Prawy</Label>
+                                                        <Input v-model.number="marginRight" type="number" min="0" max="100"
+                                                               class="mt-1 border-nova-primary/30"/>
+                                                    </div>
+                                                    <div>
+                                                        <Label class="text-xs text-muted-foreground">Dolny</Label>
+                                                        <Input v-model.number="marginBottom" type="number" min="0" max="100"
+                                                               class="mt-1 border-nova-primary/30"/>
+                                                    </div>
+                                                    <div>
+                                                        <Label class="text-xs text-muted-foreground">Lewy</Label>
+                                                        <Input v-model.number="marginLeft" type="number" min="0" max="100"
+                                                               class="mt-1 border-nova-primary/30"/>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <Separator class="my-4"/>
                                             <div v-if="reportConfig.companyInfo" class="space-y-2">
