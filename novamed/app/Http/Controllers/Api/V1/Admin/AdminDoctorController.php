@@ -259,7 +259,7 @@ class AdminDoctorController extends Controller
 
 
                 $response = Http::withBody(json_encode($payload), 'application/json')
-                    ->timeout(30)->post('https://jrxml-service-1.onrender.com/api/generate-dynamic-report');
+                    ->timeout(30)->post(config('services.jrxml.url') . '/api/generate-dynamic-report');
 
                 if ($response->successful()) {
                     return response($response->body(), 200, [

@@ -40,4 +40,8 @@ return [
         'url' => env('REPORT_SERVICE_URL', 'http://localhost:8080/api/generate-dynamic-report'),
     ],
 
+    'jrxml' => [
+            'url' => env('JRXML_SERVICE_URL', 'http://localhost:8080'),
+        ],
+
 ];

@@ -201,7 +201,8 @@ class DoctorAppointmentController extends Controller
 
             $response = Http::withBody(json_encode($payload), 'application/json')
                 ->timeout(30)
-                ->post('http://localhost:8080/api/generate-dynamic-report');
+                ->post(config('services.jrxml.url') . '/api/generate-dynamic-report');
+
 
             if ($response->successful()) {
                 return response($response->body(), 200, [
