@@ -220,7 +220,7 @@ class AdminAppointmentController extends Controller
 
         // Sprawdź czy serwis raportów jest włączony
         $reportServiceEnabled = config('services.report.enabled', true);
-        $reportServiceUrl = config('services.report.url', 'http://localhost:8080/api/generate-dynamic-report');
+        $reportServiceUrl = config('services.report.url', 'https://jrxml-service-1.onrender.com/api/generate-dynamic-report');
 
         if (!$reportServiceEnabled) {
             Log::warning('Serwis raportów jest wyłączony w konfiguracji');
