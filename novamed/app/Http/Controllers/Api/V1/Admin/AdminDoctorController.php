@@ -197,10 +197,21 @@ class AdminDoctorController extends Controller
     {
         $this->authorize('viewAny', Doctor::class);
 
+        $validated = $request->validate([
+            'config' => 'required|array',
+            'filters' => 'nullable|array',
+        ]);
+
+        Log::info('--- AdminDoctorController - Otrzymana konfiguracja ---');
+        Log::info(json_encode($validated['config'], JSON_PRETTY_PRINT));
+
         $query = Doctor::query()->with(['user', 'procedures.category'])->orderBy('id', 'asc');
 
-        if ($request->filled('search')) {
-            $searchTerm = $request->input('search');
+        $filters = $validated['filters'] ?? [];
+        $searchTerm = $filters['search'] ?? null;
+        $specialization = $filters['specialization'] ?? null;
+
+        if (!empty($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('first_name', 'LIKE', "%{$searchTerm}%")
                     ->orWhere('last_name', 'LIKE', "%{$searchTerm}%")
@@ -210,108 +221,103 @@ class AdminDoctorController extends Controller
             });
         }
 
-        if ($request->filled('specialization')) {
-            $query->where('specialization', $request->input('specialization'));
+        if (!empty($specialization)) {
+            $query->where('specialization', $specialization);
         }
 
         $doctors = $query->get();
 
-        if ($request->has('config')) {
-            try {
-                $config = json_decode($request->input('config'), true);
-
-
-                $dataForReport = $doctors->map(function ($doctor) {
-                    $doctorData = [
-                        'id' => $doctor->id,
-                        'first_name' => $doctor->first_name,
-                        'last_name' => $doctor->last_name,
-                        'specialization' => $doctor->specialization,
-                        'user_email' => $doctor->user ? $doctor->user->email : 'Brak',
-                        'bio' => $doctor->bio ?: 'Brak opisu',
-                        'created_at' => $doctor->created_at,
-                    ];
-
-                    $doctorData['user'] = [
-                        'email' => $doctor->user ? $doctor->user->email : 'Brak emaila'
-                    ];
-
-                    if ($doctor->procedures && $doctor->procedures->count() > 0) {
-                        $doctorData['procedures'] = $doctor->procedures->map(function ($procedure) {
-                            return [
-                                'item' => $procedure->name,
-                                'quantity' => 1,
-                                'price' => is_null($procedure->base_price) ? 0.0 : (float)$procedure->base_price,
-                                'category' => $procedure->category->name ?? 'Bez kategorii'
-                            ];
-                        })->toArray();
-                    } else {
-                        $doctorData['procedures'] = [];
-                    }
-
-                    return $doctorData;
-                });
-
-                $payload = [
-                    'config' => $config,
-                    'jsonData' => json_encode($dataForReport->toArray()),
+        try {
+            $dataForReport = $doctors->map(function ($doctor) {
+                $doctorData = [
+                    'id' => $doctor->id,
+                    'first_name' => $doctor->first_name,
+                    'last_name' => $doctor->last_name,
+                    'specialization' => $doctor->specialization,
+                    'user_email' => $doctor->user ? $doctor->user->email : 'Brak',
+                    'bio' => $doctor->bio ?: 'Brak opisu',
+                    'created_at' => $doctor->created_at,
                 ];
 
+                $doctorData['user'] = [
+                    'email' => $doctor->user ? $doctor->user->email : 'Brak emaila'
+                ];
 
-                $response = Http::withBody(json_encode($payload), 'application/json')
-                    ->timeout(30)->post(config('services.jrxml.url') . '/api/generate-dynamic-report');
-
-                if ($response->successful()) {
-                    return response($response->body(), 200, [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => $response->header('Content-Disposition') ?: 'attachment; filename="raport_lekarzy.pdf"',
-                    ]);
+                if ($doctor->procedures && $doctor->procedures->count() > 0) {
+                    $doctorData['procedures'] = $doctor->procedures->map(function ($procedure) {
+                        return [
+                            'item' => $procedure->name,
+                            'quantity' => 1,
+                            'price' => is_null($procedure->base_price) ? 0.0 : (float)$procedure->base_price,
+                            'category' => $procedure->category->name ?? 'Bez kategorii'
+                        ];
+                    })->toArray();
                 } else {
-                    Log::error('Błąd serwisu raportów: ' . $response->body());
-                    return response()->json([
-                        'error' => 'Nie udało się wygenerować raportu',
-                        'details' => $response->json() ?? $response->body()
-                    ], $response->status());
+                    $doctorData['procedures'] = [];
                 }
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                Log::error('Błąd połączenia z serwisem raportującym: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'Nie można połączyć się z serwisem raportującym.',
-                    'details' => $e->getMessage()
-                ], 503);
-            } catch (\Exception $e) {
-                Log::error('Błąd generowania raportu lekarzy: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'Błąd podczas generowania raportu',
-                    'details' => $e->getMessage()
-                ], 500);
+
+                return $doctorData;
+            });
+
+            // Usunięcie fieldTypes jeśli istnieje (nie jest potrzebne w Java service)
+            if (isset($validated['config']['fieldTypes'])) {
+                unset($validated['config']['fieldTypes']);
             }
+
+            // Konwersja subreportConfigs na obiekt jeśli jest tablicą
+            if (isset($validated['config']['subreportConfigs']) && is_array($validated['config']['subreportConfigs'])) {
+                $validated['config']['subreportConfigs'] = (object) $validated['config']['subreportConfigs'];
+            }
+
+            $payload = [
+                'config' => $validated['config'],
+                'jsonData' => json_encode($dataForReport->toArray()),
+            ];
+
+            $payloadJson = json_encode($payload);
+            $payloadSize = strlen($payloadJson);
+
+            Log::info('--- AdminDoctorController - Payload wysyłany do Java service ---');
+            Log::info('Config keys: ' . json_encode(array_keys($validated['config'])));
+            Log::info('JsonData length: ' . strlen($payload['jsonData']));
+            Log::info('Total payload size: ' . number_format($payloadSize / 1024, 2) . ' KB');
+            Log::info('Number of doctors in report: ' . $dataForReport->count());
+
+            $reportServiceUrl = config('services.jrxml.url', 'https://jrxml-service-1.onrender.com') . '/api/generate-dynamic-report';
+
+            $response = Http::withBody($payloadJson, 'application/json')
+                ->timeout(60)
+                ->withOptions([
+                    'verify' => false,
+                    'http_errors' => false,
+                ])
+                ->post($reportServiceUrl);
+
+            if ($response->successful()) {
+                return response($response->body(), 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => $response->header('Content-Disposition') ?: 'attachment; filename="raport_lekarzy.pdf"',
+                ]);
+            } else {
+                Log::error('Błąd serwisu raportów: ' . $response->body());
+                return response()->json([
+                    'error' => 'Nie udało się wygenerować raportu',
+                    'details' => $response->json() ?? $response->body()
+                ], $response->status());
+            }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Błąd połączenia z serwisem raportującym: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Nie można połączyć się z serwisem raportującym.',
+                'details' => $e->getMessage()
+            ], 503);
+        } catch (\Exception $e) {
+            Log::error('Błąd generowania raportu lekarzy: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Błąd podczas generowania raportu',
+                'details' => $e->getMessage()
+            ], 500);
         }
-
-        $reportConfig = [
-            'title' => 'Raport Lekarzy',
-            'companyInfo' => [
-                'name' => 'NovaMed',
-                'address' => 'ul. Zdrowotna 1, 00-001 Miasto',
-                'phone' => '123-456-789',
-                'email' => 'kontakt@novamed.pl',
-            ],
-            'columns' => [
-                ['field' => 'id', 'label' => 'ID'],
-                ['field' => 'first_name', 'label' => 'Imię'],
-                ['field' => 'last_name', 'label' => 'Nazwisko'],
-                ['field' => 'specialization', 'label' => 'Specjalizacja'],
-                ['field' => 'user_email', 'label' => 'Email'],
-            ],
-        ];
-
-        $jsonData = DoctorResource::collection($doctors)->toJson();
-
-        $payload = [
-            'config' => $reportConfig,
-            'jsonData' => $jsonData,
-        ];
-        return response()->json($payload);
     }
 }
 

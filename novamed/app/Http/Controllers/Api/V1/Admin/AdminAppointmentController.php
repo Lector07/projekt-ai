@@ -207,20 +207,27 @@ class AdminAppointmentController extends Controller
             $validated['config']['subreportConfigs'] = (object) $validated['config']['subreportConfigs'];
         }
 
-        unset($validated['config']['fieldTypes']);
-
+        if (isset($validated['config']['fieldTypes'])) {
+            unset($validated['config']['fieldTypes']);
+        }
 
         $payload = [
             'config' => $validated['config'],
             'jsonData' => $jsonData
         ];
 
-        Log::info('--- KONTROLER LARAVELA - PAYLOAD WYSYŁANY DO JAVY ---');
-        Log::info(json_encode($payload, JSON_PRETTY_PRINT));
+        $payloadJson = json_encode($payload);
+        $payloadSize = strlen($payloadJson);
+
+        Log::info('--- AdminAppointmentController - PAYLOAD WYSYŁANY DO JAVY ---');
+        Log::info('Config keys: ' . json_encode(array_keys($validated['config'])));
+        Log::info('JsonData length: ' . strlen($jsonData));
+        Log::info('Total payload size: ' . number_format($payloadSize / 1024, 2) . ' KB');
+        Log::info('Number of appointments in report: ' . $dataForReport->count());
 
         // Sprawdź czy serwis raportów jest włączony
         $reportServiceEnabled = config('services.report.enabled', true);
-        $reportServiceUrl = config('services.report.url', 'https://jrxml-service-1.onrender.com/api/generate-dynamic-report');
+        $reportServiceUrl = config('services.jrxml.url', 'https://jrxml-service-1.onrender.com') . '/api/generate-dynamic-report';
 
         if (!$reportServiceEnabled) {
             Log::warning('Serwis raportów jest wyłączony w konfiguracji');
@@ -231,8 +238,13 @@ class AdminAppointmentController extends Controller
         }
 
         try {
-            $response = Http::withBody(json_encode($payload), 'application/json')
-                ->timeout(30)->post($reportServiceUrl);
+            $response = Http::withBody($payloadJson, 'application/json')
+                ->timeout(60)
+                ->withOptions([
+                    'verify' => false,
+                    'http_errors' => false,
+                ])
+                ->post($reportServiceUrl);
 
             if ($response->successful()) {
                 return response($response->body(), 200, [

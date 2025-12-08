@@ -149,7 +149,7 @@ Route::prefix('v1/admin')
         Route::post('/appointments/report', [Admin\AdminAppointmentController::class, 'generateAppointmentsReport'])
             ->name('appointments.report');
 
-        Route::get('/doctors/report', [Admin\AdminDoctorController::class, 'generateDoctorsReport'])
+        Route::post('/doctors/report', [Admin\AdminDoctorController::class, 'generateDoctorsReport'])
             ->name('doctors.report');
 
         Route::put('/user/password', [PasswordController::class, 'update'])

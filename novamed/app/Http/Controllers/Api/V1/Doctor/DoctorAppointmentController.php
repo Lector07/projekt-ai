@@ -150,10 +150,19 @@ class DoctorAppointmentController extends Controller
             return response()->json(['message' => 'Profil lekarza nie znaleziony.'], 404);
         }
 
+        // Walidacja - wymaga config w POST body
+        $validated = $request->validate([
+            'config' => 'required|array',
+            'filters' => 'nullable|array',
+        ]);
+
+        Log::info('--- DoctorAppointmentController - Otrzymana konfiguracja ---');
+        Log::info('Config keys: ' . json_encode(array_keys($validated['config'])));
+
         $query = Appointment::where('doctor_id', $doctor->id)
             ->with(['patient:id,name', 'procedure:id,name,base_price']);
 
-        $filters = $request->input('filters', []);
+        $filters = $validated['filters'] ?? [];
 
         if (isset($filters['status']) && $filters['status'] !== 'all') {
             $query->where('status', $filters['status']);
@@ -172,15 +181,8 @@ class DoctorAppointmentController extends Controller
         }
 
         $appointments = $query->orderBy('appointment_datetime', 'desc')->get();
-        // --- Koniec budowania zapytania ---
-
 
         try {
-            $config = $request->input('config');
-            if (empty($config)) {
-                return response()->json(['error' => 'Brak konfiguracji raportu.'], 422);
-            }
-
             $dataForReport = $appointments->map(function ($appointment) use ($doctor) {
                 return [
                     'id' => $appointment->id,
@@ -194,14 +196,38 @@ class DoctorAppointmentController extends Controller
                 ];
             });
 
+            // Usunięcie fieldTypes jeśli istnieje
+            if (isset($validated['config']['fieldTypes'])) {
+                unset($validated['config']['fieldTypes']);
+            }
+
+            // Konwersja subreportConfigs na obiekt jeśli jest tablicą
+            if (isset($validated['config']['subreportConfigs']) && is_array($validated['config']['subreportConfigs'])) {
+                $validated['config']['subreportConfigs'] = (object) $validated['config']['subreportConfigs'];
+            }
+
             $payload = [
-                'config' => $config,
+                'config' => $validated['config'],
                 'jsonData' => json_encode($dataForReport->toArray()),
             ];
 
-            $response = Http::withBody(json_encode($payload), 'application/json')
-                ->timeout(30)
-                ->post(config('services.jrxml.url') . '/api/generate-dynamic-report');
+            $payloadJson = json_encode($payload);
+            $payloadSize = strlen($payloadJson);
+
+            Log::info('--- DoctorAppointmentController - Payload wysyłany do Java service ---');
+            Log::info('JsonData length: ' . strlen($payload['jsonData']));
+            Log::info('Total payload size: ' . number_format($payloadSize / 1024, 2) . ' KB');
+            Log::info('Number of appointments in report: ' . $dataForReport->count());
+
+            $reportServiceUrl = config('services.jrxml.url', 'https://jrxml-service-1.onrender.com') . '/api/generate-dynamic-report';
+
+            $response = Http::withBody($payloadJson, 'application/json')
+                ->timeout(60)
+                ->withOptions([
+                    'verify' => false,
+                    'http_errors' => false,
+                ])
+                ->post($reportServiceUrl);
 
 
             if ($response->successful()) {

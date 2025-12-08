@@ -412,6 +412,7 @@ const refreshPreview = async () => {
     try {
         const payloadConfig = JSON.parse(JSON.stringify(reportConfig));
 
+        // Usuwanie niepotrzebnych nested subreportConfigs
         if (payloadConfig.subreportConfigs) {
             for (const key in payloadConfig.subreportConfigs) {
                 delete payloadConfig.subreportConfigs[key].subreportConfigs;
@@ -421,6 +422,7 @@ const refreshPreview = async () => {
             payloadConfig.subreportConfigs = {};
         }
 
+        // Filtrowanie i mapowanie grup
         if (payloadConfig.groups) {
             payloadConfig.groups = payloadConfig.groups
                 .filter((g: { field: string }) => g.field)
@@ -431,11 +433,16 @@ const refreshPreview = async () => {
                 });
         }
 
+        // Normalizacja kolorów w highlightRules
         if (payloadConfig.formattingOptions && payloadConfig.formattingOptions.highlightRules) {
             payloadConfig.formattingOptions.highlightRules.forEach((rule: any) => {
                 rule.color = normalizeColor(rule.color);
+                // Usuwanie ID, nie jest potrzebne w Java service
+                delete rule.id;
             });
         }
+
+        // Normalizacja colorSettings głównego raportu
         if (payloadConfig.colorSettings) {
             for (const key in payloadConfig.colorSettings) {
                 if (Object.prototype.hasOwnProperty.call(payloadConfig.colorSettings, key) && payloadConfig.colorSettings[key]) {
@@ -443,6 +450,8 @@ const refreshPreview = async () => {
                 }
             }
         }
+
+        // Normalizacja colorSettings w subreportach
         if (payloadConfig.subreportConfigs) {
             for (const reportKey in payloadConfig.subreportConfigs) {
                 const subreport = payloadConfig.subreportConfigs[reportKey];
@@ -451,27 +460,41 @@ const refreshPreview = async () => {
                         subreport.colorSettings[key] = normalizeColor(subreport.colorSettings[key]);
                     }
                 }
+                // Usuwanie pustych lub niepotrzebnych pól z subreportów
+                if (subreport.groups && subreport.groups.length === 0) {
+                    delete subreport.groups;
+                }
+                if (subreport.formattingOptions && subreport.formattingOptions.highlightRules && subreport.formattingOptions.highlightRules.length === 0) {
+                    delete subreport.formattingOptions.highlightRules;
+                }
             }
         }
 
+        // Usuwanie pustych grup z głównego raportu
+        if (payloadConfig.groups && payloadConfig.groups.length === 0) {
+            delete payloadConfig.groups;
+        }
+
+        // Przygotowanie payload
+        const payload = {
+            config: payloadConfig,
+            filters: props.activeFilters
+        };
+
+        // Logowanie rozmiaru payloadu w konsoli
+        const payloadSize = new Blob([JSON.stringify(payload)]).size;
+        console.log(`Payload size: ${(payloadSize / 1024).toFixed(2)} KB`);
+
         let response;
 
-        if (props.reportType === 'doctors') {
-            const params = new URLSearchParams();
-            if (props.activeFilters.search) params.append('search', props.activeFilters.search);
-            if (props.activeFilters.specialization) params.append('specialization', props.activeFilters.specialization);
-
-            params.append('config', JSON.stringify(payloadConfig));
-
-            response = await axios.get(`${apiEndpoint.value}?${params.toString()}`, {
-                responseType: 'blob'
-            });
-        } else {
-            response = await axios.post(apiEndpoint.value, {
-                config: payloadConfig,
-                filters: props.activeFilters
-            }, {responseType: 'blob'});
-        }
+        response = await axios.post(apiEndpoint.value, payload, {
+            responseType: 'blob',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
 
         const blob = new Blob([response.data], {type: 'application/pdf'});
         currentPdfBlobUrl = URL.createObjectURL(blob);
@@ -499,6 +522,8 @@ const refreshPreview = async () => {
             } catch (e) {
                 console.error('Nie udało się sparsować odpowiedzi błędu:', e);
             }
+        } else if ((error as any).message) {
+            errorText = (error as any).message;
         }
         toast.add({severity: 'error', summary: 'Błąd generowania raportu', detail: errorText, life: 7000});
         pdfUrl.value = null;
